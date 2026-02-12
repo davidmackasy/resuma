@@ -2,7 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { storage } from "./storage";
-import { generateDocuments } from "./generation";
+import { generateDocuments, generateSingleDocument } from "./generation";
+import { generateResumePdf, generateCoverLetterPdf } from "./export-pdf";
+import { generateResumeDocx, generateCoverLetterDocx } from "./export-docx";
 import { extractTextFromFile, parseResumeText } from "./resume-parser";
 import multer from "multer";
 import path from "path";
@@ -244,8 +246,8 @@ export async function registerRoutes(
             applicationId: application.id,
             userId,
             docType: "resume",
-            contentMd: generated.resume,
-            contentJson: {},
+            contentMd: generated.resume.md,
+            contentJson: generated.resume.json,
             tokensUsed: Math.floor(generated.tokensUsed / 3),
             model: generated.model,
           }),
@@ -253,8 +255,8 @@ export async function registerRoutes(
             applicationId: application.id,
             userId,
             docType: "cover_letter",
-            contentMd: generated.coverLetter,
-            contentJson: {},
+            contentMd: generated.coverLetter.md,
+            contentJson: generated.coverLetter.json,
             tokensUsed: Math.floor(generated.tokensUsed / 3),
             model: generated.model,
           }),
@@ -262,8 +264,8 @@ export async function registerRoutes(
             applicationId: application.id,
             userId,
             docType: "followup_email",
-            contentMd: generated.followupEmail,
-            contentJson: {},
+            contentMd: generated.followupEmail.md,
+            contentJson: generated.followupEmail.json,
             tokensUsed: Math.floor(generated.tokensUsed / 3),
             model: generated.model,
           }),
@@ -304,9 +306,8 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Profile not found" });
       }
 
-      await storage.deleteDocumentsByApplication(id);
-
-      const generated = await generateDocuments({
+      const { docType } = req.body;
+      const genInput = {
         profile,
         jobDescription: application.jobDescription,
         companyName: application.companyName || undefined,
@@ -315,37 +316,53 @@ export async function registerRoutes(
         hiringManager: application.hiringManager || undefined,
         tone: application.tone,
         templateId: application.templateId,
-      });
+      };
 
-      await Promise.all([
-        storage.createDocument({
+      if (docType && ["resume", "cover_letter", "followup_email"].includes(docType)) {
+        await storage.deleteDocumentByType(id, docType);
+        const result = await generateSingleDocument(genInput, docType as any);
+        await storage.createDocument({
           applicationId: id,
           userId,
-          docType: "resume",
-          contentMd: generated.resume,
-          contentJson: {},
-          tokensUsed: Math.floor(generated.tokensUsed / 3),
-          model: generated.model,
-        }),
-        storage.createDocument({
-          applicationId: id,
-          userId,
-          docType: "cover_letter",
-          contentMd: generated.coverLetter,
-          contentJson: {},
-          tokensUsed: Math.floor(generated.tokensUsed / 3),
-          model: generated.model,
-        }),
-        storage.createDocument({
-          applicationId: id,
-          userId,
-          docType: "followup_email",
-          contentMd: generated.followupEmail,
-          contentJson: {},
-          tokensUsed: Math.floor(generated.tokensUsed / 3),
-          model: generated.model,
-        }),
-      ]);
+          docType,
+          contentMd: result.md,
+          contentJson: result.json,
+          tokensUsed: result.tokensUsed,
+          model: result.model,
+        });
+      } else {
+        await storage.deleteDocumentsByApplication(id);
+        const generated = await generateDocuments(genInput);
+        await Promise.all([
+          storage.createDocument({
+            applicationId: id,
+            userId,
+            docType: "resume",
+            contentMd: generated.resume.md,
+            contentJson: generated.resume.json,
+            tokensUsed: Math.floor(generated.tokensUsed / 3),
+            model: generated.model,
+          }),
+          storage.createDocument({
+            applicationId: id,
+            userId,
+            docType: "cover_letter",
+            contentMd: generated.coverLetter.md,
+            contentJson: generated.coverLetter.json,
+            tokensUsed: Math.floor(generated.tokensUsed / 3),
+            model: generated.model,
+          }),
+          storage.createDocument({
+            applicationId: id,
+            userId,
+            docType: "followup_email",
+            contentMd: generated.followupEmail.md,
+            contentJson: generated.followupEmail.json,
+            tokensUsed: Math.floor(generated.tokensUsed / 3),
+            model: generated.model,
+          }),
+        ]);
+      }
 
       await storage.updateApplicationStatus(id, "generated");
       await storage.incrementUsage(userId, "regenerations");
@@ -354,6 +371,82 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error regenerating:", error);
       res.status(500).json({ message: "Regeneration failed" });
+    }
+  });
+
+  app.put("/api/applykit/documents/:docId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const docId = parseInt(req.params.docId);
+      const { contentJson, contentMd } = req.body;
+
+      const doc = await storage.getDocument(docId);
+      if (!doc || doc.userId !== userId) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      const updates: any = {};
+      if (contentJson !== undefined) updates.contentJson = contentJson;
+      if (contentMd !== undefined) updates.contentMd = contentMd;
+
+      const updated = await storage.updateDocument(docId, updates);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating document:", error);
+      res.status(500).json({ message: "Failed to update document" });
+    }
+  });
+
+  app.get("/api/applykit/documents/:docId/export", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const docId = parseInt(req.params.docId);
+      const format = req.query.format as string;
+
+      if (!["pdf", "docx"].includes(format)) {
+        return res.status(400).json({ message: "Format must be pdf or docx" });
+      }
+
+      const doc = await storage.getDocument(docId);
+      if (!doc || doc.userId !== userId) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      const contentJson = doc.contentJson as any;
+      if (!contentJson || Object.keys(contentJson).length === 0) {
+        return res.status(400).json({ message: "Document has no structured content for export" });
+      }
+
+      let buffer: Buffer;
+      let filename: string;
+
+      if (doc.docType === "resume") {
+        if (format === "pdf") {
+          buffer = await generateResumePdf(contentJson);
+          filename = "resume.pdf";
+        } else {
+          buffer = await generateResumeDocx(contentJson);
+          filename = "resume.docx";
+        }
+      } else if (doc.docType === "cover_letter") {
+        if (format === "pdf") {
+          buffer = await generateCoverLetterPdf(contentJson);
+          filename = "cover-letter.pdf";
+        } else {
+          buffer = await generateCoverLetterDocx(contentJson);
+          filename = "cover-letter.docx";
+        }
+      } else {
+        return res.status(400).json({ message: "Export only available for resume and cover letter" });
+      }
+
+      const contentType = format === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error exporting document:", error);
+      res.status(500).json({ message: "Export failed" });
     }
   });
 

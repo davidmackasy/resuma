@@ -4,6 +4,14 @@
 ApplyKit lets users upload their master resume/profile once, paste any job description, and automatically generate three tailored documents (resume, cover letter, follow-up email) using AI. Built with React + Express + PostgreSQL.
 
 ## Recent Changes
+- 2026-02-12: Added Professional Resume Export Integration
+  - PDF export via pdfkit, DOCX export via docx package
+  - Structured JSON output from AI generation (ResumeJson, CoverLetterJson, EmailJson)
+  - Intelligent job relevance filtering in generation prompts
+  - Per-document regeneration with confirmation dialogs
+  - Document inline editing (markdown) and save
+  - Styled resume/cover letter/email preview using contentJson
+  - Download buttons (PDF/DOCX) on resume and cover letter tabs
 - 2026-02-12: Initial build - full frontend and backend, auth integration, AI generation pipeline, database schema
 
 ## Architecture
@@ -43,7 +51,9 @@ shared/
 - `GET/POST /api/applykit/applications` - Application list/create
 - `GET /api/applykit/applications/:id` - Single application
 - `GET /api/applykit/applications/:id/documents` - Documents for application
-- `POST /api/applykit/applications/:id/regenerate` - Regenerate documents
+- `POST /api/applykit/applications/:id/regenerate` - Regenerate all or single doc (optional docType body param)
+- `PUT /api/applykit/documents/:docId` - Update document content (contentMd, contentJson)
+- `GET /api/applykit/documents/:docId/export?format=pdf|docx` - Download PDF/DOCX
 - `GET /api/applykit/usage` - Monthly usage stats
 - `DELETE /api/applykit/data` - Delete all user data
 - `GET /api/applykit/templates` - List resume templates

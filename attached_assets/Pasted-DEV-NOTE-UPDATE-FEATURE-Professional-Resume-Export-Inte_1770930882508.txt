@@ -1,0 +1,367 @@
+DEV NOTE UPDATE
+FEATURE: Professional Resume Export + Intelligent Relevance Filtering + Preview/Edit Before Download
+GOAL:
+
+Resume and Cover Letter must be downloadable as properly formatted PDF and DOCX.
+
+Email remains copy-only.
+
+Resume generation must intelligently filter irrelevant experience based on job description.
+
+Profile data must NEVER be modified. Tailoring only affects generated output.
+
+Add Preview + Inline Edit + Regenerate before download.
+CRITICAL: Do not break auth. Do not break Stripe. Do not modify unrelated modules. Changes apply only to ApplyKit module.
+
+SECTION 1: INTELLIGENT JOB-BASED RELEVANCE FILTERING
+
+PROBLEM
+Currently resume uses profile content but does not properly filter irrelevant experience.
+
+REQUIREMENT
+When user pastes job description:
+
+System must analyze job requirements
+
+Score each experience role and bullet
+
+Include only relevant roles/bullets
+
+Reorder by relevance
+
+Exclude irrelevant experience from final output
+
+DO NOT modify applykit_profiles
+
+IMPLEMENTATION LOGIC
+
+Step 1: Extract Job Signals
+
+From job_description generate structured JSON:
+
+{
+job_category,
+required_skills[],
+preferred_skills[],
+responsibilities[],
+keywords[],
+seniority_level,
+industry_type
+}
+
+Example:
+If construction labor job:
+
+keywords: construction, manual labor, heavy lifting, tools
+
+industry_type: labor
+
+required_skills: physical stamina, teamwork, safety compliance
+
+Step 2: Score Profile Experience
+
+For each role in applykit_profiles.experience:
+
+Calculate relevance score:
+
+Keyword overlap count
+
+Skill match count
+
+Industry similarity
+
+Responsibility similarity
+
+Score formula example:
+score = (keyword_matches * 2) + (skill_matches * 3) + (industry_match ? 5 : 0)
+
+Sort roles by score descending.
+
+Step 3: Filter Logic
+
+Rules:
+
+Include top 2–4 most relevant roles
+
+Exclude roles with score below threshold
+
+If user applying to labor job:
+Exclude unrelated doctor/office roles unless they share relevant skills
+
+If tech job:
+Exclude unrelated manual labor roles
+
+Do NOT delete them from profile.
+Only exclude from generated output.
+
+Step 4: Bullet Selection
+
+For each included role:
+
+Score each bullet
+
+Keep top 3–5 relevant bullets
+
+Rewrite bullets for clarity, not fabrication
+
+Remove fluff
+
+Keep measurable results only if present
+
+SECTION 2: PROFESSIONAL PDF + DOCX EXPORT
+
+CURRENT ISSUE
+Only copy available. Not acceptable.
+
+REQUIREMENT
+Resume + Cover Letter must support:
+
+Download as:
+
+PDF
+
+DOCX
+
+Email:
+
+Copy only
+
+PDF IMPLEMENTATION
+
+Use server-side HTML → PDF rendering via Playwright or Puppeteer.
+
+Flow:
+
+Generate structured resume JSON
+
+Render HTML template using template_id
+
+Convert to PDF
+
+Store in Supabase Storage:
+applykit/generated/{user_id}/{application_id}/resume.pdf
+applykit/generated/{user_id}/{application_id}/cover_letter.pdf
+
+Save URLs in applykit_documents.pdf_url
+
+Templates must:
+
+Be ATS-safe
+
+Use system fonts or embedded fonts
+
+Black and white
+
+Strong hierarchy
+
+Clean spacing
+
+No tables for main content
+
+DOCX IMPLEMENTATION
+
+Use docx library (npm: docx).
+
+Generate structured docx using:
+
+Paragraph styles
+
+Heading styles
+
+Consistent spacing
+
+Save:
+resume.docx
+cover_letter.docx
+
+Store in same storage folder.
+
+SECTION 3: PREVIEW + EDIT BEFORE DOWNLOAD
+
+NEW FLOW
+
+After generation:
+User lands on Application Detail page.
+
+Tabs:
+
+Resume
+
+Cover Letter
+
+Email
+
+Each tab must include:
+
+Preview Mode (default)
+
+Styled preview like PDF layout
+
+Not raw markdown
+
+Looks identical to final export
+
+Edit Mode
+Button: “Edit”
+Switch preview into editable structured form:
+
+Editable sections:
+
+Summary
+
+Bullet points
+
+Cover letter paragraphs
+
+Email body
+
+Important:
+Edits must update content_json and content_md
+Regenerate must overwrite edited content only if user confirms.
+
+SECTION 4: REGENERATE LOGIC
+
+Regenerate options:
+
+Regenerate Resume only
+
+Regenerate Cover Letter only
+
+Regenerate Email only
+
+Regenerate All
+
+Before regenerating:
+Show warning:
+“This will replace current content.”
+
+Regeneration must:
+
+Re-run relevance scoring
+
+Use same template
+
+Use same tone
+
+Not modify profile
+
+Increment regeneration usage counter.
+
+SECTION 5: UI CHANGES
+
+Application Detail Page
+
+Top right:
+Status badge: Generated
+Buttons:
+
+Download PDF (dropdown: Resume / Cover)
+
+Download DOCX
+
+Regenerate
+
+Right sidebar:
+Application Details:
+
+Tone
+
+Template
+
+Created date
+
+Add:
+
+Relevance summary box (Phase 2 optional)
+“Top matched skills: Safety compliance, Heavy lifting”
+
+SECTION 6: PROFILE PROTECTION RULE
+
+Add hard rule in generation service:
+
+NEVER write back to applykit_profiles during generation.
+
+All tailoring occurs in:
+applykit_documents only.
+
+Profile is immutable unless user edits it manually.
+
+SECTION 7: DATA MODEL UPDATE
+
+Ensure applykit_documents includes:
+
+doc_type (resume, cover_letter, email)
+
+content_json
+
+content_md
+
+pdf_url
+
+docx_url
+
+relevance_score_summary (jsonb optional)
+
+SECTION 8: EDGE CASES
+
+If user profile contains:
+
+Many unrelated jobs
+Filtering must still include minimum 1 role.
+
+If no relevant match found:
+Include most recent roles but rewrite summary to align transferable skills.
+
+If PDF generation fails:
+Allow text copy and show retry button.
+
+SECTION 9: PERFORMANCE REQUIREMENTS
+
+Full generation pipeline:
+Under 10 seconds target.
+
+PDF rendering:
+Under 3 seconds per document.
+
+DOCX generation:
+Under 2 seconds.
+
+SECTION 10: ACCEPTANCE CRITERIA
+
+User can:
+
+Paste job description
+
+Get resume tailored specifically to job
+
+Irrelevant roles excluded from output
+
+Preview formatted resume
+
+Edit before downloading
+
+Download resume as PDF
+
+Download resume as DOCX
+
+Download cover letter as PDF or DOCX
+
+Copy email
+
+System must:
+
+Never modify master profile automatically
+
+Not break authentication
+
+Not break Stripe
+
+Not affect other modules
+
+Maintain clean, professional formatting
+
+This update turns ApplyKit from:
+“AI text generator”
+
+Into:
+“Professional job-ready document builder”

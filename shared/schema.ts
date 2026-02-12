@@ -52,6 +52,8 @@ export const applykit_documents = pgTable("applykit_documents", {
   docType: text("doc_type").notNull(),
   contentMd: text("content_md").default(""),
   contentJson: jsonb("content_json").default({}),
+  pdfUrl: text("pdf_url"),
+  docxUrl: text("docx_url"),
   tokensUsed: integer("tokens_used").default(0),
   model: text("model").default(""),
   createdAt: timestamp("created_at").defaultNow(),

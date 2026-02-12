@@ -17,10 +17,55 @@ interface GenerationInput {
   templateId: string;
 }
 
-interface GeneratedDocuments {
-  resume: string;
-  coverLetter: string;
-  followupEmail: string;
+export interface ResumeJson {
+  header: {
+    name: string;
+    title: string;
+    email: string;
+    phone: string;
+    location: string;
+    linkedin?: string;
+    portfolio?: string;
+    github?: string;
+  };
+  summary: string;
+  experience: {
+    title: string;
+    company: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    bullets: string[];
+    relevanceScore?: number;
+  }[];
+  skills: { name: string; items: string[] }[];
+  education: { school: string; degree: string; field: string; year: string }[];
+  certifications?: { name: string; issuer: string; year: string }[];
+}
+
+export interface CoverLetterJson {
+  recipientName: string;
+  recipientTitle: string;
+  companyName: string;
+  date: string;
+  opening: string;
+  body: string[];
+  closing: string;
+  senderName: string;
+}
+
+export interface EmailJson {
+  subject: string;
+  greeting: string;
+  body: string;
+  signoff: string;
+  senderName: string;
+}
+
+export interface GeneratedDocuments {
+  resume: { md: string; json: ResumeJson };
+  coverLetter: { md: string; json: CoverLetterJson };
+  followupEmail: { md: string; json: EmailJson };
   model: string;
   tokensUsed: number;
 }
@@ -36,10 +81,21 @@ CRITICAL RULES:
 - Use ONLY facts from the provided profile data
 - If information is missing, omit it gracefully - do not invent
 - Keep resume to 1 page content (max 2 for senior roles)
-- Use 3-5 bullets per role max
 - Use active verbs and measurable outcomes ONLY if present in source
 - Remove filler phrases like "results-driven", "dynamic", "passionate"
 - Keep tense consistent (past for previous roles, present for current)
+- NEVER modify the candidate's master profile - all tailoring applies to output only
+
+INTELLIGENT RELEVANCE FILTERING:
+- Analyze the job description to identify: required skills, industry, responsibilities, keywords, seniority level
+- Score each experience role for relevance to this specific job
+- Include ONLY the top 2-4 most relevant roles in the resume
+- For each included role, select only the 3-5 most relevant bullets
+- Rewrite bullets for clarity and alignment with the job, but NEVER fabricate achievements
+- Exclude completely irrelevant roles (e.g., exclude retail experience for a senior engineering role)
+- If no roles are highly relevant, include the most recent roles and rewrite the summary to emphasize transferable skills
+- Always include at least 1 role minimum
+- Reorder skills to prioritize those mentioned in the job description
 
 TONE: ${input.tone}
 ${input.companyName ? `COMPANY: ${input.companyName}` : ""}
@@ -52,12 +108,27 @@ ${profileSummary}
 JOB DESCRIPTION:
 ${input.jobDescription.substring(0, 6000)}
 
-Generate THREE documents as a JSON object with these keys:
-1. "resume" - A tailored resume in markdown format. Include: name/contact header, professional summary (2-3 lines), relevant experience with tailored bullets, skills section, education. Match keywords from the job description where truthful.
-2. "coverLetter" - A cover letter (250-350 words) with: tailored opening referencing company/role, 1-2 proof points aligned to responsibilities, clear closing with call to action.
-3. "followupEmail" - A follow-up email (60-120 words) with subject line, professional greeting, brief reminder of application, and professional sign-off.
+Generate THREE documents as a JSON object with these exact keys:
 
-Return ONLY valid JSON with keys: resume, coverLetter, followupEmail. Each value is a string.`;
+1. "resume" - Object with:
+   - "md": Full tailored resume in markdown (name/contact header, summary, filtered experience with tailored bullets, skills, education)
+   - "json": Structured resume object with keys:
+     - "header": { name, title, email, phone, location, linkedin?, portfolio?, github? }
+     - "summary": string (2-3 line professional summary tailored to job)
+     - "experience": array of { title, company, location, startDate, endDate, bullets: string[], relevanceScore: number 0-100 }
+     - "skills": array of { name, items: string[] } (reordered by relevance)
+     - "education": array of { school, degree, field, year }
+     - "certifications": array of { name, issuer, year } (if any)
+
+2. "coverLetter" - Object with:
+   - "md": Full cover letter in markdown (250-350 words)
+   - "json": { recipientName, recipientTitle, companyName, date, opening, body: string[], closing, senderName }
+
+3. "followupEmail" - Object with:
+   - "md": Follow-up email in markdown (60-120 words) with subject line
+   - "json": { subject, greeting, body, signoff, senderName }
+
+Return ONLY valid JSON with keys: resume, coverLetter, followupEmail.`;
 
   const response = await openai.chat.completions.create({
     model,
@@ -66,7 +137,77 @@ Return ONLY valid JSON with keys: resume, coverLetter, followupEmail. Each value
       { role: "user", content: userPrompt },
     ],
     response_format: { type: "json_object" },
-    max_completion_tokens: 4096,
+    max_completion_tokens: 6000,
+  });
+
+  const content = response.choices[0]?.message?.content || "{}";
+  const tokensUsed = response.usage?.total_tokens || 0;
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new Error("Failed to parse AI response");
+  }
+
+  const resumeData = parsed.resume || {};
+  const coverLetterData = parsed.coverLetter || {};
+  const emailData = parsed.followupEmail || {};
+
+  return {
+    resume: {
+      md: resumeData.md || resumeData || "Generation failed - no resume content",
+      json: resumeData.json || buildFallbackResumeJson(input.profile),
+    },
+    coverLetter: {
+      md: coverLetterData.md || coverLetterData || "Generation failed - no cover letter content",
+      json: coverLetterData.json || { recipientName: "", recipientTitle: "", companyName: input.companyName || "", date: new Date().toLocaleDateString(), opening: "", body: [], closing: "", senderName: input.profile.fullName },
+    },
+    followupEmail: {
+      md: emailData.md || emailData || "Generation failed - no email content",
+      json: emailData.json || { subject: "", greeting: "", body: "", signoff: "", senderName: input.profile.fullName },
+    },
+    model,
+    tokensUsed,
+  };
+}
+
+export async function generateSingleDocument(
+  input: GenerationInput,
+  docType: "resume" | "cover_letter" | "followup_email"
+): Promise<{ md: string; json: any; model: string; tokensUsed: number }> {
+  const profileSummary = buildProfileSummary(input.profile);
+  const model = "gpt-5-mini";
+
+  const docPrompts: Record<string, string> = {
+    resume: `Generate a tailored resume as JSON with keys:
+- "md": Full resume in markdown format
+- "json": Structured resume with { header: { name, title, email, phone, location, linkedin?, portfolio?, github? }, summary: string, experience: [{ title, company, location, startDate, endDate, bullets: string[], relevanceScore: number }], skills: [{ name, items: string[] }], education: [{ school, degree, field, year }], certifications: [{ name, issuer, year }] }
+
+RELEVANCE FILTERING: Analyze job description, include only top 2-4 most relevant roles with 3-5 best bullets each. Exclude irrelevant experience. Reorder skills by relevance.`,
+    cover_letter: `Generate a cover letter (250-350 words) as JSON with keys:
+- "md": Full cover letter in markdown
+- "json": { recipientName, recipientTitle, companyName, date, opening, body: string[], closing, senderName }`,
+    followup_email: `Generate a follow-up email (60-120 words) as JSON with keys:
+- "md": Email with subject line in markdown
+- "json": { subject, greeting, body, signoff, senderName }`,
+  };
+
+  const systemPrompt = `You are an expert career consultant. Produce ATS-safe, premium-quality documents.
+CRITICAL: NEVER fabricate facts. Use ONLY data from the profile. NEVER modify the master profile.
+TONE: ${input.tone}
+${input.companyName ? `COMPANY: ${input.companyName}` : ""}
+${input.roleTitle ? `TARGET ROLE: ${input.roleTitle}` : ""}
+${input.hiringManager ? `HIRING MANAGER: ${input.hiringManager}` : ""}`;
+
+  const response = await openai.chat.completions.create({
+    model,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: `CANDIDATE PROFILE:\n${profileSummary}\n\nJOB DESCRIPTION:\n${input.jobDescription.substring(0, 6000)}\n\n${docPrompts[docType]}\n\nReturn ONLY valid JSON.` },
+    ],
+    response_format: { type: "json_object" },
+    max_completion_tokens: 4000,
   });
 
   const content = response.choices[0]?.message?.content || "{}";
@@ -80,11 +221,43 @@ Return ONLY valid JSON with keys: resume, coverLetter, followupEmail. Each value
   }
 
   return {
-    resume: parsed.resume || "Generation failed - no resume content",
-    coverLetter: parsed.coverLetter || "Generation failed - no cover letter content",
-    followupEmail: parsed.followupEmail || "Generation failed - no email content",
+    md: parsed.md || "",
+    json: parsed.json || parsed,
     model,
     tokensUsed,
+  };
+}
+
+function buildFallbackResumeJson(profile: Profile): ResumeJson {
+  const links = profile.links as any || {};
+  const exp = profile.experience as any || { roles: [] };
+  const skills = profile.skills as any || { groups: [] };
+  const edu = profile.education as any || { items: [] };
+  const certs = profile.certifications as any || { items: [] };
+
+  return {
+    header: {
+      name: profile.fullName,
+      title: profile.title || "",
+      email: profile.email || "",
+      phone: profile.phone || "",
+      location: profile.location || "",
+      linkedin: links.linkedin,
+      portfolio: links.portfolio,
+      github: links.github,
+    },
+    summary: profile.summaryBase || "",
+    experience: (exp.roles || []).map((r: any) => ({
+      title: r.title,
+      company: r.company,
+      location: r.location,
+      startDate: r.startDate,
+      endDate: r.endDate,
+      bullets: r.bullets || [],
+    })),
+    skills: (skills.groups || []).map((g: any) => ({ name: g.name, items: g.items || [] })),
+    education: edu.items || [],
+    certifications: certs.items?.length ? certs.items : undefined,
   };
 }
 

@@ -24,8 +24,12 @@ export interface IStorage {
   createApplication(data: InsertApplication): Promise<Application>;
   updateApplicationStatus(id: number, status: string): Promise<void>;
   getDocuments(applicationId: number): Promise<AppDocument[]>;
+  getDocument(id: number): Promise<AppDocument | undefined>;
+  getDocumentByType(applicationId: number, docType: string): Promise<AppDocument | undefined>;
   createDocument(data: InsertDocument): Promise<AppDocument>;
+  updateDocument(id: number, data: Partial<{ contentMd: string; contentJson: any }>): Promise<AppDocument>;
   deleteDocumentsByApplication(applicationId: number): Promise<void>;
+  deleteDocumentByType(applicationId: number, docType: string): Promise<void>;
   getUsage(userId: string): Promise<Usage | undefined>;
   incrementUsage(userId: string, field: "applicationsGenerated" | "regenerations"): Promise<void>;
   getTemplates(): Promise<Template[]>;
@@ -91,13 +95,44 @@ class DatabaseStorage implements IStorage {
       .where(eq(applykit_documents.applicationId, applicationId));
   }
 
+  async getDocument(id: number): Promise<AppDocument | undefined> {
+    const [doc] = await db
+      .select()
+      .from(applykit_documents)
+      .where(eq(applykit_documents.id, id));
+    return doc;
+  }
+
+  async getDocumentByType(applicationId: number, docType: string): Promise<AppDocument | undefined> {
+    const [doc] = await db
+      .select()
+      .from(applykit_documents)
+      .where(and(eq(applykit_documents.applicationId, applicationId), eq(applykit_documents.docType, docType)));
+    return doc;
+  }
+
   async createDocument(data: InsertDocument): Promise<AppDocument> {
     const [doc] = await db.insert(applykit_documents).values(data).returning();
     return doc;
   }
 
+  async updateDocument(id: number, data: Partial<{ contentMd: string; contentJson: any }>): Promise<AppDocument> {
+    const [doc] = await db
+      .update(applykit_documents)
+      .set(data)
+      .where(eq(applykit_documents.id, id))
+      .returning();
+    return doc;
+  }
+
   async deleteDocumentsByApplication(applicationId: number): Promise<void> {
     await db.delete(applykit_documents).where(eq(applykit_documents.applicationId, applicationId));
+  }
+
+  async deleteDocumentByType(applicationId: number, docType: string): Promise<void> {
+    await db.delete(applykit_documents).where(
+      and(eq(applykit_documents.applicationId, applicationId), eq(applykit_documents.docType, docType))
+    );
   }
 
   async getUsage(userId: string): Promise<Usage | undefined> {
