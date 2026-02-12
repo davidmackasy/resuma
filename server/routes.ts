@@ -3,6 +3,38 @@ import { createServer, type Server } from "http";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { storage } from "./storage";
 import { generateDocuments } from "./generation";
+import { extractTextFromFile, parseResumeText } from "./resume-parser";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+const uploadsDir = path.join(process.cwd(), "uploads", "resumes");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadsDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      const uniqueName = `${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`;
+      cb(null, uniqueName);
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF and DOCX files are supported"));
+    }
+  },
+});
 
 export async function registerRoutes(
   httpServer: Server,
@@ -29,6 +61,11 @@ export async function registerRoutes(
           experience: { roles: [] },
           education: { items: [] },
           certifications: { items: [] },
+          resumeInputMethod: null,
+          resumeFileUrl: null,
+          resumeFileType: null,
+          resumeVersion: 0,
+          structuredComplete: false,
         });
       }
       res.json(profile);
@@ -47,6 +84,62 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error saving profile:", error);
       res.status(500).json({ message: "Failed to save profile" });
+    }
+  });
+
+  app.post("/api/applykit/profile/upload", isAuthenticated, upload.single("resume"), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const file = req.file;
+
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const rawText = await extractTextFromFile(file.path, file.mimetype);
+
+      if (!rawText || rawText.trim().length < 50) {
+        fs.unlinkSync(file.path);
+        return res.status(400).json({
+          message: "Could not extract enough text from this file. Please try a different file or create your profile manually.",
+        });
+      }
+
+      const parsed = await parseResumeText(rawText);
+
+      const existing = await storage.getProfile(userId);
+      const nextVersion = existing ? (existing.resumeVersion || 0) + 1 : 1;
+
+      const profile = await storage.upsertProfile(userId, {
+        fullName: parsed.fullName,
+        title: parsed.title,
+        location: parsed.location,
+        email: parsed.email,
+        phone: parsed.phone,
+        links: parsed.links,
+        summaryBase: parsed.summaryBase,
+        skills: parsed.skills,
+        experience: parsed.experience,
+        education: parsed.education,
+        certifications: parsed.certifications,
+        resumeInputMethod: "upload",
+        resumeFileUrl: file.path,
+        resumeFileType: file.mimetype,
+        resumeVersion: nextVersion,
+        structuredComplete: false,
+      });
+
+      res.json({
+        profile,
+        warnings: parsed.warnings,
+        rawTextLength: rawText.length,
+      });
+    } catch (error: any) {
+      console.error("Error uploading resume:", error);
+      if (req.file?.path) {
+        try { fs.unlinkSync(req.file.path); } catch {}
+      }
+      res.status(500).json({ message: error.message || "Failed to process resume" });
     }
   });
 
@@ -112,8 +205,8 @@ export async function registerRoutes(
       }
 
       const profile = await storage.getProfile(userId);
-      if (!profile || !profile.fullName) {
-        return res.status(400).json({ message: "Please set up your profile first" });
+      if (!profile || !profile.fullName || !profile.structuredComplete) {
+        return res.status(400).json({ message: "Please complete your career profile setup first" });
       }
 
       const usage = await storage.getUsage(userId);

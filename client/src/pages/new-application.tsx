@@ -70,7 +70,7 @@ export default function NewApplication() {
     },
   });
 
-  const hasProfile = profile && profile.fullName;
+  const hasProfile = profile && profile.fullName && profile.structuredComplete;
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
@@ -88,18 +88,18 @@ export default function NewApplication() {
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-sm">Profile required</p>
+              <p className="font-medium text-sm">Career profile required</p>
               <p className="text-sm text-muted-foreground mt-1">
-                You need to set up your profile first before generating applications.
+                Complete your career profile setup before generating applications.
               </p>
               <Button
                 variant="outline"
                 size="sm"
                 className="mt-2"
-                onClick={() => navigate("/app/profile")}
+                onClick={() => navigate("/app/profile/setup")}
                 data-testid="button-go-to-profile"
               >
-                Set up profile
+                Set up career profile
               </Button>
             </div>
           </div>

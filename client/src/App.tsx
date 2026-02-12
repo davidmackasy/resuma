@@ -17,6 +17,7 @@ import NewApplication from "@/pages/new-application";
 import ApplicationsPage from "@/pages/applications";
 import ApplicationDetail from "@/pages/application-detail";
 import SettingsPage from "@/pages/settings";
+import ProfileSetup from "@/pages/profile-setup";
 
 function AppShell() {
   const style = {
@@ -39,6 +40,7 @@ function AppShell() {
               <Route path="/app/new" component={NewApplication} />
               <Route path="/app/applications" component={ApplicationsPage} />
               <Route path="/app/applications/:id" component={ApplicationDetail} />
+              <Route path="/app/profile/setup" component={ProfileSetup} />
               <Route path="/app/profile" component={ProfilePage} />
               <Route path="/app/settings" component={SettingsPage} />
               <Route component={NotFound} />
@@ -76,8 +78,7 @@ function RootRouter() {
   return (
     <Switch>
       <Route path="/">{() => { window.location.href = "/app"; return null; }}</Route>
-      <Route path="/app/:rest*" component={AppShell} />
-      <Route path="/app" component={AppShell} />
+      <Route path="/app/*?" component={AppShell} />
       <Route component={NotFound} />
     </Switch>
   );

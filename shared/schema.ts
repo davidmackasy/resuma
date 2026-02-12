@@ -20,6 +20,11 @@ export const applykit_profiles = pgTable("applykit_profiles", {
   experience: jsonb("experience").$type<{ roles: { company: string; title: string; location: string; startDate: string; endDate: string; bullets: string[] }[] }>().default({ roles: [] }),
   education: jsonb("education").$type<{ items: { school: string; degree: string; field: string; year: string }[] }>().default({ items: [] }),
   certifications: jsonb("certifications").$type<{ items: { name: string; issuer: string; year: string }[] }>().default({ items: [] }),
+  resumeInputMethod: text("resume_input_method").default("manual"),
+  resumeFileUrl: text("resume_file_url"),
+  resumeFileType: text("resume_file_type"),
+  resumeVersion: integer("resume_version").notNull().default(1),
+  structuredComplete: boolean("structured_complete").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

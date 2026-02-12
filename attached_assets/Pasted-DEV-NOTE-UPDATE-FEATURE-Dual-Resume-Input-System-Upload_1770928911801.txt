@@ -1,0 +1,396 @@
+DEV NOTE UPDATE
+FEATURE: Dual Resume Input System (Upload OR Create)
+GOAL: Allow users to either upload an existing resume to auto-fill their profile OR manually create a resume from scratch. All structured data must be saved as the user’s Master Career Profile and used for all future tailored generations.
+CRITICAL: Do not break authentication. Do not break Stripe. Do not modify unrelated modules. Only extend ApplyKit module.
+
+OVERVIEW
+
+We are upgrading the Profile setup flow.
+
+Users must have two clear options:
+
+Upload Existing Resume (auto-extract + auto-fill profile)
+
+Create Resume From Scratch (manual structured builder)
+
+Both paths must result in the same outcome:
+A fully structured applykit_profile record that becomes the single source of truth for all job applications.
+
+USER FLOW CHANGES
+
+A) First Time Setup (Profile Required Before Generating)
+
+When user visits:
+
+/applykit/app/new
+
+OR /applykit/app/profile
+
+If applykit_profile does NOT exist:
+Redirect to:
+
+/applykit/app/profile/setup
+
+This setup page shows:
+
+TITLE:
+“Set up your career profile”
+
+SUBTEXT:
+Upload your resume or create one from scratch. This will be used to tailor your applications automatically.
+
+Two large option cards:
+
+OPTION A: Upload Resume
+OPTION B: Create Resume
+
+Clean UI. No clutter.
+
+OPTION A: UPLOAD RESUME (AUTO-FILL FLOW)
+
+STEP 1: Upload File
+Accept:
+
+PDF
+
+DOCX
+
+Storage:
+applykit/master_resumes/{user_id}/v{resume_version}.{ext}
+
+Save path in:
+applykit_profiles.resume_file_url
+
+STEP 2: Server-Side Parsing
+
+Extract text.
+
+Normalize into structured JSON:
+
+{
+full_name,
+title,
+location,
+email,
+phone,
+links: {},
+summary_base,
+experience: [
+{
+company,
+role,
+start_date,
+end_date,
+bullets: []
+}
+],
+education: [],
+skills: {
+groups: [
+{ name: "Technical Skills", items: [] }
+]
+},
+certifications: []
+}
+
+IMPORTANT:
+Parsing is draft quality only.
+Never assume perfection.
+Never invent missing data.
+
+STEP 3: Profile Editor Review Screen
+
+After parsing, user sees structured editor:
+
+Sections:
+
+Header (name, title, location, links)
+
+Summary
+
+Experience (editable roles + bullet lists)
+
+Skills (grouped editor)
+
+Education
+
+Certifications
+
+User must confirm and save.
+
+Button:
+“Save Career Profile”
+
+Only after saving can they generate applications.
+
+OPTION B: CREATE RESUME FROM SCRATCH
+
+Instead of uploading, user clicks:
+
+“Create Resume”
+
+Load structured form identical to post-parse editor.
+
+User manually fills:
+
+Header:
+
+Name
+
+Title
+
+Location
+
+Email
+
+Phone
+
+Links
+
+Experience:
+Add Role
+
+Company
+
+Role
+
+Dates
+
+Add bullets (min 1 required)
+
+Skills:
+Add group
+Add skills per group
+
+Education:
+Add entries
+
+Certifications:
+Optional
+
+This uses same applykit_profiles schema.
+
+On Save:
+Create profile record.
+resume_file_url remains null.
+resume_version = 1.
+
+DATABASE ADJUSTMENTS
+
+No new tables required.
+We are extending usage of applykit_profiles.
+
+Ensure fields exist:
+
+applykit_profiles
+
+resume_input_method (text) // “upload” or “manual”
+
+resume_file_url (nullable)
+
+resume_file_type (nullable)
+
+resume_version (int)
+
+structured_complete (bool default false)
+
+When user finishes setup:
+structured_complete = true
+
+Before allowing generation:
+Check structured_complete = true
+
+PROFILE PAGE UPDATE
+
+/profile now supports:
+
+If profile exists:
+Show:
+
+Section 1: Career Profile Summary Card
+
+Name
+
+Title
+
+Last updated
+
+Resume input method
+
+Section 2: Edit Career Profile button
+
+Section 3: Resume Version History (phase 2 optional)
+
+Section 4: Replace Resume
+If upload method:
+
+Allow upload new version
+
+Increment resume_version
+
+Re-parse
+
+Show diff confirmation screen
+
+If manual method:
+
+“Switch to Upload” option available
+
+NEW APPLICATION FLOW VALIDATION
+
+Before generating:
+
+On /applykit/app/new:
+
+Check:
+
+Profile exists
+
+structured_complete = true
+
+If not:
+Redirect to profile setup.
+
+GENERATION LOGIC UPDATE
+
+Generation pipeline must always pull from:
+
+applykit_profiles structured JSON
+
+NEVER parse raw resume again during generation.
+
+Resume tailoring works like this:
+
+Input:
+
+structured profile JSON
+
+job description
+
+template_id
+
+tone
+
+Process:
+
+Extract job requirements
+
+Select relevant experience + skills
+
+Rewrite summary and bullets only from approved structured data
+
+Generate:
+
+Resume
+
+Cover letter
+
+Email
+
+No dependency on original file after setup.
+
+UX SIMPLIFICATION RULES
+
+We must keep this powerful but not complicated.
+
+Rules:
+
+Never show both upload and full manual form at once.
+
+Use stepper UI during setup:
+Step 1: Choose method
+Step 2: Edit structured data
+Step 3: Save
+
+No advanced customization.
+
+No drag/drop resume layout.
+
+No template editing in profile.
+
+EDGE CASE HANDLING
+
+Case 1: Uploaded resume has missing email/phone
+Show warning banner:
+“Some information couldn’t be extracted. Please review before saving.”
+
+Case 2: User deletes all experience accidentally
+Block save.
+Require minimum:
+
+Name
+
+At least 1 role
+
+At least 1 bullet
+
+At least 1 skill group
+
+Case 3: User wants to reset everything
+Add:
+“Reset Career Profile” in settings.
+Deletes applykit_profiles record and associated documents.
+
+PERFORMANCE REQUIREMENTS
+
+Resume parsing must:
+
+Finish under 5 seconds typical
+
+Return structured draft
+
+Not block UI silently
+
+If parsing fails:
+Return raw extracted text
+Allow manual editing fallback
+
+Never fully fail the setup flow.
+
+MOBILE RESPONSIVENESS
+
+On mobile:
+
+Setup flow vertical stacked cards
+
+Large touch targets
+
+Sticky bottom Save button
+
+Experience roles collapse into accordion
+
+No horizontal scrolling.
+
+ACCEPTANCE CRITERIA
+
+User can:
+
+Upload resume and auto-fill profile
+
+Manually create resume profile
+
+Edit and save structured data
+
+Generate tailored documents using structured data
+
+Replace uploaded resume with new version
+
+Use profile repeatedly without re-uploading
+
+System must:
+
+Store structured career profile as source of truth
+
+Never fabricate experience
+
+Never depend on resume file after setup
+
+Not interfere with existing authentication or billing
+
+This upgrade makes the product:
+
+More useful
+More flexible
+Less confusing
+More premium
+Still simple
