@@ -1,0 +1,649 @@
+DEV NOTE
+PROJECT: Premium Resume Tailor Web App
+GOAL: User uploads master resume once. User pastes job description. App generates 3 outputs: tailored resume (ATS-safe), cover letter, follow-up email. User can preview and download PDFs. App includes dashboard, profile, history, settings, and Stripe plans.
+CRITICAL: Do not break authentication. Do not break Stripe. Do not change unrelated pages/modules. Build this as a standalone app module with isolated routes, isolated tables, isolated APIs.
+
+TECH STACK (ASSUMED)
+Frontend
+
+Next.js (App Router)
+
+TypeScript
+
+Tailwind + shadcn/ui
+
+React Hook Form + zod
+Backend
+
+Next.js API routes (Route Handlers) or separate Node service (keep minimal)
+
+OpenAI text model for generation
+Data
+
+Supabase Postgres (or existing Postgres)
+
+Supabase Storage (for resume uploads and generated PDFs)
+Auth
+
+Existing auth (Supabase Auth / NextAuth). Do not modify auth logic.
+Billing
+
+Stripe subscriptions with 3 tiers. Do not modify existing Stripe logic. Add new product/price IDs only.
+
+ROUTES AND PAGES (STANDALONE)
+All new pages under /applykit (or /careerkit). Do not mix into Pixifield/TasksMet routes.
+
+Public
+
+/applykit (landing)
+
+/applykit/pricing
+
+Authed App Shell
+
+/applykit/app (Dashboard)
+
+/applykit/app/new (New Application)
+
+/applykit/app/applications (History list)
+
+/applykit/app/applications/[id] (Application detail: Resume/Cover/Email preview + download)
+
+/applykit/app/profile (Master resume + parsed profile data editor)
+
+/applykit/app/settings (Plan, billing portal link, preferences, export/delete)
+
+CORE USER FLOW
+A) Onboarding
+
+User signs up
+
+Redirect to /applykit/app/profile
+
+Prompt: Upload master resume (PDF/DOCX)
+
+Parse + store structured profile
+
+User can edit extracted content before generating anything
+
+B) New Application
+
+User goes to /applykit/app/new
+
+Paste job description
+
+Optional: company name, role title, location, hiring manager name, link
+
+Select format template (4–6 locked templates)
+
+Select tone (Professional, Confident, Warm, Direct)
+
+Click Generate
+
+System creates Application record + three Documents (resume, cover letter, email)
+
+User lands on Application detail page with previews and downloads
+
+C) History
+
+Dashboard shows recent applications
+
+History list shows all applications with status tags
+
+Re-open any application, regenerate, or download again
+
+DATA MODEL (POSTGRES)
+Create new tables only. Prefix with applykit_ to avoid collisions.
+
+applykit_profiles
+
+id (uuid, pk)
+
+user_id (uuid, indexed, unique)
+
+full_name (text)
+
+title (text)
+
+location (text)
+
+email (text)
+
+phone (text)
+
+links (jsonb) // linkedin, portfolio, github
+
+summary_base (text) // optional base summary
+
+skills (jsonb) // grouped list: {groups:[{name, items[]}]}
+
+experience (jsonb) // array of roles with bullets
+
+education (jsonb)
+
+certifications (jsonb)
+
+resume_file_url (text) // storage path for uploaded master resume
+
+resume_file_type (text) // pdf/docx
+
+resume_version (int default 1)
+
+created_at, updated_at
+
+applykit_applications
+
+id (uuid, pk)
+
+user_id (uuid, indexed)
+
+company_name (text)
+
+role_title (text)
+
+job_location (text)
+
+job_url (text)
+
+hiring_manager (text)
+
+job_description (text) // raw pasted
+
+tone (text) // enum-like
+
+template_id (text) // “modern_minimal”, etc.
+
+status (text) // “generated”, “failed”, “draft”
+
+created_at, updated_at
+
+applykit_documents
+
+id (uuid, pk)
+
+application_id (uuid, indexed)
+
+user_id (uuid, indexed)
+
+doc_type (text) // “resume”, “cover_letter”, “followup_email”
+
+content_md (text) // canonical content in markdown-like format
+
+content_json (jsonb) // structured sections for consistent rendering
+
+pdf_url (text) // storage path of rendered PDF
+
+tokens_used (int) // optional
+
+model (text)
+
+created_at, updated_at
+
+applykit_usage
+
+id (uuid, pk)
+
+user_id (uuid, indexed)
+
+period_start (date)
+
+period_end (date)
+
+applications_generated (int default 0)
+
+regenerations (int default 0)
+
+created_at, updated_at
+
+applykit_templates
+
+id (text, pk) // “modern_minimal”
+
+name (text)
+
+description (text)
+
+config (jsonb) // typography, spacing, layout rules
+
+is_active (bool default true)
+
+TEMPLATES (LOCKED, PREMIUM, ATS-SAFE)
+Provide 4 to start:
+
+modern_minimal
+
+professional_corporate
+
+tech_product
+
+executive_clean
+
+Template config should control:
+
+font family (stick to safe web fonts for rendering consistency)
+
+header style (name size, separators)
+
+section order
+
+spacing scale
+
+bullet style
+
+Do NOT allow users to drag/drop layout. Only template selection + maybe section order toggle later.
+
+FILE UPLOAD AND PARSING
+Upload
+
+Accept PDF and DOCX
+
+Store original file in Supabase Storage: applykit/master_resumes/{user_id}/v{resume_version}.{ext}
+
+Save path in applykit_profiles.resume_file_url
+
+Parsing strategy (MVP)
+
+If DOCX: use docx parser (server side) to extract text reliably
+
+If PDF: extract text with a PDF text extractor (server side)
+
+Convert to a normalized “profile draft”:
+
+Contact block
+
+Experience roles and bullets
+
+Skills list
+
+Education
+
+Show extracted data in UI for user to fix before first generation
+Important: parsing will never be perfect. The UI editor is mandatory.
+
+GENERATION ARCHITECTURE (PROMPTING)
+Do not “rewrite everything blindly”. Use a controlled pipeline.
+
+Step 1: Job extraction
+Input: job_description
+Output JSON:
+
+role_title
+
+seniority
+
+required_skills[]
+
+preferred_skills[]
+
+responsibilities[]
+
+keywords[]
+
+tone_hint
+
+Step 2: Profile selection
+Input: applykit_profiles (structured) + job JSON
+Output JSON:
+
+selected_experience_roles[]
+
+selected_bullets_by_role
+
+selected_skills_grouped
+
+suggested_summary_points
+
+gaps_or_unknowns (do not invent, just flag)
+
+Step 3: Generate each doc (resume, cover, email)
+Use the selected JSON so the model writes only from approved facts.
+Hard rule: no fabricated companies, dates, degrees, awards.
+
+Resume output requirements
+
+1 page preferred, 2 pages allowed for senior roles
+
+3–5 bullets per role max
+
+Active verbs, measurable outcomes if present in source bullets
+
+No buzzword soup
+
+ATS-safe formatting
+
+Cover letter requirements
+
+max 250–350 words unless user chooses “long”
+
+tailored opening referencing company/role
+
+1–2 proof points aligned to responsibilities
+
+clear close
+
+Email requirements
+
+initial application email: 60–120 words
+
+follow-up email: 60–120 words
+
+subject line included
+
+professional and human
+
+Store output in:
+
+content_json (structured sections)
+
+content_md (human readable)
+
+PDF RENDERING (CRITICAL FOR “PREMIUM”)
+Requirement: “download in PDF format” with consistent design.
+
+Recommended approach (stable)
+Option A: Server-side HTML to PDF via Playwright/Puppeteer
+
+Build HTML templates per template_id
+
+Render to PDF on server
+
+Upload to storage and store pdf_url
+Pros: best typography control, consistent output
+
+Option B: @react-pdf/renderer
+
+Create PDF components per template
+Pros: pure React, simpler deploy
+Cons: fonts/layout can be tricky
+
+Pick one and standardize. Do not mix.
+
+Also provide:
+
+Copy text (for email)
+
+Optional DOCX export later (phase 2)
+
+API ENDPOINTS (NEXT.JS ROUTE HANDLERS)
+All endpoints under /api/applykit/*
+
+Profile
+
+POST /api/applykit/profile/upload
+
+uploads master resume
+
+parses text
+
+returns extracted draft JSON for UI confirmation
+
+PUT /api/applykit/profile
+
+saves edited structured profile
+
+Applications
+
+POST /api/applykit/applications
+
+creates application
+
+validates plan limits
+
+runs generation pipeline
+
+creates documents
+
+kicks off PDF rendering
+
+returns application_id
+
+GET /api/applykit/applications?limit=&cursor=
+
+GET /api/applykit/applications/[id]
+
+POST /api/applykit/applications/[id]/regenerate
+
+regenerate selected docs
+
+increments usage
+
+Documents
+
+GET /api/applykit/documents/[id]/pdf (signed url)
+
+GET /api/applykit/documents/[id]/content (for preview)
+
+Usage
+
+GET /api/applykit/usage
+
+returns month usage, remaining
+
+PLAN LIMITS AND BILLING
+Plans (example)
+
+Starter: $8/mo
+
+15 applications/month
+
+15 regenerations/month
+
+Pro: $29/mo
+
+80 applications/month
+
+120 regenerations/month
+
+Max: $39/mo
+
+200 applications/month
+
+300 regenerations/month
+
+Rules
+
+One “application” = initial generation of all 3 docs
+
+Regeneration counts only when user clicks regenerate
+
+Download does not count
+
+Implementation
+
+On every generation/regeneration:
+
+read user plan from existing Stripe subscription state
+
+update applykit_usage for current billing period
+
+enforce hard limits with clean error messages
+Do not change existing Stripe webhook logic. Add a small “plan resolver” helper used by applykit only.
+
+UI/UX SPEC (PREMIUM FEEL)
+App Shell
+
+Left sidebar: Dashboard, New Application, History, Profile, Settings
+
+Top bar: plan badge + usage counter + account menu
+
+Dashboard
+
+Primary CTA: New Application
+
+Cards: last 5 applications
+
+Usage ring or simple counter: “7 ofD left this month”
+
+Profile page
+
+Upload resume area
+
+After parse: section editor UI
+
+Experience list with role cards
+
+Bullet editor with add/remove
+
+Skills grouped editor
+
+Education editor
+
+Save button fixed at bottom on mobile
+
+New Application page
+
+Job description large input
+
+Optional fields collapsed (company, role title, link)
+
+Template picker grid (4)
+
+Tone picker (segmented control)
+
+Generate button
+
+Clear usage cost shown: “Uses 1 application”
+
+Application detail
+
+Tabs: Resume | Cover Letter | Email
+
+Each tab shows:
+
+Preview (PDF-like)
+
+Download PDF
+
+Copy text (cover/email)
+
+Regenerate (dropdown: regenerate this doc only vs all)
+
+Right rail on desktop:
+
+Job summary
+
+Matched keywords (phase 2)
+
+Mobile
+
+Sticky bottom bar: Download, Copy, Regenerate
+
+Preview scroll with clear section anchors
+
+QUALITY RULES (NO “AI SMELL”)
+Enforce these in prompts and post-processing:
+
+Limit summary to 2–3 lines
+
+Limit bullets to 1–2 lines each when possible
+
+Remove filler phrases (“results-driven”, “dynamic”, etc.)
+
+Keep tense consistent
+
+No invented metrics. Only use metrics already in profile bullets
+
+If missing info, do not guess. Either omit or mark as optional in editor.
+
+SECURITY AND DATA
+
+Store job_description and generated docs as user-private.
+
+Row Level Security (RLS) on all applykit tables by user_id.
+
+Use signed URLs for PDFs in storage.
+
+Add “Delete all data” in Settings:
+
+delete applykit tables rows
+
+delete storage files paths
+
+OBSERVABILITY + RELIABILITY
+
+Log each generation with:
+
+user_id
+
+application_id
+
+model
+
+token estimate
+
+duration
+
+success/failure
+
+Handle failures gracefully:
+
+Application status “failed”
+
+Retry button
+
+Keep partial results if 1 of 3 docs succeeded
+
+IMPLEMENTATION TASK LIST (ORDER)
+Phase 1: Foundations
+
+Create DB tables + RLS policies
+
+Add storage buckets/folders for applykit
+
+Build routes/pages skeleton with app shell
+
+Implement profile upload + parsing + editor + save
+
+Phase 2: Generation
+5. Implement plan resolver + usage enforcement
+6. Build generation pipeline steps 1–3
+7. Save docs to applykit_documents
+8. Build application history list
+
+Phase 3: PDF
+9. Build HTML/PDF renderer for 4 templates
+10. Render PDFs on generation and store pdf_url
+11. Application detail preview pulls PDF and shows embedded preview
+
+Phase 4: Polish
+12. Regenerate flows (doc-only and all)
+13. Settings page: billing link + data export/delete
+14. QA: mobile responsiveness, PDF spacing, ATS-safe output checks
+
+ACCEPTANCE CRITERIA
+
+User can upload master resume and edit parsed profile
+
+User can paste a job description and generate:
+
+tailored resume
+
+cover letter
+
+follow-up email
+
+Outputs are consistent in tone and facts
+
+Resume is ATS-safe and looks premium in PDF
+
+User can download PDFs for each document
+
+Dashboard and History show prior applications
+
+Plan limits enforced correctly
+
+No changes to existing auth or Stripe flows outside a plan resolver helper
+
+No other product modules affected
+
+EDGE CASES TO HANDLE
+
+User has no profile yet: redirect to profile upload
+
+Very long job description: truncate safely after N chars and keep requirements section
+
+Missing company/role: extract from job description, else leave blank cleanly
+
+PDF rendering failure: still allow copy text while PDF retries
+
+Multiple resume versions: increment resume_version and keep prior applications intact
