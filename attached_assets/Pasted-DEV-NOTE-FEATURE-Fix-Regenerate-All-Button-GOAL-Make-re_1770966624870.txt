@@ -1,0 +1,225 @@
+DEV NOTE
+FEATURE: Fix “Regenerate All” Button
+GOAL: Make regenerate all reliably re-run generation pipeline without crashing
+SCOPE: ApplyKit only
+DO NOT modify profile logic, Stripe, or existing working generation.
+
+SECTION 1: FRONTEND FIX
+
+Check current button handler.
+
+Likely you have:
+
+onClick={handleRegenerateAll}
+
+Inside it, ensure:
+
+You are sending application_id correctly.
+
+Correct implementation:
+
+const handleRegenerateAll = async () => {
+setLoading(true)
+
+const res = await fetch(/api/applykit/applications/${applicationId}/regenerate, {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({
+regenerate: "all"
+})
+})
+
+const data = await res.json()
+
+if (!res.ok) {
+console.error(data)
+toast.error("Regeneration failed")
+return
+}
+
+router.refresh()
+setLoading(false)
+}
+
+Critical:
+Make sure applicationId is defined and not undefined.
+
+SECTION 2: BACKEND ENDPOINT FIX
+
+File:
+POST /api/applykit/applications/[id]/regenerate
+
+Replace unsafe logic with structured regeneration.
+
+Correct backend structure:
+
+Get session user
+
+Validate ownership
+
+Fetch existing application
+
+Fetch job analysis
+
+Fetch profile
+
+Re-run generation
+
+UPDATE documents (not insert duplicate)
+
+Re-render PDF
+
+Return success
+
+SECTION 3: COMMON FAILURE CAUSE
+
+You are probably doing:
+
+insert into applykit_documents
+
+Instead of updating existing ones.
+
+If doc_type = resume already exists,
+unique constraint or conflict may occur.
+
+Fix:
+
+Use update, not insert.
+
+Example:
+
+await supabase
+.from("applykit_documents")
+.update({
+content_json: newResumeJson,
+content_md: newResumeMd,
+updated_at: new Date()
+})
+.eq("application_id", applicationId)
+.eq("doc_type", "resume")
+
+Repeat for:
+cover_letter
+email
+
+Do NOT insert new row.
+
+SECTION 4: ENSURE JOB ANALYSIS EXISTS
+
+Before regenerating:
+
+const { data: analysis } = await supabase
+.from("applykit_job_analysis")
+.select("*")
+.eq("application_id", applicationId)
+.single()
+
+If analysis is null:
+Return 400 instead of crashing.
+
+if (!analysis) {
+return NextResponse.json(
+{ message: "Missing job analysis data" },
+{ status: 400 }
+)
+}
+
+SECTION 5: WRAP GENERATION IN TRY/CATCH
+
+Right now 500 likely means error thrown but not caught.
+
+Fix endpoint:
+
+try {
+// generation logic
+} catch (error) {
+console.error("Regenerate error:", error)
+
+return NextResponse.json(
+{ message: "Regeneration failed" },
+{ status: 500 }
+)
+}
+
+Never let unhandled error crash route.
+
+SECTION 6: PDF RENDERING SAFETY
+
+If PDF regeneration fails,
+DO NOT fail entire request.
+
+Wrap PDF render in separate try/catch:
+
+try {
+await renderResumePDF()
+} catch (pdfError) {
+console.error("PDF render failed", pdfError)
+}
+
+Always return success if text generation succeeded.
+
+SECTION 7: SAFE REGENERATION FLOW
+
+Correct logic:
+
+Fetch application
+
+Fetch profile
+
+Fetch job analysis
+
+Re-run prompt 3 only
+
+Update documents
+
+Attempt PDF regeneration
+
+Return success JSON
+
+Do NOT:
+
+Recreate application row
+
+Recreate job analysis
+
+Modify profile
+
+Modify Stripe
+
+Insert duplicate docs
+
+SECTION 8: RESPONSE STRUCTURE
+
+Return:
+
+return NextResponse.json({
+success: true
+})
+
+Frontend checks success.
+
+SECTION 9: ACCEPTANCE CRITERIA
+
+When user clicks Regenerate All:
+
+• No 500 error
+• Resume updates
+• Cover letter updates
+• Email updates
+• PDF re-download works
+• No duplicate document rows created
+• No change to profile data
+• No change to subscription logic
+
+LIKELY ROOT ISSUE
+
+Based on your screenshot and experience:
+
+You are probably trying to:
+
+Insert new applykit_documents row
+with same unique constraint
+or missing job_analysis fetch
+causing crash
+
+The update instead of insert will fix it.

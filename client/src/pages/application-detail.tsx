@@ -363,7 +363,7 @@ function DocumentPanel({
     <Card className="mt-4">
       <div className="flex flex-wrap items-center justify-between gap-2 p-3 border-b">
         <div className="flex items-center gap-1.5">
-          {canExport && hasStructuredContent && onDownload && (
+          {canExport && hasStructuredContent && onDownload ? (
             <>
               <Button
                 variant="outline"
@@ -384,7 +384,7 @@ function DocumentPanel({
                 DOCX
               </Button>
             </>
-          )}
+          ) : null}
         </div>
         <div className="flex items-center gap-1.5">
           {editing ? (

@@ -388,7 +388,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Profile not found" });
       }
 
-      const { docType } = req.body;
+      const docType = req.body?.docType;
       const genInput = {
         profile,
         jobDescription: application.jobDescription,
