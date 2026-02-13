@@ -45,6 +45,48 @@ export const applykit_applications = pgTable("applykit_applications", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const applykit_job_analysis = pgTable("applykit_job_analysis", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id").notNull().references(() => applykit_applications.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  jobDescription: text("job_description").notNull(),
+  fitScore: integer("fit_score").notNull().default(0),
+  matchedSkills: jsonb("matched_skills").$type<string[]>().default([]),
+  missingSkills: jsonb("missing_skills").$type<string[]>().default([]),
+  riskFlags: jsonb("risk_flags").$type<{ type: string; severity: string; message: string }[]>().default([]),
+  transferableAngle: jsonb("transferable_angle").$type<{ title: string; explanation: string }>().default({ title: "", explanation: "" }),
+  suggestedAdditions: jsonb("suggested_additions").$type<{
+    id: string;
+    type: string;
+    targetRole: string;
+    originalBullet: string;
+    improvedBullet: string;
+    reason: string;
+  }[]>().default([]),
+  jobExtraction: jsonb("job_extraction").$type<{
+    jobCategory: string;
+    industry: string;
+    seniorityLevel: string;
+    requiredSkills: string[];
+    preferredSkills: string[];
+    responsibilities: string[];
+    certificationsRequired: string[];
+    yearsExperienceRequired: string;
+    keywords: string[];
+  }>().default({
+    jobCategory: "",
+    industry: "",
+    seniorityLevel: "",
+    requiredSkills: [],
+    preferredSkills: [],
+    responsibilities: [],
+    certificationsRequired: [],
+    yearsExperienceRequired: "",
+    keywords: [],
+  }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const applykit_documents = pgTable("applykit_documents", {
   id: serial("id").primaryKey(),
   applicationId: integer("application_id").notNull().references(() => applykit_applications.id),
@@ -54,6 +96,7 @@ export const applykit_documents = pgTable("applykit_documents", {
   contentJson: jsonb("content_json").default({}),
   pdfUrl: text("pdf_url"),
   docxUrl: text("docx_url"),
+  relevanceSummary: text("relevance_summary"),
   tokensUsed: integer("tokens_used").default(0),
   model: text("model").default(""),
   createdAt: timestamp("created_at").defaultNow(),
@@ -94,11 +137,18 @@ export const insertDocumentSchema = createInsertSchema(applykit_documents).omit(
   createdAt: true,
 });
 
+export const insertJobAnalysisSchema = createInsertSchema(applykit_job_analysis).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type Profile = typeof applykit_profiles.$inferSelect;
 export type InsertProfile = z.infer<typeof insertProfileSchema>;
 export type Application = typeof applykit_applications.$inferSelect;
 export type InsertApplication = z.infer<typeof insertApplicationSchema>;
 export type AppDocument = typeof applykit_documents.$inferSelect;
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+export type JobAnalysis = typeof applykit_job_analysis.$inferSelect;
+export type InsertJobAnalysis = z.infer<typeof insertJobAnalysisSchema>;
 export type Usage = typeof applykit_usage.$inferSelect;
 export type Template = typeof applykit_templates.$inferSelect;

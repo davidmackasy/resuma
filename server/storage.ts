@@ -4,6 +4,7 @@ import {
   applykit_profiles,
   applykit_applications,
   applykit_documents,
+  applykit_job_analysis,
   applykit_usage,
   applykit_templates,
   type Profile,
@@ -12,6 +13,8 @@ import {
   type InsertApplication,
   type AppDocument,
   type InsertDocument,
+  type JobAnalysis,
+  type InsertJobAnalysis,
   type Usage,
   type Template,
 } from "@shared/schema";
@@ -30,6 +33,9 @@ export interface IStorage {
   updateDocument(id: number, data: Partial<{ contentMd: string; contentJson: any }>): Promise<AppDocument>;
   deleteDocumentsByApplication(applicationId: number): Promise<void>;
   deleteDocumentByType(applicationId: number, docType: string): Promise<void>;
+  createJobAnalysis(data: InsertJobAnalysis): Promise<JobAnalysis>;
+  getJobAnalysis(applicationId: number): Promise<JobAnalysis | undefined>;
+  deleteJobAnalysis(applicationId: number): Promise<void>;
   getUsage(userId: string): Promise<Usage | undefined>;
   incrementUsage(userId: string, field: "applicationsGenerated" | "regenerations"): Promise<void>;
   getTemplates(): Promise<Template[]>;
@@ -135,6 +141,23 @@ class DatabaseStorage implements IStorage {
     );
   }
 
+  async createJobAnalysis(data: InsertJobAnalysis): Promise<JobAnalysis> {
+    const [analysis] = await db.insert(applykit_job_analysis).values(data).returning();
+    return analysis;
+  }
+
+  async getJobAnalysis(applicationId: number): Promise<JobAnalysis | undefined> {
+    const [analysis] = await db
+      .select()
+      .from(applykit_job_analysis)
+      .where(eq(applykit_job_analysis.applicationId, applicationId));
+    return analysis;
+  }
+
+  async deleteJobAnalysis(applicationId: number): Promise<void> {
+    await db.delete(applykit_job_analysis).where(eq(applykit_job_analysis.applicationId, applicationId));
+  }
+
   async getUsage(userId: string): Promise<Usage | undefined> {
     const now = new Date();
     const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
@@ -226,6 +249,7 @@ class DatabaseStorage implements IStorage {
       .where(eq(applykit_applications.userId, userId));
     for (const app of apps) {
       await db.delete(applykit_documents).where(eq(applykit_documents.applicationId, app.id));
+      await db.delete(applykit_job_analysis).where(eq(applykit_job_analysis.applicationId, app.id));
     }
     await db.delete(applykit_applications).where(eq(applykit_applications.userId, userId));
     await db.delete(applykit_usage).where(eq(applykit_usage.userId, userId));

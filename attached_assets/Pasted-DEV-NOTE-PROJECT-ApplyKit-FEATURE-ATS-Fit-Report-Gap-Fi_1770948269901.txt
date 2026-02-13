@@ -1,0 +1,474 @@
+DEV NOTE
+PROJECT: ApplyKit
+FEATURE: ATS Fit Report + Gap Fixer + Tailored Resume/Cover/Email Generation
+GOAL:
+Keep the existing concept intact:
+
+User flow remains:
+
+User pastes job description
+
+System analyzes job fit
+
+User reviews ATS Fit Report
+
+User optionally toggles improvements
+
+System generates:
+
+Tailored Resume
+
+Tailored Cover Letter
+
+Follow-up Email
+
+User previews, edits, regenerates, downloads (PDF/DOCX for resume + cover, copy for email)
+
+Do NOT change the core product concept.
+Do NOT break authentication.
+Do NOT break Stripe.
+Do NOT modify unrelated modules.
+All changes are within ApplyKit only.
+
+SECTION 1: HIGH LEVEL ARCHITECTURE
+
+ApplyKit becomes:
+
+Resume Generator
+
+ATS Fit Analyzer
+
+Gap Fixer
+
+Career Strategy Coach
+
+But still outputs:
+
+Resume (PDF + DOCX)
+
+Cover Letter (PDF + DOCX)
+
+Email Follow-up (copy)
+
+SECTION 2: FINAL USER FLOW (END-TO-END)
+
+Step 1: New Application
+Route: /applykit/app/new
+
+User inputs:
+
+Job Description (required)
+
+Company name (optional)
+
+Role title (optional)
+
+Tone selection
+
+Template selection
+
+Button:
+Analyze Job Fit
+
+Step 2: ATS Fit Report Page
+
+System runs Job Analysis.
+
+User sees:
+
+A) Fit Score (0–100)
+B) Matched Skills
+C) Missing Skills
+D) Risk Flags
+E) Transferable Angle
+F) Suggested Improvements (toggleable)
+
+Bottom Button:
+Generate Tailored Application
+
+Step 3: Final Results Page
+
+Route:
+/applykit/app/applications/[id]
+
+Tabs:
+
+Resume
+
+Cover Letter
+
+Email
+
+Each includes:
+
+Preview (styled)
+
+Edit
+
+Regenerate
+
+Download (PDF + DOCX for resume and cover)
+
+Copy (email)
+
+Important:
+Final generation always produces all three documents simultaneously.
+
+SECTION 3: DATA MODEL (NO REMOVALS)
+
+Keep existing tables.
+
+Add:
+
+applykit_job_analysis
+
+id
+
+user_id
+
+job_description
+
+fit_score
+
+matched_skills
+
+missing_skills
+
+risk_flags
+
+transferable_angle
+
+suggested_additions
+
+created_at
+
+applykit_documents
+Ensure fields:
+
+doc_type
+
+content_json
+
+content_md
+
+pdf_url
+
+docx_url
+
+relevance_summary
+
+Do NOT modify applykit_profiles.
+
+SECTION 4: INTELLIGENT FILTERING LOGIC
+
+When generating final documents:
+
+System uses:
+
+Structured profile
+
+Job analysis JSON
+
+Selected suggested_additions
+
+Filtering rules:
+
+Score each role for relevance.
+
+Sort roles by relevance.
+
+Include top relevant roles.
+
+Exclude irrelevant roles in final output only.
+
+Score bullets and keep top relevant ones.
+
+Apply selected bullet upgrades.
+
+Reorder roles by relevance.
+
+Never modify profile.
+
+SECTION 5: FINAL DOCUMENT GENERATION REQUIREMENTS
+
+All three documents must be generated in one pipeline execution.
+
+Resume:
+
+1 page preferred
+
+Excludes irrelevant experience
+
+Reordered by relevance
+
+Uses template formatting
+
+ATS-safe
+
+No fabricated experience
+
+Cover Letter:
+
+250–350 words
+
+References company and role
+
+Aligns with transferable angle
+
+Uses selected improvements
+
+Email:
+
+Short
+
+Professional
+
+Includes subject line
+
+Consistent tone
+
+SECTION 6: OPENAI PROMPT STRUCTURE
+
+We use a 3-stage prompt architecture.
+
+PROMPT 1: JOB EXTRACTION
+
+System Prompt:
+
+"You are an ATS job analyzer. Extract structured job requirements from the provided job description. Return strict JSON only."
+
+User Input:
+Job Description
+
+Expected JSON Output:
+
+{
+"job_category": "",
+"industry": "",
+"seniority_level": "",
+"required_skills": [],
+"preferred_skills": [],
+"responsibilities": [],
+"certifications_required": [],
+"years_experience_required": "",
+"keywords": []
+}
+
+PROMPT 2: FIT SCORING + GAP ANALYSIS
+
+System Prompt:
+
+"You are a career strategist and ATS evaluator. Compare the structured job requirements with the candidate profile. Do not invent experience. Only use provided profile data. Return strict JSON."
+
+Inputs:
+
+Extracted job JSON
+
+Structured candidate profile
+
+Output JSON:
+
+{
+"fit_score": 0,
+"matched_skills": [],
+"missing_skills": [],
+"risk_flags": [
+{
+"type": "",
+"severity": "",
+"message": ""
+}
+],
+"transferable_angle": {
+"title": "",
+"explanation": ""
+},
+"suggested_additions": [
+{
+"type": "bullet_upgrade",
+"target_role": "",
+"original_bullet": "",
+"improved_bullet": "",
+"reason": ""
+}
+]
+}
+
+Rules:
+
+No fabrication
+
+Only derive improvements from existing profile data
+
+Suggest rewrites, not new jobs
+
+PROMPT 3: FINAL DOCUMENT GENERATION
+
+System Prompt:
+
+"You are a professional resume writer and career coach. Generate a tailored resume, cover letter, and follow-up email using the candidate profile, job analysis, and selected improvements. Do not fabricate experience. Exclude irrelevant roles. Return structured JSON."
+
+Inputs:
+
+Candidate structured profile
+
+Job extraction JSON
+
+Selected suggested_additions
+
+Template ID
+
+Tone
+
+Output JSON:
+
+{
+"resume": {
+"header": {},
+"summary": "",
+"experience": [],
+"skills": [],
+"education": [],
+"certifications": []
+},
+"cover_letter": {
+"content": ""
+},
+"email": {
+"subject": "",
+"body": ""
+}
+}
+
+Resume rules:
+
+Include only relevant roles
+
+Maximum 3–5 bullets per role
+
+Rewrite for clarity and alignment
+
+No fake numbers
+
+ATS safe
+
+Cover letter rules:
+
+Reference company
+
+Align with transferable angle
+
+Professional tone
+
+Email rules:
+
+Short
+
+Professional
+
+Clear intent
+
+SECTION 7: PDF + DOCX GENERATION
+
+After final JSON output:
+
+Render:
+
+Resume:
+
+HTML template → PDF
+
+docx library → DOCX
+
+Cover Letter:
+
+HTML template → PDF
+
+docx library → DOCX
+
+Email:
+
+Text only
+
+Copy button
+
+Store in:
+applykit/generated/{user_id}/{application_id}/
+
+SECTION 8: EDIT + REGENERATE
+
+Preview page must allow:
+
+Edit:
+
+Editable fields
+
+Update content_json
+
+Regenerate PDF/DOCX after edit
+
+Regenerate:
+
+Re-run Prompt 3
+
+Keep job analysis intact
+
+Ask confirmation before overwrite
+
+SECTION 9: ACCEPTANCE CRITERIA
+
+User can:
+
+Paste job description
+
+See ATS Fit Report
+
+Toggle suggested improvements
+
+Generate resume + cover + email simultaneously
+
+Preview formatted resume
+
+Edit before download
+
+Download PDF
+
+Download DOCX
+
+Copy email
+
+Regenerate documents
+
+System must:
+
+Never modify master profile
+
+Never fabricate experience
+
+Keep feature isolated
+
+Maintain premium formatting
+
+Keep original concept intact
+
+FINAL RESULT
+
+ApplyKit becomes:
+
+AI Resume Generator
+
+ATS Scanner
+
+Gap Fixer
+
+Career Strategy Coach
+
+While still delivering:
+
+Resume
+Cover Letter
+Email
+
+All generated together.
+All downloadable.
+All job-targeted.
