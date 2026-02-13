@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { storage } from "./storage";
-import { generateDocuments, generateSingleDocument } from "./generation";
+import { analyzeJob, generateFromAnalysis, generateDocuments, generateSingleDocument } from "./generation";
 import { generateResumePdf, generateCoverLetterPdf } from "./export-pdf";
 import { generateResumeDocx, generateCoverLetterDocx } from "./export-docx";
 import { extractTextFromFile, parseResumeText } from "./resume-parser";
@@ -197,6 +197,25 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/applykit/applications/:id/analysis", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = parseInt(req.params.id);
+      const application = await storage.getApplication(id, userId);
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+      const analysis = await storage.getJobAnalysis(id);
+      if (!analysis) {
+        return res.status(404).json({ message: "No analysis found for this application" });
+      }
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error fetching analysis:", error);
+      res.status(500).json({ message: "Failed to fetch analysis" });
+    }
+  });
+
   app.post("/api/applykit/applications", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -230,20 +249,84 @@ export async function registerRoutes(
       });
 
       try {
-        const generated = await generateDocuments({
-          profile,
+        const analysisResult = await analyzeJob(profile, jobDescription);
+
+        await storage.createJobAnalysis({
+          applicationId: application.id,
+          userId,
           jobDescription,
-          companyName,
-          roleTitle,
-          jobLocation,
-          hiringManager,
-          tone: tone || "professional",
-          templateId: templateId || "modern_minimal",
+          fitScore: analysisResult.fitAnalysis.fitScore,
+          matchedSkills: analysisResult.fitAnalysis.matchedSkills,
+          missingSkills: analysisResult.fitAnalysis.missingSkills,
+          riskFlags: analysisResult.fitAnalysis.riskFlags,
+          transferableAngle: analysisResult.fitAnalysis.transferableAngle,
+          suggestedAdditions: analysisResult.fitAnalysis.suggestedAdditions,
+          jobExtraction: analysisResult.jobExtraction,
         });
+
+        await storage.updateApplicationStatus(application.id, "analyzed");
+
+        res.json({ id: application.id, status: "analyzed" });
+      } catch (analysisError) {
+        console.error("Analysis error:", analysisError);
+        await storage.updateApplicationStatus(application.id, "failed");
+        res.status(500).json({ message: "Job analysis failed. Please try again." });
+      }
+    } catch (error) {
+      console.error("Error creating application:", error);
+      res.status(500).json({ message: "Failed to create application" });
+    }
+  });
+
+  app.post("/api/applykit/applications/:id/generate", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = parseInt(req.params.id);
+
+      const application = await storage.getApplication(id, userId);
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      const profile = await storage.getProfile(userId);
+      if (!profile) {
+        return res.status(400).json({ message: "Profile not found" });
+      }
+
+      const analysis = await storage.getJobAnalysis(id);
+      if (!analysis) {
+        return res.status(400).json({ message: "No job analysis found. Please analyze the job first." });
+      }
+
+      const { selectedAdditions } = req.body;
+
+      try {
+        const generated = await generateFromAnalysis({
+          profile,
+          jobDescription: application.jobDescription,
+          companyName: application.companyName || undefined,
+          roleTitle: application.roleTitle || undefined,
+          jobLocation: application.jobLocation || undefined,
+          hiringManager: application.hiringManager || undefined,
+          tone: application.tone,
+          templateId: application.templateId,
+          jobExtraction: analysis.jobExtraction as any,
+          fitAnalysis: {
+            fitScore: analysis.fitScore,
+            matchedSkills: analysis.matchedSkills as string[],
+            missingSkills: analysis.missingSkills as string[],
+            riskFlags: analysis.riskFlags as any[],
+            transferableAngle: analysis.transferableAngle as any,
+            suggestedAdditions: analysis.suggestedAdditions as any[],
+          },
+          selectedAdditions: selectedAdditions || [],
+        });
+
+        await storage.deleteDocumentsByApplication(id);
 
         await Promise.all([
           storage.createDocument({
-            applicationId: application.id,
+            applicationId: id,
             userId,
             docType: "resume",
             contentMd: generated.resume.md,
@@ -252,7 +335,7 @@ export async function registerRoutes(
             model: generated.model,
           }),
           storage.createDocument({
-            applicationId: application.id,
+            applicationId: id,
             userId,
             docType: "cover_letter",
             contentMd: generated.coverLetter.md,
@@ -261,7 +344,7 @@ export async function registerRoutes(
             model: generated.model,
           }),
           storage.createDocument({
-            applicationId: application.id,
+            applicationId: id,
             userId,
             docType: "followup_email",
             contentMd: generated.followupEmail.md,
@@ -271,18 +354,17 @@ export async function registerRoutes(
           }),
         ]);
 
-        await storage.updateApplicationStatus(application.id, "generated");
+        await storage.updateApplicationStatus(id, "generated");
         await storage.incrementUsage(userId, "applicationsGenerated");
 
-        res.json({ id: application.id, status: "generated" });
+        res.json({ id, status: "generated" });
       } catch (genError) {
         console.error("Generation error:", genError);
-        await storage.updateApplicationStatus(application.id, "failed");
         res.status(500).json({ message: "Document generation failed. Please try again." });
       }
     } catch (error) {
-      console.error("Error creating application:", error);
-      res.status(500).json({ message: "Failed to create application" });
+      console.error("Error generating from analysis:", error);
+      res.status(500).json({ message: "Failed to generate documents" });
     }
   });
 

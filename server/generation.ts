@@ -6,15 +6,40 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-interface GenerationInput {
-  profile: Profile;
-  jobDescription: string;
-  companyName?: string;
-  roleTitle?: string;
-  jobLocation?: string;
-  hiringManager?: string;
-  tone: string;
-  templateId: string;
+const MODEL = "gpt-5-mini";
+
+export interface JobExtraction {
+  jobCategory: string;
+  industry: string;
+  seniorityLevel: string;
+  requiredSkills: string[];
+  preferredSkills: string[];
+  responsibilities: string[];
+  certificationsRequired: string[];
+  yearsExperienceRequired: string;
+  keywords: string[];
+}
+
+export interface FitAnalysis {
+  fitScore: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  riskFlags: { type: string; severity: string; message: string }[];
+  transferableAngle: { title: string; explanation: string };
+  suggestedAdditions: {
+    id: string;
+    type: string;
+    targetRole: string;
+    originalBullet: string;
+    improvedBullet: string;
+    reason: string;
+  }[];
+}
+
+export interface AnalysisResult {
+  jobExtraction: JobExtraction;
+  fitAnalysis: FitAnalysis;
+  tokensUsed: number;
 }
 
 export interface ResumeJson {
@@ -70,9 +95,216 @@ export interface GeneratedDocuments {
   tokensUsed: number;
 }
 
+interface GenerationInput {
+  profile: Profile;
+  jobDescription: string;
+  companyName?: string;
+  roleTitle?: string;
+  jobLocation?: string;
+  hiringManager?: string;
+  tone: string;
+  templateId: string;
+}
+
+interface AnalysisGenerationInput extends GenerationInput {
+  jobExtraction: JobExtraction;
+  fitAnalysis: FitAnalysis;
+  selectedAdditions: string[];
+}
+
+export async function analyzeJob(profile: Profile, jobDescription: string): Promise<AnalysisResult> {
+  let totalTokens = 0;
+
+  const extractionResponse = await openai.chat.completions.create({
+    model: MODEL,
+    messages: [
+      {
+        role: "system",
+        content: `You are an ATS job analyzer. Extract structured job requirements from the provided job description. Return strict JSON only.`,
+      },
+      {
+        role: "user",
+        content: `Extract the key requirements from this job description:\n\n${jobDescription.substring(0, 6000)}\n\nReturn JSON with these exact keys:\n{\n  "jobCategory": "",\n  "industry": "",\n  "seniorityLevel": "",\n  "requiredSkills": [],\n  "preferredSkills": [],\n  "responsibilities": [],\n  "certificationsRequired": [],\n  "yearsExperienceRequired": "",\n  "keywords": []\n}`,
+      },
+    ],
+    response_format: { type: "json_object" },
+    max_completion_tokens: 2000,
+  });
+
+  totalTokens += extractionResponse.usage?.total_tokens || 0;
+  let jobExtraction: JobExtraction;
+  try {
+    jobExtraction = JSON.parse(extractionResponse.choices[0]?.message?.content || "{}") as JobExtraction;
+  } catch {
+    jobExtraction = {
+      jobCategory: "", industry: "", seniorityLevel: "",
+      requiredSkills: [], preferredSkills: [], responsibilities: [],
+      certificationsRequired: [], yearsExperienceRequired: "", keywords: [],
+    };
+  }
+
+  const profileSummary = buildProfileSummary(profile);
+
+  const fitResponse = await openai.chat.completions.create({
+    model: MODEL,
+    messages: [
+      {
+        role: "system",
+        content: `You are a career strategist and ATS evaluator. Compare the structured job requirements with the candidate profile. Do not invent experience. Only use provided profile data. Return strict JSON.`,
+      },
+      {
+        role: "user",
+        content: `JOB REQUIREMENTS:\n${JSON.stringify(jobExtraction, null, 2)}\n\nCANDIDATE PROFILE:\n${profileSummary}\n\nAnalyze the fit between this candidate and the job. Return JSON with these exact keys:\n{\n  "fitScore": 0-100,\n  "matchedSkills": ["skill1", "skill2"],\n  "missingSkills": ["skill1", "skill2"],\n  "riskFlags": [{"type": "experience_gap|skill_gap|overqualified|location|certification", "severity": "high|medium|low", "message": "explanation"}],\n  "transferableAngle": {"title": "angle title", "explanation": "how to position transferable skills"},\n  "suggestedAdditions": [{"id": "unique_id", "type": "bullet_upgrade", "targetRole": "role name from profile", "originalBullet": "current bullet text", "improvedBullet": "rewritten bullet aligned with job", "reason": "why this improves fit"}]\n}\n\nRules:\n- fitScore: 0-100 based on overall match\n- Only suggest improvements based on EXISTING profile data, never fabricate\n- Suggest bullet rewrites that better highlight relevant aspects of actual experience\n- Each suggestedAddition must have a unique "id" (use format "sa_1", "sa_2", etc.)\n- Limit to 3-6 best suggested improvements\n- Be honest about gaps; don't inflate the score`,
+      },
+    ],
+    response_format: { type: "json_object" },
+    max_completion_tokens: 3000,
+  });
+
+  totalTokens += fitResponse.usage?.total_tokens || 0;
+  let fitAnalysis: FitAnalysis;
+  try {
+    const parsed = JSON.parse(fitResponse.choices[0]?.message?.content || "{}");
+    fitAnalysis = {
+      fitScore: parsed.fitScore || 0,
+      matchedSkills: parsed.matchedSkills || [],
+      missingSkills: parsed.missingSkills || [],
+      riskFlags: parsed.riskFlags || [],
+      transferableAngle: parsed.transferableAngle || { title: "", explanation: "" },
+      suggestedAdditions: (parsed.suggestedAdditions || []).map((sa: any, i: number) => ({
+        id: sa.id || `sa_${i + 1}`,
+        type: sa.type || "bullet_upgrade",
+        targetRole: sa.targetRole || "",
+        originalBullet: sa.originalBullet || "",
+        improvedBullet: sa.improvedBullet || "",
+        reason: sa.reason || "",
+      })),
+    };
+  } catch {
+    fitAnalysis = {
+      fitScore: 0,
+      matchedSkills: [],
+      missingSkills: [],
+      riskFlags: [],
+      transferableAngle: { title: "", explanation: "" },
+      suggestedAdditions: [],
+    };
+  }
+
+  return { jobExtraction, fitAnalysis, tokensUsed: totalTokens };
+}
+
+export async function generateFromAnalysis(input: AnalysisGenerationInput): Promise<GeneratedDocuments> {
+  const profileSummary = buildProfileSummary(input.profile);
+
+  const selectedImprovements = input.fitAnalysis.suggestedAdditions
+    .filter(sa => input.selectedAdditions.includes(sa.id));
+
+  const improvementsText = selectedImprovements.length > 0
+    ? `\n\nSELECTED BULLET IMPROVEMENTS (apply these rewrites in the resume):\n${selectedImprovements.map(sa => `- Role "${sa.targetRole}": Replace "${sa.originalBullet}" with "${sa.improvedBullet}"`).join("\n")}`
+    : "";
+
+  const systemPrompt = `You are a professional resume writer and career coach. Generate a tailored resume, cover letter, and follow-up email using the candidate profile, job analysis, and selected improvements. Do not fabricate experience. Exclude irrelevant roles. Return structured JSON.
+
+CRITICAL RULES:
+- NEVER fabricate companies, dates, degrees, awards, or metrics not present in the profile
+- Use ONLY facts from the provided profile data
+- If information is missing, omit it gracefully - do not invent
+- Keep resume to 1 page content (max 2 for senior roles)
+- Use active verbs and measurable outcomes ONLY if present in source
+- Remove filler phrases like "results-driven", "dynamic", "passionate"
+- NEVER modify the candidate's master profile - all tailoring applies to output only
+
+INTELLIGENT RELEVANCE FILTERING:
+- Include ONLY the top 2-4 most relevant roles in the resume
+- For each included role, select only the 3-5 most relevant bullets
+- Apply selected bullet upgrades where specified
+- Exclude completely irrelevant roles
+- If no roles are highly relevant, include most recent roles and emphasize transferable skills
+- Always include at least 1 role minimum
+- Reorder skills to prioritize those mentioned in the job description
+
+TONE: ${input.tone}
+${input.companyName ? `COMPANY: ${input.companyName}` : ""}
+${input.roleTitle ? `TARGET ROLE: ${input.roleTitle}` : ""}
+${input.hiringManager ? `HIRING MANAGER: ${input.hiringManager}` : ""}`;
+
+  const userPrompt = `CANDIDATE PROFILE:
+${profileSummary}
+
+JOB EXTRACTION:
+${JSON.stringify(input.jobExtraction, null, 2)}
+
+TRANSFERABLE ANGLE:
+${input.fitAnalysis.transferableAngle.title}: ${input.fitAnalysis.transferableAngle.explanation}
+${improvementsText}
+
+Generate THREE documents as a JSON object with these exact keys:
+
+1. "resume" - Object with:
+   - "md": Full tailored resume in markdown
+   - "json": { "header": { name, title, email, phone, location, linkedin?, portfolio?, github? }, "summary": string, "experience": [{ title, company, location, startDate, endDate, bullets: string[], relevanceScore: number 0-100 }], "skills": [{ name, items: string[] }], "education": [{ school, degree, field, year }], "certifications": [{ name, issuer, year }] }
+
+2. "coverLetter" - Object with:
+   - "md": Full cover letter in markdown (250-350 words)
+   - "json": { recipientName, recipientTitle, companyName, date, opening, body: string[], closing, senderName }
+
+3. "followupEmail" - Object with:
+   - "md": Follow-up email in markdown (60-120 words) with subject line
+   - "json": { subject, greeting, body, signoff, senderName }
+
+COVER LETTER RULES:
+- Reference company and role specifically
+- Align with the transferable angle
+- Use selected improvements naturally
+- Professional ${input.tone} tone
+
+Return ONLY valid JSON with keys: resume, coverLetter, followupEmail.`;
+
+  const response = await openai.chat.completions.create({
+    model: MODEL,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    response_format: { type: "json_object" },
+    max_completion_tokens: 6000,
+  });
+
+  const content = response.choices[0]?.message?.content || "{}";
+  const tokensUsed = response.usage?.total_tokens || 0;
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new Error("Failed to parse AI response");
+  }
+
+  const resumeData = parsed.resume || {};
+  const coverLetterData = parsed.coverLetter || {};
+  const emailData = parsed.followupEmail || {};
+
+  return {
+    resume: {
+      md: resumeData.md || "Generation failed - no resume content",
+      json: resumeData.json || buildFallbackResumeJson(input.profile),
+    },
+    coverLetter: {
+      md: coverLetterData.md || "Generation failed - no cover letter content",
+      json: coverLetterData.json || { recipientName: "", recipientTitle: "", companyName: input.companyName || "", date: new Date().toLocaleDateString(), opening: "", body: [], closing: "", senderName: input.profile.fullName },
+    },
+    followupEmail: {
+      md: emailData.md || "Generation failed - no email content",
+      json: emailData.json || { subject: "", greeting: "", body: "", signoff: "", senderName: input.profile.fullName },
+    },
+    model: MODEL,
+    tokensUsed,
+  };
+}
+
 export async function generateDocuments(input: GenerationInput): Promise<GeneratedDocuments> {
   const profileSummary = buildProfileSummary(input.profile);
-  const model = "gpt-5-mini";
 
   const systemPrompt = `You are an expert career consultant and resume writer. You produce ATS-safe, premium-quality documents.
 
@@ -92,7 +324,7 @@ INTELLIGENT RELEVANCE FILTERING:
 - Include ONLY the top 2-4 most relevant roles in the resume
 - For each included role, select only the 3-5 most relevant bullets
 - Rewrite bullets for clarity and alignment with the job, but NEVER fabricate achievements
-- Exclude completely irrelevant roles (e.g., exclude retail experience for a senior engineering role)
+- Exclude completely irrelevant roles
 - If no roles are highly relevant, include the most recent roles and rewrite the summary to emphasize transferable skills
 - Always include at least 1 role minimum
 - Reorder skills to prioritize those mentioned in the job description
@@ -131,7 +363,7 @@ Generate THREE documents as a JSON object with these exact keys:
 Return ONLY valid JSON with keys: resume, coverLetter, followupEmail.`;
 
   const response = await openai.chat.completions.create({
-    model,
+    model: MODEL,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -156,18 +388,18 @@ Return ONLY valid JSON with keys: resume, coverLetter, followupEmail.`;
 
   return {
     resume: {
-      md: resumeData.md || resumeData || "Generation failed - no resume content",
+      md: resumeData.md || "Generation failed - no resume content",
       json: resumeData.json || buildFallbackResumeJson(input.profile),
     },
     coverLetter: {
-      md: coverLetterData.md || coverLetterData || "Generation failed - no cover letter content",
+      md: coverLetterData.md || "Generation failed - no cover letter content",
       json: coverLetterData.json || { recipientName: "", recipientTitle: "", companyName: input.companyName || "", date: new Date().toLocaleDateString(), opening: "", body: [], closing: "", senderName: input.profile.fullName },
     },
     followupEmail: {
-      md: emailData.md || emailData || "Generation failed - no email content",
+      md: emailData.md || "Generation failed - no email content",
       json: emailData.json || { subject: "", greeting: "", body: "", signoff: "", senderName: input.profile.fullName },
     },
-    model,
+    model: MODEL,
     tokensUsed,
   };
 }
@@ -177,7 +409,6 @@ export async function generateSingleDocument(
   docType: "resume" | "cover_letter" | "followup_email"
 ): Promise<{ md: string; json: any; model: string; tokensUsed: number }> {
   const profileSummary = buildProfileSummary(input.profile);
-  const model = "gpt-5-mini";
 
   const docPrompts: Record<string, string> = {
     resume: `Generate a tailored resume as JSON with keys:
@@ -201,7 +432,7 @@ ${input.roleTitle ? `TARGET ROLE: ${input.roleTitle}` : ""}
 ${input.hiringManager ? `HIRING MANAGER: ${input.hiringManager}` : ""}`;
 
   const response = await openai.chat.completions.create({
-    model,
+    model: MODEL,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: `CANDIDATE PROFILE:\n${profileSummary}\n\nJOB DESCRIPTION:\n${input.jobDescription.substring(0, 6000)}\n\n${docPrompts[docType]}\n\nReturn ONLY valid JSON.` },
@@ -223,7 +454,7 @@ ${input.hiringManager ? `HIRING MANAGER: ${input.hiringManager}` : ""}`;
   return {
     md: parsed.md || "",
     json: parsed.json || parsed,
-    model,
+    model: MODEL,
     tokensUsed,
   };
 }
