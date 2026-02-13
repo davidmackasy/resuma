@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -48,7 +48,6 @@ export default function FitReport() {
   const id = params?.id;
   const { toast } = useToast();
   const [selectedAdditions, setSelectedAdditions] = useState<Set<string>>(new Set());
-  const [initialized, setInitialized] = useState(false);
 
   const { data: application, isLoading: appLoading } = useQuery<Application>({
     queryKey: ["/api/applykit/applications", id],
@@ -59,13 +58,14 @@ export default function FitReport() {
     enabled: !!id,
   });
 
-  if (analysis && !initialized) {
-    const additions = analysis.suggestedAdditions as any[];
-    if (additions?.length > 0) {
-      setSelectedAdditions(new Set(additions.map((sa: any) => sa.id)));
-      setInitialized(true);
+  useEffect(() => {
+    if (analysis) {
+      const additions = analysis.suggestedAdditions as any[];
+      if (additions?.length > 0) {
+        setSelectedAdditions(new Set(additions.map((sa: any) => sa.id)));
+      }
     }
-  }
+  }, [analysis]);
 
   const generateMutation = useMutation({
     mutationFn: async () => {
