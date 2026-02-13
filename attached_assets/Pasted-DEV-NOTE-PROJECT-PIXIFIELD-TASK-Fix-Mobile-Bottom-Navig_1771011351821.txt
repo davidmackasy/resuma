@@ -1,0 +1,247 @@
+DEV NOTE
+PROJECT: PIXIFIELD
+TASK: Fix Mobile Bottom Navigation Role Logic
+SCOPE: Mobile UI only
+DO NOT TOUCH: Desktop UI, authentication, Stripe, backend, APIs, credit logic, admin permissions
+
+Objective
+
+Correct the mobile bottom navigation so that:
+
+Non-admin users see
+Home
+New
+History
+Profile
+Settings
+
+Admin users see
+Home
+New
+History
+Profile
+Admin
+
+Settings must NOT disappear for non-admin users.
+Admin users must NOT see Settings in bottom nav.
+Desktop navigation must remain unchanged.
+
+Scope Limitation
+
+This fix applies ONLY to mobile layout where screen width <= 768px.
+
+Do not modify
+
+Desktop sidebar
+
+Desktop header
+
+Desktop admin panel
+
+Route protection
+
+Auth logic
+
+Role logic backend
+
+This is a mobile navigation rendering fix only.
+
+Current Issue
+
+Settings tab was removed from mobile bottom nav for both roles.
+
+Admin button shows correctly for admins.
+Non-admin users are missing Settings.
+
+This must be corrected.
+
+Role-Based Bottom Nav Rendering Logic
+
+Implement conditional rendering inside MobileBottomNav component only.
+
+Pseudo logic
+
+If isMobile === true
+
+If user.role === "admin"
+Show tabs:
+Home
+New
+History
+Profile
+Admin
+
+Else
+Show tabs:
+Home
+New
+History
+Profile
+Settings
+
+Do NOT mix both Admin and Settings in the same role.
+
+Navigation Order (Strict)
+
+For non-admin
+
+Home
+
+New
+
+History
+
+Profile
+
+Settings
+
+For admin
+
+Home
+
+New
+
+History
+
+Profile
+
+Admin
+
+Order must remain consistent.
+Do not rearrange tabs.
+
+Icon and Label Rules
+
+Maintain same icon styling already implemented.
+
+Active state
+
+Brand highlight
+Inactive state
+
+Muted gray
+
+Do not change icon set.
+Do not change animation.
+
+Routing
+
+Ensure the following routes are mapped correctly
+
+Home → existing home route
+New → create page route
+History → history route
+Profile → account/profile route
+Settings → settings route
+Admin → admin dashboard route
+
+Do NOT change route names.
+Do NOT modify backend guards.
+
+Admin route must still be protected server-side.
+
+Important: Do NOT Remove Settings Page
+
+Settings page must still exist.
+Only hide it from admin mobile bottom nav.
+
+Admins can still access Settings through profile or desktop if needed.
+Do not delete or refactor settings page.
+
+Component Isolation
+
+Changes must only occur inside
+
+MobileBottomNav.tsx
+or
+MobileNavigation component
+
+Do not modify global navigation config unless scoped to mobile.
+
+Testing Checklist
+
+Test on mobile viewport only
+
+Non-admin user
+
+Sees Home
+
+Sees New
+
+Sees History
+
+Sees Profile
+
+Sees Settings
+
+Does NOT see Admin
+
+Admin user
+
+Sees Home
+
+Sees New
+
+Sees History
+
+Sees Profile
+
+Sees Admin
+
+Does NOT see Settings
+
+Verify
+
+Tabs switch correctly
+
+No blank screens
+
+No console errors
+
+No route mismatch
+
+State persistence still works
+
+Desktop navigation unchanged
+
+Critical Protection
+
+Do NOT
+
+Modify user role logic
+
+Modify auth provider
+
+Modify Stripe
+
+Modify credit deductions
+
+Modify admin backend logic
+
+Modify desktop UI
+
+Modify sidebar
+
+This is a mobile UI tab rendering correction only.
+
+Final Expected Result
+
+On mobile
+
+Non-admin sees
+Home
+New
+History
+Profile
+Settings
+
+Admin sees
+Home
+New
+History
+Profile
+Admin
+
+Nothing else changes.
+
+End of dev note.
