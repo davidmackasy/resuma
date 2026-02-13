@@ -1,0 +1,216 @@
+The error:
+
+duplicate key value violates unique constraint "users_email_unique"
+
+means:
+
+You are manually inserting into your users table
+after Google OAuth
+even though that email already exists.
+
+So instead of logging the existing user in,
+your code is trying to create a second user row with the same email.
+
+That’s why Postgres blocks it.
+
+This is not a Google Auth problem.
+It is your user creation logic.
+
+Now I’ll give you a proper production-safe fix.
+
+ROOT CAUSE
+
+You likely have something like this somewhere after login:
+
+insert into users (email, ...)
+values (session.user.email, ...)
+
+Every time user logs in.
+
+That must NOT happen.
+
+User creation must happen only once.
+
+THE CORRECT AUTH FLOW
+
+Google OAuth → Supabase creates auth.users row automatically.
+
+You do NOT manually create auth users.
+
+You only create your custom profile row if it does not exist.
+
+Never blindly insert.
+
+PROPER FIX (SAFE, PRODUCTION-READY)
+
+STEP 1: Stop inserting user by email
+
+Search your code for:
+
+insert into users
+insert into applykit_profiles
+insert into profiles
+
+Any place where you insert on login.
+
+Replace that logic.
+
+STEP 2: Use UPSERT or EXISTENCE CHECK
+
+After login success:
+
+Get user id:
+
+const {
+data: { user }
+} = await supabase.auth.getUser()
+
+Then do:
+
+const { data: existingProfile } = await supabase
+.from('applykit_profiles')
+.select('id')
+.eq('user_id', user.id)
+.single()
+
+If profile does NOT exist, then create it.
+
+Example:
+
+if (!existingProfile) {
+await supabase
+.from('applykit_profiles')
+.insert({
+user_id: user.id,
+structured_complete: false,
+resume_input_method: null
+})
+}
+
+Important:
+Never use email as unique identifier.
+Always use auth user id.
+
+STEP 3: REMOVE UNIQUE CONSTRAINT ON CUSTOM users.email (IF YOU HAVE ONE)
+
+If you created your own users table with:
+
+email UNIQUE
+
+That’s fine — but you must not manually insert duplicate.
+
+Better architecture:
+
+Do NOT create your own users table.
+Use auth.users as source of truth.
+Use user_id foreign keys everywhere.
+
+If you already have a custom users table,
+make sure it links by:
+
+user_id uuid references auth.users(id)
+
+Not email.
+
+STEP 4: DO NOT INSERT ON EVERY LOGIN
+
+Login ≠ Signup.
+
+Your logic must be:
+
+If first login → create profile
+Else → do nothing
+
+Google handles login automatically.
+
+STEP 5: SAFE UPSERT ALTERNATIVE
+
+If you want simpler logic:
+
+await supabase
+.from('applykit_profiles')
+.upsert({
+user_id: user.id
+}, {
+onConflict: 'user_id'
+})
+
+This prevents duplicate insert errors.
+
+STEP 6: VERIFY YOUR TABLE CONSTRAINTS
+
+Your applykit_profiles table should have:
+
+user_id uuid unique
+
+NOT email unique.
+
+If you created a users table manually with:
+
+email unique
+
+You must either:
+
+Stop inserting into it
+OR
+
+Change logic to upsert
+
+WHY THIS IS HAPPENING
+
+User logs in with Google.
+Supabase finds existing auth user.
+You then try to create another user row with same email.
+Database says no.
+
+That’s correct behavior.
+
+WHAT THE FINAL CORRECT BEHAVIOR SHOULD BE
+
+New user:
+
+Google login
+
+Supabase creates auth user
+
+Your system creates profile row
+
+User enters app
+
+Returning user:
+
+Google login
+
+Supabase finds auth user
+
+Your system checks profile exists
+
+Skips insert
+
+User enters app
+
+No errors
+
+DO NOT CHANGE
+
+Stripe linkage
+
+Existing profile data
+
+ApplyKit tables
+
+RLS policies
+
+This is purely login creation logic.
+
+CHECKLIST FOR YOUR AGENT
+
+Remove any manual insert into users table on login
+
+Replace with existence check or upsert
+
+Use user.id, not email
+
+Ensure applykit_profiles has user_id unique
+
+Test login twice with same Google account
