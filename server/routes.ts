@@ -109,6 +109,14 @@ export async function registerRoutes(
         return res.status(400).json({ message: "No file uploaded" });
       }
 
+      if (file.mimetype !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+        fs.unlinkSync(file.path);
+        return res.status(400).json({
+          code: "INVALID_FILE_FORMAT",
+          message: "Only DOCX files are supported.",
+        });
+      }
+
       const rawText = await extractTextFromFile(file.path, file.mimetype);
 
       if (!rawText || rawText.trim().length < 50) {

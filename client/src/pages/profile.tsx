@@ -68,6 +68,13 @@ export default function ProfilePage() {
   const links = profile.links as any;
 
   const handleReplaceUpload = async (file: File) => {
+    const isDocx = file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.name.toLowerCase().endsWith(".docx");
+    if (!isDocx) {
+      toast({ title: "Unsupported File Format", description: "We currently accept resumes in DOCX format only. Please upload a .docx file to continue." });
+      return;
+    }
+
     setIsReplacing(true);
     setUploadProgress(10);
 
@@ -251,7 +258,7 @@ export default function ProfilePage() {
         <div className="relative">
           <input
             type="file"
-            accept=".pdf,.docx"
+            accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             onChange={(e) => {
               const file = e.target.files?.[0];

@@ -1,0 +1,227 @@
+DEV NOTE
+Feature: Restrict Resume Upload Format to DOCX Only
+Scope: Resume Upload Flow Only
+Do Not Affect: Resume generation, resume download (PDF/DOC), DOCX parser logic, auth, Stripe, admin, limits, storage, or any other document features.
+
+Objective
+Remove PDF upload support when users upload their resume.
+Allow only .docx files.
+If user attempts to upload a PDF, show a professional UI-matching notification.
+Do not break or modify existing DOCX functionality.
+
+FRONTEND CHANGES
+
+A. File Input Restriction
+
+Locate resume upload component. Likely something like:
+
+<input type="file" />
+
+Update accept attribute to:
+
+accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+Remove:
+
+application/pdf
+
+.pdf
+
+This ensures OS file picker filters PDFs out visually.
+
+B. Client-Side Validation
+
+Even with accept filter, user may bypass via drag and drop.
+
+Add strict validation before upload request:
+
+Pseudo logic:
+
+if (file.type !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+showFormatError();
+return;
+}
+
+Do not check only extension. Check MIME type first. Fallback to extension if needed.
+
+Allowed:
+application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
+Rejected:
+application/pdf
+Anything else
+
+C. Professional Notification UI
+
+Do NOT use red error background.
+Do NOT use destructive alert styling.
+Do NOT break existing UI theme.
+
+Instead:
+
+Use your app’s neutral info notification style:
+
+Same border radius as cards
+
+Same background as modal surface
+
+Subtle left accent border in primary brand color
+
+Normal text color
+
+Small icon if already used elsewhere
+
+Message copy:
+
+Title:
+Unsupported File Format
+
+Body:
+We currently accept resumes in DOCX format only. Please upload a .docx file to continue.
+
+If your app uses toast:
+Use neutral toast variant.
+If your app uses inline message under uploader:
+Place it directly below upload box.
+
+Make sure:
+
+Works on desktop
+
+Works on mobile
+
+Text wraps properly
+
+No overflow
+
+No layout shift
+
+BACKEND SAFETY CHECK
+
+Even though frontend blocks it, backend must also reject PDF uploads.
+
+Locate resume upload endpoint.
+
+Before processing:
+
+if (file.mimetype !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+return 400 with structured JSON error:
+{
+code: "INVALID_FILE_FORMAT",
+message: "Only DOCX files are supported."
+}
+}
+
+Do NOT:
+
+Modify DOCX parser
+
+Modify storage logic
+
+Modify resume processing pipeline
+
+Modify generation flow
+
+Only block PDF and other formats at validation layer.
+
+DO NOT TOUCH DOWNLOAD LOGIC
+
+Important:
+
+Resume generation download must remain unchanged.
+
+Users must still be able to:
+
+Download as PDF
+
+Download as DOC
+
+Download as DOCX
+
+This restriction applies ONLY to resume upload on profile.
+
+TESTING CHECKLIST
+
+Desktop:
+
+Upload DOCX → works normally
+
+Upload PDF → blocked with professional message
+
+Drag and drop PDF → blocked
+
+Drag and drop DOCX → works
+
+No console errors
+
+Mobile:
+
+File picker filters to DOCX
+
+Upload PDF → blocked properly
+
+Notification UI responsive
+
+No red error background
+
+Backend:
+
+Direct API upload attempt with PDF → rejected with 400
+
+DOCX upload still processed correctly
+
+UI CONSISTENCY REQUIREMENTS
+
+Match:
+
+Same spacing as other upload sections
+
+Same typography scale
+
+Same notification styling pattern used elsewhere
+
+No red background
+
+No aggressive error state
+
+No shake animation
+
+No breaking layout
+
+IMPORTANT
+
+Do not:
+
+Change resume generation
+
+Change resume fixing logic
+
+Change parsing
+
+Change DOCX handling
+
+Change download formats
+
+Touch Stripe
+
+Touch auth
+
+Touch admin panel
+
+Touch limits
+
+Touch analytics
+
+Only remove PDF support from resume upload.
+
+This must be a clean restriction, not a refactor.
+
+If implemented correctly:
+
+System remains stable
+
+DOCX works exactly as before
+
+Users clearly understand accepted format
+
+UI remains premium and consistent

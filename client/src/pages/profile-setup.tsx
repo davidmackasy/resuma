@@ -72,6 +72,13 @@ export default function ProfileSetup() {
   const certItems = useFieldArray({ control: form.control, name: "certifications.items" });
 
   const handleUpload = useCallback(async (file: File) => {
+    const isDocx = file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.name.toLowerCase().endsWith(".docx");
+    if (!isDocx) {
+      toast({ title: "Unsupported File Format", description: "We currently accept resumes in DOCX format only. Please upload a .docx file to continue." });
+      return;
+    }
+
     setIsUploading(true);
     setUploadProgress(10);
 
@@ -253,7 +260,7 @@ function ChooseMethodStep({
       <Card className="p-6 hover-elevate cursor-pointer relative" data-testid="card-upload-resume">
         <input
           type="file"
-          accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           onChange={handleFileChange}
           disabled={isUploading}
@@ -269,7 +276,7 @@ function ChooseMethodStep({
           </div>
           <h3 className="font-medium text-lg mb-2">Upload Resume</h3>
           <p className="text-sm text-muted-foreground mb-3">
-            Upload a PDF or DOCX file. We'll extract your information automatically.
+            Upload a DOCX file. We'll extract your information automatically.
           </p>
           {isUploading && (
             <div className="mt-3">
@@ -280,7 +287,7 @@ function ChooseMethodStep({
             </div>
           )}
           {!isUploading && (
-            <Badge variant="secondary">PDF or DOCX</Badge>
+            <Badge variant="secondary">DOCX Only</Badge>
           )}
         </div>
       </Card>
