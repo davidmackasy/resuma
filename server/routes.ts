@@ -45,7 +45,18 @@ export async function registerRoutes(
   await setupAuth(app);
   registerAuthRoutes(app);
 
-  app.get("/api/applykit/profile", isAuthenticated, async (req: any, res) => {
+  const checkBan: any = async (req: any, res: any, next: any) => {
+    const userId = req.user?.claims?.sub;
+    if (userId) {
+      const flag = await storage.getUserFlag(userId);
+      if (flag?.isBanned) {
+        return res.status(403).json({ message: "Account disabled", banned: true });
+      }
+    }
+    return next();
+  };
+
+  app.get("/api/applykit/profile", isAuthenticated, checkBan, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const profile = await storage.getProfile(userId);
@@ -77,7 +88,7 @@ export async function registerRoutes(
     }
   });
 
-  app.put("/api/applykit/profile", isAuthenticated, async (req: any, res) => {
+  app.put("/api/applykit/profile", isAuthenticated, checkBan, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const data = req.body;
@@ -216,7 +227,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/applykit/applications", isAuthenticated, async (req: any, res) => {
+  app.post("/api/applykit/applications", isAuthenticated, checkBan, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { jobDescription, companyName, roleTitle, jobLocation, jobUrl, hiringManager, tone, templateId } = req.body;
@@ -231,8 +242,12 @@ export async function registerRoutes(
       }
 
       const usage = await storage.getUsage(userId);
-      if (usage && usage.applicationsGenerated >= 15) {
-        return res.status(403).json({ message: "Monthly application limit reached (15/15)" });
+      const isAdminUser = await storage.isAdmin(userId);
+      const override = await storage.getUserOverride(userId);
+      const isUnlimited = isAdminUser || (override?.forceUnlimited && (!override.overrideExpiresAt || override.overrideExpiresAt > new Date()));
+      const appLimit = 15 + (override?.extraApplications || 0);
+      if (!isUnlimited && usage && usage.applicationsGenerated >= appLimit) {
+        return res.status(403).json({ message: `Monthly application limit reached (${appLimit}/${appLimit})` });
       }
 
       const application = await storage.createApplication({
@@ -278,7 +293,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/applykit/applications/:id/generate", isAuthenticated, async (req: any, res) => {
+  app.post("/api/applykit/applications/:id/generate", isAuthenticated, checkBan, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const id = parseInt(req.params.id);
@@ -368,7 +383,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/applykit/applications/:id/regenerate", isAuthenticated, async (req: any, res) => {
+  app.post("/api/applykit/applications/:id/regenerate", isAuthenticated, checkBan, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const id = parseInt(req.params.id);
@@ -379,8 +394,12 @@ export async function registerRoutes(
       }
 
       const usage = await storage.getUsage(userId);
-      if (usage && usage.regenerations >= 15) {
-        return res.status(403).json({ message: "Monthly regeneration limit reached (15/15)" });
+      const isAdminUser = await storage.isAdmin(userId);
+      const override = await storage.getUserOverride(userId);
+      const isUnlimited = isAdminUser || (override?.forceUnlimited && (!override.overrideExpiresAt || override.overrideExpiresAt > new Date()));
+      const regenLimit = 15 + (override?.extraRegenerations || 0);
+      if (!isUnlimited && usage && usage.regenerations >= regenLimit) {
+        return res.status(403).json({ message: `Monthly regeneration limit reached (${regenLimit}/${regenLimit})` });
       }
 
       const profile = await storage.getProfile(userId);
@@ -551,6 +570,183 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting data:", error);
       res.status(500).json({ message: "Failed to delete data" });
+    }
+  });
+
+  const isAdminMiddleware: any = async (req: any, res: any, next: any) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const userId = req.user.claims.sub;
+    const admin = await storage.isAdmin(userId);
+    if (!admin) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    return next();
+  };
+
+  app.get("/api/applykit/admin/me", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const admin = await storage.getAdmin(userId);
+      res.json({ isAdmin: !!admin?.isActive, role: admin?.role || null });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to check admin status" });
+    }
+  });
+
+  app.get("/api/applykit/admin/metrics", isAdminMiddleware, async (req: any, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 14;
+      const metrics = await storage.getMetrics(days);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching metrics:", error);
+      res.status(500).json({ message: "Failed to fetch metrics" });
+    }
+  });
+
+  app.get("/api/applykit/admin/users", isAdminMiddleware, async (req: any, res) => {
+    try {
+      const { query, filter, page, limit } = req.query;
+      const result = await storage.getAllUsers({
+        query: query as string,
+        filter: filter as string,
+        page: parseInt(page as string) || 1,
+        limit: parseInt(limit as string) || 20,
+      });
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get("/api/applykit/admin/users/:userId", isAdminMiddleware, async (req: any, res) => {
+    try {
+      const detail = await storage.getUserDetail(req.params.userId);
+      if (!detail) return res.status(404).json({ message: "User not found" });
+      res.json(detail);
+    } catch (error) {
+      console.error("Error fetching user detail:", error);
+      res.status(500).json({ message: "Failed to fetch user detail" });
+    }
+  });
+
+  app.post("/api/applykit/admin/users/:userId/override", isAdminMiddleware, async (req: any, res) => {
+    try {
+      const adminUserId = req.user.claims.sub;
+      const { extraApplications, extraRegenerations, forceUnlimited, overrideExpiresAt } = req.body;
+      const override = await storage.setUserOverride(req.params.userId, {
+        extraApplications: extraApplications || 0,
+        extraRegenerations: extraRegenerations || 0,
+        forceUnlimited: forceUnlimited || false,
+        overrideExpiresAt: overrideExpiresAt ? new Date(overrideExpiresAt) : null,
+        updatedBy: adminUserId,
+      });
+      await storage.trackEvent(adminUserId, "admin_override", { targetUserId: req.params.userId, ...req.body });
+      res.json(override);
+    } catch (error) {
+      console.error("Error setting override:", error);
+      res.status(500).json({ message: "Failed to set override" });
+    }
+  });
+
+  app.post("/api/applykit/admin/users/:userId/ban", isAdminMiddleware, async (req: any, res) => {
+    try {
+      const adminUserId = req.user.claims.sub;
+      const { reason } = req.body;
+      const flag = await storage.setUserFlag(req.params.userId, {
+        isBanned: true,
+        banReason: reason || "Banned by admin",
+        bannedBy: adminUserId,
+      });
+      await storage.trackEvent(adminUserId, "admin_ban", { targetUserId: req.params.userId, reason });
+      res.json(flag);
+    } catch (error) {
+      console.error("Error banning user:", error);
+      res.status(500).json({ message: "Failed to ban user" });
+    }
+  });
+
+  app.post("/api/applykit/admin/users/:userId/unban", isAdminMiddleware, async (req: any, res) => {
+    try {
+      const adminUserId = req.user.claims.sub;
+      const flag = await storage.setUserFlag(req.params.userId, {
+        isBanned: false,
+        banReason: null,
+        bannedBy: null,
+      });
+      await storage.trackEvent(adminUserId, "admin_unban", { targetUserId: req.params.userId });
+      res.json(flag);
+    } catch (error) {
+      console.error("Error unbanning user:", error);
+      res.status(500).json({ message: "Failed to unban user" });
+    }
+  });
+
+  app.get("/api/applykit/admin/admins", isAdminMiddleware, async (_req: any, res) => {
+    try {
+      const admins = await storage.getAdmins();
+      res.json(admins);
+    } catch (error) {
+      console.error("Error fetching admins:", error);
+      res.status(500).json({ message: "Failed to fetch admins" });
+    }
+  });
+
+  app.post("/api/applykit/admin/admins", isAdminMiddleware, async (req: any, res) => {
+    try {
+      const adminUserId = req.user.claims.sub;
+      const currentAdmin = await storage.getAdmin(adminUserId);
+      if (!currentAdmin || currentAdmin.role !== "owner") {
+        return res.status(403).json({ message: "Only owners can add admins" });
+      }
+      const { email, role } = req.body;
+      if (!email) return res.status(400).json({ message: "Email is required" });
+
+      const { users: foundUsers } = await storage.getAllUsers({ query: email, limit: 1 });
+      const targetUser = foundUsers.find((u: any) => u.email === email);
+      if (!targetUser) return res.status(404).json({ message: "User must sign up first" });
+
+      const admin = await storage.addAdmin(targetUser.id, email, role || "admin", adminUserId);
+      await storage.trackEvent(adminUserId, "admin_add", { targetEmail: email, role: role || "admin" });
+      res.json(admin);
+    } catch (error) {
+      console.error("Error adding admin:", error);
+      res.status(500).json({ message: "Failed to add admin" });
+    }
+  });
+
+  app.patch("/api/applykit/admin/admins/:adminId", isAdminMiddleware, async (req: any, res) => {
+    try {
+      const adminUserId = req.user.claims.sub;
+      const currentAdmin = await storage.getAdmin(adminUserId);
+      if (!currentAdmin || currentAdmin.role !== "owner") {
+        return res.status(403).json({ message: "Only owners can modify admins" });
+      }
+      const adminId = parseInt(req.params.adminId);
+      const { role, isActive } = req.body;
+      const updated = await storage.updateAdmin(adminId, { role, isActive });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating admin:", error);
+      res.status(500).json({ message: "Failed to update admin" });
+    }
+  });
+
+  app.get("/api/applykit/admin/events", isAdminMiddleware, async (req: any, res) => {
+    try {
+      const { eventType, limit, offset } = req.query;
+      const events = await storage.getEvents({
+        eventType: eventType as string,
+        limit: parseInt(limit as string) || 50,
+        offset: parseInt(offset as string) || 0,
+      });
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      res.status(500).json({ message: "Failed to fetch events" });
     }
   });
 

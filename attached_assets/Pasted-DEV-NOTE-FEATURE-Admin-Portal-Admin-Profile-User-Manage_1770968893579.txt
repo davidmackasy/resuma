@@ -1,0 +1,579 @@
+DEV NOTE
+FEATURE: Admin Portal + Admin Profile + User Management + Metrics Dashboard
+GOAL: Add an admin-only section for selected emails to manage users, view metrics, adjust limits, and moderate accounts. Admins must have unlimited access.
+CRITICAL: Do not break authentication, Google OAuth, Stripe billing, or any existing ApplyKit flows. This is additive and isolated. No refactors of working features.
+
+ADMIN ACCESS MODEL (SAFE AND SIMPLE)
+
+Requirement
+
+Only selected users can access admin pages.
+
+Admins can add other admins.
+
+Admins bypass plan limits and do not need to pay.
+
+Decision
+Use a dedicated admin table with role-based access, tied to Supabase auth user_id.
+
+Do NOT rely on client-only email checks. Must be enforced server-side.
+
+DATABASE CHANGES (NEW TABLES ONLY)
+
+A) applykit_admins
+Purpose: admin allowlist + role
+
+Columns
+
+id uuid pk default gen_random_uuid()
+
+user_id uuid unique not null references auth.users(id) on delete cascade
+
+email text not null
+
+role text not null default 'admin' // 'owner' | 'admin' | 'support'
+
+is_active boolean not null default true
+
+created_at timestamptz default now()
+
+created_by uuid null references auth.users(id)
+
+Notes
+
+Store email for display and quick lookup
+
+user_id is the true key
+
+B) applykit_user_flags
+Purpose: moderation and account actions
+
+Columns
+
+user_id uuid pk references auth.users(id) on delete cascade
+
+is_banned boolean not null default false
+
+ban_reason text null
+
+banned_at timestamptz null
+
+banned_by uuid null references auth.users(id)
+
+notes text null
+
+updated_at timestamptz default now()
+
+C) applykit_user_overrides
+Purpose: give extra limits, override plan, admin unlimited
+
+Columns
+
+user_id uuid pk references auth.users(id) on delete cascade
+
+extra_applications int not null default 0
+
+extra_regenerations int not null default 0
+
+force_unlimited boolean not null default false
+
+override_expires_at timestamptz null
+
+updated_at timestamptz default now()
+
+updated_by uuid null references auth.users(id)
+
+D) applykit_events (optional but strongly recommended)
+Purpose: analytics without relying on logs
+
+Columns
+
+id uuid pk default gen_random_uuid()
+
+user_id uuid null references auth.users(id)
+
+event_type text not null // 'signup' | 'login' | 'analysis' | 'generate' | 'regenerate' | 'download_pdf' | 'subscribe' | 'cancel'
+
+metadata jsonb default '{}'
+
+created_at timestamptz default now()
+
+RLS + SECURITY (NON-NEGOTIABLE)
+
+Enable RLS on all new tables.
+
+Admin gate must be enforced server-side.
+
+Helper SQL function
+Create a secure function to check admin:
+
+is_admin(uid) returns boolean
+Checks applykit_admins where user_id = uid and is_active = true
+
+Policies
+applykit_admins
+
+Only admins can read admins list
+
+Only owner can insert/update/delete admins
+
+applykit_user_flags / applykit_user_overrides / applykit_events
+
+Only admins can read/write
+
+Normal users have zero access
+
+Do NOT expose admin data to client without server verification.
+
+BOOTSTRAP FIRST ADMIN (YOU)
+
+Requirement
+You need a safe way to become the first admin.
+
+Implement a one-time server-side seed script or SQL insert:
+
+Insert into applykit_admins using your auth user_id and email, role='owner'.
+
+Important
+Do not hardcode email checks in frontend.
+If you want “selected emails,” store them in applykit_admins.
+
+ADMIN ROUTES (ISOLATED)
+
+All admin pages under:
+
+/applykit/admin
+
+Pages
+
+/applykit/admin (Admin Dashboard)
+
+/applykit/admin/users (Users list)
+
+/applykit/admin/users/[id] (User detail + actions)
+
+/applykit/admin/admins (Manage admins)
+
+/applykit/admin/billing (Revenue + plans summary) optional
+
+Navigation
+Add “Admin” link in sidebar ONLY if user is admin.
+
+Do not mix admin UI into normal Profile page. Keep it separate.
+
+ADMIN MIDDLEWARE (ACCESS CONTROL)
+
+Add a server-side middleware check for routes starting with /applykit/admin:
+
+Steps
+
+Get session user_id
+
+Query applykit_admins where user_id = session.user.id and is_active = true
+
+If not admin, redirect to /applykit/app (or show 403 page)
+
+Must be enforced in:
+
+middleware.ts (route guard)
+AND
+
+every /api/applykit/admin/* endpoint (server verification)
+
+ADMIN DASHBOARD METRICS (WHAT YOU WANT)
+
+Dashboard cards
+A) Users
+
+Total users
+
+Signups today
+
+Signups this week
+
+Active users (last 7 days login) optional
+
+B) Revenue
+
+Paid users count
+
+Free users count
+
+New paid today
+
+Conversions this week
+
+C) Usage
+
+Total applications generated today
+
+Total generated this week
+
+Avg generations per user (7 days)
+
+Graphs
+
+Signups by day (last 14 days)
+
+Paid conversions by day (last 14 days)
+
+Generations by day (last 14 days)
+
+Data source options
+Option 1 (Best): applykit_events
+Track events and query aggregates.
+
+Option 2: Use existing tables timestamps
+
+auth.users created_at for signups (requires service role access)
+
+applykit_applications created_at for usage
+
+Stripe subscription table for paid users (whatever you already store)
+
+If you do not already store Stripe subscription status in your DB, add a small internal table:
+applykit_subscriptions with user_id, status, plan, current_period_start/end, updated_at
+Populate via existing Stripe webhook only. Do not change Stripe logic beyond storing status.
+
+USERS LIST (ADMIN)
+
+Page: /applykit/admin/users
+
+Table columns
+
+Name (from applykit_profiles.full_name)
+
+Email (from auth users or stored mapping)
+
+Plan (free/pro/max)
+
+Status (active/banned)
+
+Created date
+
+Generated this month
+
+Total generated
+
+Filters
+
+Free vs Paid
+
+Banned
+
+High usage
+
+New today / week
+
+Search
+
+email
+
+name
+
+Pagination required.
+
+USER DETAIL PAGE (ADMIN ACTIONS)
+
+Page: /applykit/admin/users/[id]
+
+Show
+
+User identity: name, email, created_at
+
+Plan + subscription status
+
+Usage this month: applications_generated, regenerations
+
+Total applications ever
+
+Last activity date
+
+Resume profile completion status
+
+Recent applications list (last 10)
+
+Actions (buttons)
+A) Add more limits
+
+Add extra applications (int)
+
+Add extra regenerations (int)
+
+Optional expiry date
+
+B) Set unlimited
+
+force_unlimited true/false
+
+Optional expiry date
+
+C) Ban user
+
+is_banned true
+
+require ban_reason
+
+Ban immediately blocks access
+
+D) Unban user
+
+is_banned false
+
+E) Delete user (high risk)
+Recommended: soft delete only
+
+Mark user as banned + “deleted” note
+
+Optional: hide from lists
+Do NOT delete auth.users automatically unless you are 100% sure. Keep it safe.
+
+BAN ENFORCEMENT (APP-WIDE)
+
+Add a global check in ApplyKit middleware:
+
+If user is banned:
+
+block access to /applykit/app/*
+
+redirect to /login with message “Account disabled”
+or show /disabled page
+
+Also enforce on all ApplyKit APIs:
+
+if banned return 403
+
+This prevents banned users from still generating via API.
+
+ADMIN UNLIMITED ACCESS
+
+Where plan limits are enforced today (usage checking function), update logic:
+
+PlanResolver order
+
+If user is admin in applykit_admins and is_active true
+Return unlimited = true
+
+Else check applykit_user_overrides.force_unlimited true and not expired
+Return unlimited = true
+
+Else apply normal Stripe plan limits + extra allowances:
+allowed_applications = plan_limit + extra_applications
+allowed_regenerations = plan_limit + extra_regenerations
+
+Important
+Do not change Stripe. Just layer overrides on top.
+
+ADMIN MANAGEMENT (ADD OTHER ADMINS)
+
+Page: /applykit/admin/admins
+
+Owner-only actions
+
+Add admin by email
+
+Set role: admin/support
+
+Disable admin (is_active false)
+
+Implementation detail
+Adding admin by email requires mapping to user_id.
+
+Flow
+
+Admin enters email
+
+Server searches auth.users for matching email (requires service role)
+If found:
+Insert applykit_admins with user_id + email
+If not found:
+Create “pending admin” row is not recommended unless you build it. Keep simple:
+Show error: “User must sign up first.”
+
+Owner role
+Only owner can manage admins.
+
+API ENDPOINTS (ADMIN ONLY)
+
+All under /api/applykit/admin/*
+
+GET /api/applykit/admin/metrics?range=14d
+Returns counts + timeseries
+
+GET /api/applykit/admin/users?query=&filter=&page=
+Returns paginated list
+
+GET /api/applykit/admin/users/[id]
+Returns user detail
+
+POST /api/applykit/admin/users/[id]/override
+Body: { extra_applications, extra_regenerations, force_unlimited, expires_at }
+
+POST /api/applykit/admin/users/[id]/ban
+Body: { reason }
+
+POST /api/applykit/admin/users/[id]/unban
+
+GET /api/applykit/admin/admins
+
+POST /api/applykit/admin/admins
+Body: { email, role }
+Owner only
+
+PATCH /api/applykit/admin/admins/[id]
+Enable/disable or role change
+Owner only
+
+All endpoints must:
+
+Validate session
+
+Verify admin role
+
+For owner-only actions verify role == 'owner'
+
+GRAPH IMPLEMENTATION
+
+Use a lightweight chart library (Recharts) for:
+
+Signups per day
+
+Paid conversions per day
+
+Generations per day
+
+Data format:
+[{ date: "2026-02-01", count: 12 }, ...]
+
+Must support time ranges:
+
+7d
+
+14d
+
+30d
+
+EVENT TRACKING (MINIMUM REQUIRED)
+
+Track these events:
+
+signup
+
+login
+
+generate
+
+regenerate
+
+subscribe (from Stripe webhook)
+
+cancel (from Stripe webhook)
+
+Implementation
+On key actions:
+Insert applykit_events row.
+
+Example:
+When generation succeeds:
+event_type = "generate"
+metadata = { application_id, template_id, tone }
+
+This powers admin metrics without fragile queries.
+
+UI QUALITY REQUIREMENTS
+
+Admin UI must be:
+
+Clean
+
+Professional
+
+Fast
+
+No clutter
+
+Admin dashboard layout:
+Top row: 4 KPI cards
+Middle: 2 charts
+Bottom: recent activity table
+
+Users list:
+
+Table with filters and search
+
+Quick actions in row menu
+
+User detail:
+
+Left: profile info
+
+Right: actions panel
+
+Mobile:
+Admin can be desktop-first but must still render without breaking layout.
+
+ACCEPTANCE CRITERIA
+
+Admin access
+
+Only whitelisted admins can open /applykit/admin
+
+Non-admins get redirected or 403
+
+Metrics
+
+Shows total users, signups today/week
+
+Shows paid vs free counts
+
+Shows generations today/week
+
+Graphs render for last 14 days
+
+User management
+
+Admin can view user details
+
+Admin can add extra limits
+
+Admin can set unlimited
+
+Admin can ban/unban user
+
+Banned user cannot access app or APIs
+
+Admin management
+
+Owner can add another admin
+
+Admin list view works
+
+Admin role enforced
+
+No regressions
+
+Google auth still works
+
+Stripe still works
+
+Generation still works
+
+Existing user data intact
+
+SAFE IMPLEMENTATION ORDER
+
+Add tables + RLS + is_admin helper function
+
+Seed first owner admin (your user_id)
+
+Add admin middleware + admin routes skeleton
+
+Build metrics endpoints (start with simple counts)
+
+Build users list + user detail read-only
+
+Add overrides actions (extra limits + force unlimited)
+
+Add ban/unban and enforce ban checks in middleware + APIs
+
+Add charts and event tracking polish

@@ -120,6 +120,44 @@ export const applykit_templates = pgTable("applykit_templates", {
   isActive: boolean("is_active").notNull().default(true),
 });
 
+export const applykit_admins = pgTable("applykit_admins", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().unique().references(() => users.id),
+  email: text("email").notNull(),
+  role: text("role").notNull().default("admin"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: varchar("created_by"),
+});
+
+export const applykit_user_flags = pgTable("applykit_user_flags", {
+  userId: varchar("user_id").primaryKey().references(() => users.id),
+  isBanned: boolean("is_banned").notNull().default(false),
+  banReason: text("ban_reason"),
+  bannedAt: timestamp("banned_at"),
+  bannedBy: varchar("banned_by"),
+  notes: text("notes"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const applykit_user_overrides = pgTable("applykit_user_overrides", {
+  userId: varchar("user_id").primaryKey().references(() => users.id),
+  extraApplications: integer("extra_applications").notNull().default(0),
+  extraRegenerations: integer("extra_regenerations").notNull().default(0),
+  forceUnlimited: boolean("force_unlimited").notNull().default(false),
+  overrideExpiresAt: timestamp("override_expires_at"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedBy: varchar("updated_by"),
+});
+
+export const applykit_events = pgTable("applykit_events", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id"),
+  eventType: text("event_type").notNull(),
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertProfileSchema = createInsertSchema(applykit_profiles).omit({
   id: true,
   createdAt: true,
@@ -152,3 +190,7 @@ export type JobAnalysis = typeof applykit_job_analysis.$inferSelect;
 export type InsertJobAnalysis = z.infer<typeof insertJobAnalysisSchema>;
 export type Usage = typeof applykit_usage.$inferSelect;
 export type Template = typeof applykit_templates.$inferSelect;
+export type Admin = typeof applykit_admins.$inferSelect;
+export type UserFlag = typeof applykit_user_flags.$inferSelect;
+export type UserOverride = typeof applykit_user_overrides.$inferSelect;
+export type AppEvent = typeof applykit_events.$inferSelect;

@@ -1,4 +1,4 @@
-import { eq, desc, and, gte, lte } from "drizzle-orm";
+import { eq, desc, and, gte, lte, sql, count, like, or } from "drizzle-orm";
 import { db } from "./db";
 import {
   applykit_profiles,
@@ -7,6 +7,10 @@ import {
   applykit_job_analysis,
   applykit_usage,
   applykit_templates,
+  applykit_admins,
+  applykit_user_flags,
+  applykit_user_overrides,
+  applykit_events,
   type Profile,
   type InsertProfile,
   type Application,
@@ -17,7 +21,12 @@ import {
   type InsertJobAnalysis,
   type Usage,
   type Template,
+  type Admin,
+  type UserFlag,
+  type UserOverride,
+  type AppEvent,
 } from "@shared/schema";
+import { users } from "@shared/models/auth";
 
 export interface IStorage {
   getProfile(userId: string): Promise<Profile | undefined>;
@@ -41,6 +50,20 @@ export interface IStorage {
   getTemplates(): Promise<Template[]>;
   seedTemplates(): Promise<void>;
   deleteAllUserData(userId: string): Promise<void>;
+  isAdmin(userId: string): Promise<boolean>;
+  getAdmin(userId: string): Promise<Admin | undefined>;
+  getAdmins(): Promise<Admin[]>;
+  addAdmin(userId: string, email: string, role: string, createdBy?: string): Promise<Admin>;
+  updateAdmin(id: number, data: Partial<{ role: string; isActive: boolean }>): Promise<Admin>;
+  getUserFlag(userId: string): Promise<UserFlag | undefined>;
+  setUserFlag(userId: string, data: Partial<{ isBanned: boolean; banReason: string | null; bannedBy: string | null; notes: string | null }>): Promise<UserFlag>;
+  getUserOverride(userId: string): Promise<UserOverride | undefined>;
+  setUserOverride(userId: string, data: Partial<{ extraApplications: number; extraRegenerations: number; forceUnlimited: boolean; overrideExpiresAt: Date | null; updatedBy: string | null }>): Promise<UserOverride>;
+  trackEvent(userId: string | null, eventType: string, metadata?: any): Promise<void>;
+  getEvents(options: { limit?: number; offset?: number; eventType?: string }): Promise<AppEvent[]>;
+  getAllUsers(options: { query?: string; filter?: string; page?: number; limit?: number }): Promise<{ users: any[]; total: number }>;
+  getUserDetail(userId: string): Promise<any>;
+  getMetrics(days: number): Promise<any>;
 }
 
 class DatabaseStorage implements IStorage {
@@ -254,6 +277,220 @@ class DatabaseStorage implements IStorage {
     await db.delete(applykit_applications).where(eq(applykit_applications.userId, userId));
     await db.delete(applykit_usage).where(eq(applykit_usage.userId, userId));
     await db.delete(applykit_profiles).where(eq(applykit_profiles.userId, userId));
+  }
+
+  async isAdmin(userId: string): Promise<boolean> {
+    const [admin] = await db.select().from(applykit_admins)
+      .where(and(eq(applykit_admins.userId, userId), eq(applykit_admins.isActive, true)));
+    return !!admin;
+  }
+
+  async getAdmin(userId: string): Promise<Admin | undefined> {
+    const [admin] = await db.select().from(applykit_admins)
+      .where(eq(applykit_admins.userId, userId));
+    return admin;
+  }
+
+  async getAdmins(): Promise<Admin[]> {
+    return db.select().from(applykit_admins).orderBy(desc(applykit_admins.createdAt));
+  }
+
+  async addAdmin(userId: string, email: string, role: string, createdBy?: string): Promise<Admin> {
+    const [admin] = await db.insert(applykit_admins)
+      .values({ userId, email, role, createdBy: createdBy || null })
+      .returning();
+    return admin;
+  }
+
+  async updateAdmin(id: number, data: Partial<{ role: string; isActive: boolean }>): Promise<Admin> {
+    const [admin] = await db.update(applykit_admins).set(data)
+      .where(eq(applykit_admins.id, id)).returning();
+    return admin;
+  }
+
+  async getUserFlag(userId: string): Promise<UserFlag | undefined> {
+    const [flag] = await db.select().from(applykit_user_flags)
+      .where(eq(applykit_user_flags.userId, userId));
+    return flag;
+  }
+
+  async setUserFlag(userId: string, data: Partial<{ isBanned: boolean; banReason: string | null; bannedBy: string | null; notes: string | null }>): Promise<UserFlag> {
+    const existing = await this.getUserFlag(userId);
+    if (existing) {
+      const [updated] = await db.update(applykit_user_flags)
+        .set({ ...data, updatedAt: new Date(), ...(data.isBanned ? { bannedAt: new Date() } : { bannedAt: null }) })
+        .where(eq(applykit_user_flags.userId, userId)).returning();
+      return updated;
+    }
+    const [created] = await db.insert(applykit_user_flags)
+      .values({ userId, ...data, ...(data.isBanned ? { bannedAt: new Date() } : {}) } as any)
+      .returning();
+    return created;
+  }
+
+  async getUserOverride(userId: string): Promise<UserOverride | undefined> {
+    const [override] = await db.select().from(applykit_user_overrides)
+      .where(eq(applykit_user_overrides.userId, userId));
+    return override;
+  }
+
+  async setUserOverride(userId: string, data: Partial<{ extraApplications: number; extraRegenerations: number; forceUnlimited: boolean; overrideExpiresAt: Date | null; updatedBy: string | null }>): Promise<UserOverride> {
+    const existing = await this.getUserOverride(userId);
+    if (existing) {
+      const [updated] = await db.update(applykit_user_overrides)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(applykit_user_overrides.userId, userId)).returning();
+      return updated;
+    }
+    const [created] = await db.insert(applykit_user_overrides)
+      .values({ userId, ...data } as any)
+      .returning();
+    return created;
+  }
+
+  async trackEvent(userId: string | null, eventType: string, metadata?: any): Promise<void> {
+    await db.insert(applykit_events).values({
+      userId,
+      eventType,
+      metadata: metadata || {},
+    });
+  }
+
+  async getEvents(options: { limit?: number; offset?: number; eventType?: string }): Promise<AppEvent[]> {
+    let query = db.select().from(applykit_events).orderBy(desc(applykit_events.createdAt));
+    if (options.eventType) {
+      query = query.where(eq(applykit_events.eventType, options.eventType)) as any;
+    }
+    return (query as any).limit(options.limit || 50).offset(options.offset || 0);
+  }
+
+  async getAllUsers(options: { query?: string; filter?: string; page?: number; limit?: number }): Promise<{ users: any[]; total: number }> {
+    const pageSize = options.limit || 20;
+    const offset = ((options.page || 1) - 1) * pageSize;
+
+    let whereClause: any = undefined;
+    if (options.query) {
+      const searchTerm = `%${options.query}%`;
+      whereClause = or(
+        like(users.email, searchTerm),
+        like(users.firstName, searchTerm),
+        like(users.lastName, searchTerm)
+      );
+    }
+
+    const userRows = whereClause
+      ? await db.select().from(users).where(whereClause).orderBy(desc(users.createdAt)).limit(pageSize).offset(offset)
+      : await db.select().from(users).orderBy(desc(users.createdAt)).limit(pageSize).offset(offset);
+
+    const [totalResult] = whereClause
+      ? await db.select({ count: count() }).from(users).where(whereClause)
+      : await db.select({ count: count() }).from(users);
+
+    const enriched = await Promise.all(userRows.map(async (u) => {
+      const profile = await this.getProfile(u.id);
+      const usage = await this.getUsage(u.id);
+      const flag = await this.getUserFlag(u.id);
+      const override = await this.getUserOverride(u.id);
+      const isAdminUser = await this.isAdmin(u.id);
+      const appCount = await db.select({ count: count() }).from(applykit_applications).where(eq(applykit_applications.userId, u.id));
+      return {
+        ...u,
+        profileName: profile?.fullName || "",
+        profileComplete: profile?.structuredComplete || false,
+        usage: usage ? { applicationsGenerated: usage.applicationsGenerated, regenerations: usage.regenerations } : null,
+        isBanned: flag?.isBanned || false,
+        isAdmin: isAdminUser,
+        forceUnlimited: override?.forceUnlimited || false,
+        totalApplications: appCount[0]?.count || 0,
+      };
+    }));
+
+    if (options.filter === "banned") {
+      return { users: enriched.filter(u => u.isBanned), total: enriched.filter(u => u.isBanned).length };
+    }
+
+    return { users: enriched, total: totalResult.count };
+  }
+
+  async getUserDetail(userId: string): Promise<any> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) return null;
+    const profile = await this.getProfile(userId);
+    const usage = await this.getUsage(userId);
+    const flag = await this.getUserFlag(userId);
+    const override = await this.getUserOverride(userId);
+    const isAdminUser = await this.isAdmin(userId);
+    const apps = await db.select().from(applykit_applications)
+      .where(eq(applykit_applications.userId, userId))
+      .orderBy(desc(applykit_applications.createdAt)).limit(10);
+    const [appCount] = await db.select({ count: count() }).from(applykit_applications)
+      .where(eq(applykit_applications.userId, userId));
+    return {
+      ...user,
+      profile,
+      usage: usage ? { applicationsGenerated: usage.applicationsGenerated, regenerations: usage.regenerations } : null,
+      flag,
+      override,
+      isAdmin: isAdminUser,
+      recentApplications: apps,
+      totalApplications: appCount?.count || 0,
+    };
+  }
+
+  async getMetrics(days: number): Promise<any> {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [totalUsers] = await db.select({ count: count() }).from(users);
+    const [signupsToday] = await db.select({ count: count() }).from(users)
+      .where(gte(users.createdAt, today));
+    const [signupsWeek] = await db.select({ count: count() }).from(users)
+      .where(gte(users.createdAt, new Date(today.getTime() - 7 * 86400000)));
+
+    const [totalApps] = await db.select({ count: count() }).from(applykit_applications);
+    const [appsToday] = await db.select({ count: count() }).from(applykit_applications)
+      .where(gte(applykit_applications.createdAt, today));
+    const [appsWeek] = await db.select({ count: count() }).from(applykit_applications)
+      .where(gte(applykit_applications.createdAt, new Date(today.getTime() - 7 * 86400000)));
+
+    const signupsByDay = await db.select({
+      date: sql<string>`DATE(${users.createdAt})`,
+      count: count(),
+    }).from(users)
+      .where(gte(users.createdAt, since))
+      .groupBy(sql`DATE(${users.createdAt})`)
+      .orderBy(sql`DATE(${users.createdAt})`);
+
+    const appsByDay = await db.select({
+      date: sql<string>`DATE(${applykit_applications.createdAt})`,
+      count: count(),
+    }).from(applykit_applications)
+      .where(gte(applykit_applications.createdAt, since))
+      .groupBy(sql`DATE(${applykit_applications.createdAt})`)
+      .orderBy(sql`DATE(${applykit_applications.createdAt})`);
+
+    const eventsByDay = await db.select({
+      date: sql<string>`DATE(${applykit_events.createdAt})`,
+      eventType: applykit_events.eventType,
+      count: count(),
+    }).from(applykit_events)
+      .where(gte(applykit_events.createdAt, since))
+      .groupBy(sql`DATE(${applykit_events.createdAt})`, applykit_events.eventType)
+      .orderBy(sql`DATE(${applykit_events.createdAt})`);
+
+    return {
+      totalUsers: totalUsers.count,
+      signupsToday: signupsToday.count,
+      signupsWeek: signupsWeek.count,
+      totalApplications: totalApps.count,
+      applicationsToday: appsToday.count,
+      applicationsWeek: appsWeek.count,
+      signupsByDay,
+      applicationsByDay: appsByDay,
+      eventsByDay,
+    };
   }
 }
 
