@@ -33,8 +33,8 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  const callbackURL = process.env.REPLIT_DEPLOYMENT
-    ? `https://${process.env.REPLIT_DEV_DOMAIN || process.env.REPL_SLUG + ".replit.app"}/api/callback`
+  const callbackURL = process.env.APP_URL
+    ? `${process.env.APP_URL}/api/callback`
     : "/api/callback";
 
   passport.use(

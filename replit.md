@@ -4,6 +4,13 @@
 ApplyKit lets users upload their master resume/profile once, paste any job description, and automatically generate three tailored documents (resume, cover letter, follow-up email) using AI. Built with React + Express + PostgreSQL.
 
 ## Recent Changes
+- 2026-02-13: Replaced Replit Auth with Google OAuth
+  - Swapped Passport.js strategy from Replit OIDC to passport-google-oauth20
+  - Kept session infrastructure (express-session + PostgreSQL store)
+  - Removed openid-client and memoizee dependencies
+  - Auth routes preserved: /api/login, /api/callback, /api/logout, /api/auth/user
+  - User session maintains claims.sub pattern for backward compatibility
+  - Secrets needed: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET
 - 2026-02-13: ATS Fit Report with Gap Fixer
   - 3-stage AI pipeline: job extraction → fit scoring → document generation from analysis
   - New applykit_job_analysis table storing fitScore, matchedSkills, missingSkills, riskFlags, transferableAngle, suggestedAdditions, jobExtraction
@@ -23,7 +30,7 @@ ApplyKit lets users upload their master resume/profile once, paste any job descr
 
 ## Architecture
 - **Frontend**: React + Vite, wouter routing, TanStack Query, shadcn/ui components, Tailwind CSS
-- **Backend**: Express.js with session-based auth (Replit Auth via OIDC), RESTful API
+- **Backend**: Express.js with session-based auth (Google OAuth via Passport.js), RESTful API
 - **Database**: PostgreSQL via Drizzle ORM
 - **AI**: OpenAI (via Replit AI Integrations) for document generation using gpt-5-mini
 
