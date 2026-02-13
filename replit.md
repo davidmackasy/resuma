@@ -4,6 +4,13 @@
 Resuma lets users upload their master resume/profile once, paste any job description, and automatically generate three tailored documents (resume, cover letter, follow-up email) using AI. Built with React + Express + PostgreSQL.
 
 ## Recent Changes
+- 2026-02-13: Dev-Only Email/Password Login
+  - Added passwordHash and authProvider columns to users table
+  - Dev routes (POST /api/auth/dev/register, POST /api/auth/dev/login) only registered when NODE_ENV !== "production"
+  - GET /api/auth/dev-status returns { isDev } for frontend conditional rendering
+  - Login page shows email/password form + toggle between signup/login in dev mode
+  - Passwords hashed with bcrypt (12 rounds), passwordHash stripped from all API responses
+  - Production: only Google OAuth, dev routes not registered, complete isolation
 - 2026-02-13: Admin Portal
   - 4 new tables: applykit_admins, applykit_user_flags, applykit_user_overrides, applykit_events
   - Admin middleware (isAdminMiddleware) protects /api/applykit/admin/* routes
