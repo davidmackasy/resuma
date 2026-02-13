@@ -292,3 +292,10 @@
     inset: -1px;
   }
 }
+
+@media (max-width: 767px) {
+  .mobile-tap-scale:active {
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+  }
+}

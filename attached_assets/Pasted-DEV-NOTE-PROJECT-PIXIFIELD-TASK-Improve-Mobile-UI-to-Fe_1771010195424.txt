@@ -1,0 +1,374 @@
+DEV NOTE
+PROJECT: PIXIFIELD
+TASK: Improve Mobile UI to Feel Like a Native App
+SCOPE: Mobile UI only
+DO NOT TOUCH: Authentication, Stripe, API logic, credit logic, generation endpoints, backend services, desktop UI
+
+Objective
+
+Convert the current mobile experience from a web-style layout with slide sidebar navigation to a native app style layout using a fixed bottom tab bar with clear button navigation.
+
+This update must affect MOBILE VIEW ONLY.
+Desktop layout must remain unchanged.
+All existing functionality must remain fully operational.
+
+Core Design Shift
+
+Current mobile issue
+
+Slide sidebar navigation
+
+Feels like a web dashboard
+
+Too many nested menus
+
+Not optimized for thumb navigation
+
+Target experience
+
+Native iOS and Android app feel
+
+Fixed bottom navigation bar
+
+Large touch-friendly buttons
+
+Fast switching between tools
+
+No slide-out sidebar on mobile
+
+Mobile Detection Logic
+
+Agent must implement responsive breakpoint logic:
+
+If screen width <= 768px
+→ Enable mobile native layout
+
+If screen width > 768px
+→ Keep current desktop layout unchanged
+
+Do not remove sidebar from desktop.
+Do not merge layouts.
+Mobile layout must be isolated.
+
+Bottom Navigation Bar Implementation
+
+Create a fixed bottom tab bar for mobile only.
+
+Position
+
+Fixed bottom
+
+Full width
+
+Height: 60px to 70px
+
+Background: Solid dark theme consistent with current brand
+
+Border-top: subtle 1px separator
+
+Safe area support
+
+Add padding-bottom for iOS safe-area
+
+Use env(safe-area-inset-bottom)
+
+Bottom Tab Structure
+
+Maximum 5 primary tabs
+
+Recommended structure for PIXIFIELD mobile:
+
+Home
+
+Create
+
+Angles
+
+Upscale
+
+Profile
+
+If additional tools exist like Edit, Video, 3D
+→ They must be accessible from Create page as action buttons
+Do NOT overload bottom bar
+
+Tab Button Design
+
+Each tab must include:
+
+Icon
+
+Label
+
+Active state
+
+Design rules
+
+Icon size: 22px to 26px
+
+Label font size: 11px to 12px
+
+Active state: brand color highlight
+
+Inactive state: muted gray
+
+Tap area
+
+Minimum 44px height
+
+Comfortable thumb interaction
+
+Transitions
+
+Instant switch
+
+No full page reload
+
+Use client-side routing
+
+Remove Mobile Sidebar
+
+On mobile only:
+
+Disable hamburger menu
+
+Remove slide sidebar
+
+Do not render sidebar DOM
+
+Prevent overlay conflicts
+
+Keep sidebar intact for desktop.
+
+Create Page Redesign (Mobile Focus)
+
+The Create tab should feel like a native hub.
+
+Layout
+
+Top
+
+Title: Create
+
+Small subtitle
+
+Main content
+Grid of large rounded action buttons
+
+Example buttons:
+
+Text to Image
+
+Image to Image
+
+Angles
+
+Edit
+
+Video
+
+3D
+
+Button specs
+
+Full width or 2-column grid
+
+Border radius: 16px
+
+Padding: 16px to 20px
+
+Elevated card style
+
+Soft shadow
+
+Must feel like tapping app features, not clicking links.
+
+Improve Screen Layout Behavior
+
+Each mobile page must follow this structure:
+
+Top section
+
+Page title
+
+Optional small description
+
+Scrollable content area
+
+Padding: 16px
+
+No cramped edges
+
+Bottom
+
+Fixed navigation bar
+
+Important
+Content must never hide behind bottom nav.
+Add bottom padding equal to nav height.
+
+Improve Generation Pages on Mobile
+
+For Angles, Upscale, Video pages:
+
+Buttons
+
+Large primary action button
+
+Full width
+
+Rounded corners
+
+Upload area
+
+Large drag and tap zone
+
+Clear CTA
+
+Loading state
+
+Native spinner
+
+Progress indicator
+
+Results
+
+Display as cards
+
+Full width
+
+Rounded corners
+
+Do not alter generation logic.
+Only adjust UI layout and spacing.
+
+Micro Interactions
+
+Add native-like behavior
+
+Button press scale animation 0.97
+
+Smooth fade transitions
+
+Soft haptic feedback if supported
+
+Ripple effect on Android style
+
+No heavy animations.
+Keep performance optimized.
+
+Performance Rules
+
+Mobile layout must:
+
+Lazy load heavy components
+
+Avoid re-render loops
+
+Minimize layout shift
+
+Keep generation state persistent
+
+If user switches tabs and returns
+→ Do not lose current generation state
+
+Visual Polish
+
+Use consistent spacing system
+
+8px grid system
+
+Border radius
+
+Cards: 16px
+
+Buttons: 14px
+
+Inputs: 12px
+
+Typography
+
+Clear hierarchy
+
+No overcrowding
+
+Touch priority
+Everything must be reachable with thumb without stretching.
+
+Do NOT Break
+
+Critical instruction
+
+Do NOT modify:
+
+Authentication system
+
+Google auth
+
+Stripe billing
+
+Credit deduction
+
+NanoBanana Pro integration
+
+Existing API endpoints
+
+Backend routes
+
+Desktop layout
+
+This is UI layer only.
+
+Testing Checklist
+
+Agent must verify:
+
+Mobile only
+
+Bottom nav visible
+
+Sidebar removed
+
+Tabs switch correctly
+
+No overlapping content
+
+No scroll bugs
+
+Safe area works
+
+Generation pages still function
+
+Credit deduction works
+
+State persists when switching tabs
+
+Desktop
+
+Sidebar unchanged
+
+No layout regression
+
+No CSS conflicts
+
+Final Goal
+
+When opening PIXIFIELD on mobile:
+
+It should feel like:
+
+A real App Store app
+
+Thumb-friendly
+
+Clean
+
+Fast
+
+Focused
+
+No dashboard clutter
+
+This must feel like a product upgrade, not a theme tweak.
+
+End of dev note.

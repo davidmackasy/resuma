@@ -6,9 +6,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FileText } from "lucide-react";
+import { Link } from "wouter";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import LoginPage from "@/pages/login";
@@ -25,7 +29,49 @@ import AdminUsers from "@/pages/admin-users";
 import AdminUserDetail from "@/pages/admin-user-detail";
 import AdminAdmins from "@/pages/admin-admins";
 
-function AppShell() {
+function AppRoutes() {
+  return (
+    <Switch>
+      <Route path="/app" component={Dashboard} />
+      <Route path="/app/new" component={NewApplication} />
+      <Route path="/app/applications" component={ApplicationsPage} />
+      <Route path="/app/applications/:id/fit-report" component={FitReport} />
+      <Route path="/app/applications/:id" component={ApplicationDetail} />
+      <Route path="/app/profile/setup" component={ProfileSetup} />
+      <Route path="/app/profile" component={ProfilePage} />
+      <Route path="/app/settings" component={SettingsPage} />
+      <Route path="/app/admin" component={AdminDashboard} />
+      <Route path="/app/admin/users/:userId" component={AdminUserDetail} />
+      <Route path="/app/admin/users" component={AdminUsers} />
+      <Route path="/app/admin/admins" component={AdminAdmins} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function MobileShell() {
+  return (
+    <div className="flex flex-col h-[100dvh] w-full">
+      <header className="flex items-center justify-between gap-4 px-4 py-2 border-b sticky top-0 z-50 bg-background/95 backdrop-blur-md">
+        <Link href="/app">
+          <div className="flex items-center gap-2 cursor-pointer" data-testid="mobile-header-logo">
+            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
+              <FileText className="h-3.5 w-3.5 text-primary-foreground" />
+            </div>
+            <span className="font-serif font-bold text-base tracking-tight">Resuma</span>
+          </div>
+        </Link>
+        <ThemeToggle />
+      </header>
+      <main className="flex-1 overflow-auto" style={{ paddingBottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))" }}>
+        <AppRoutes />
+      </main>
+      <MobileBottomNav />
+    </div>
+  );
+}
+
+function DesktopShell() {
   const style = {
     "--sidebar-width": "16rem",
     "--sidebar-width-icon": "3rem",
@@ -41,26 +87,17 @@ function AppShell() {
             <ThemeToggle />
           </header>
           <main className="flex-1 overflow-auto">
-            <Switch>
-              <Route path="/app" component={Dashboard} />
-              <Route path="/app/new" component={NewApplication} />
-              <Route path="/app/applications" component={ApplicationsPage} />
-              <Route path="/app/applications/:id/fit-report" component={FitReport} />
-              <Route path="/app/applications/:id" component={ApplicationDetail} />
-              <Route path="/app/profile/setup" component={ProfileSetup} />
-              <Route path="/app/profile" component={ProfilePage} />
-              <Route path="/app/settings" component={SettingsPage} />
-              <Route path="/app/admin" component={AdminDashboard} />
-              <Route path="/app/admin/users/:userId" component={AdminUserDetail} />
-              <Route path="/app/admin/users" component={AdminUsers} />
-              <Route path="/app/admin/admins" component={AdminAdmins} />
-              <Route component={NotFound} />
-            </Switch>
+            <AppRoutes />
           </main>
         </div>
       </div>
     </SidebarProvider>
   );
+}
+
+function AppShell() {
+  const isMobile = useIsMobile();
+  return isMobile ? <MobileShell /> : <DesktopShell />;
 }
 
 function RootRouter() {

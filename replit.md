@@ -4,6 +4,13 @@
 Resuma lets users upload their master resume/profile once, paste any job description, and automatically generate three tailored documents (resume, cover letter, follow-up email) using AI. Built with React + Express + PostgreSQL.
 
 ## Recent Changes
+- 2026-02-13: Mobile Native UI
+  - Added fixed bottom tab bar for mobile (≤767px) with 5 tabs: Home, New, History, Profile, Settings
+  - Created MobileBottomNav component and MobileShell layout in App.tsx
+  - Desktop layout completely unchanged (sidebar preserved)
+  - useIsMobile hook initializes synchronously to prevent layout flash
+  - Safe area support for iOS notch/home indicator
+  - Auto-admin bootstrap: OWNER_EMAILS checked on Google login to auto-create admin records
 - 2026-02-13: Dev-Only Email/Password Login
   - Added passwordHash and authProvider columns to users table
   - Dev routes (POST /api/auth/dev/register, POST /api/auth/dev/login) only registered when NODE_ENV !== "production"
