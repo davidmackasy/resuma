@@ -1,0 +1,198 @@
+Perfect. This is exactly what a real SaaS should do.
+
+Right now your flow is:
+
+Landing page → Direct redirect to Google OAuth
+
+That feels cheap and rushed.
+
+You want:
+
+Landing page → /login (auth page) → Click button → Google OAuth
+
+That’s correct. Clean. Premium. Controlled.
+
+Here is the proper dev note without breaking your current working Google setup.
+
+DEV NOTE
+FEATURE: Add Authentication Page Before Google Redirect
+GOAL:
+When user clicks “Login” or “Start Free” from landing page, they must first go to a dedicated authentication page.
+From there, user clicks “Continue with Google”.
+Then Google OAuth runs normally.
+Do not break existing OAuth flow.
+
+SECTION 1: ROUTING UPDATE
+
+Current behavior:
+Landing button directly calls supabase.auth.signInWithOAuth
+
+Change to:
+
+Landing page buttons should navigate to:
+
+/login
+
+NOT trigger OAuth directly.
+
+Example:
+
+Instead of:
+
+onClick={handleGoogleLogin}
+
+Use:
+
+router.push("/login")
+
+or
+
+<Link href="/login">Start Free</Link>
+
+SECTION 2: CREATE AUTH PAGE
+
+Create:
+
+/app/login/page.tsx
+
+This page must:
+
+• Show logo
+• Show product name
+• Show headline
+• Show one Google button
+• Clean SaaS styling
+
+Do NOT auto-trigger OAuth.
+
+Example:
+
+"use client"
+
+import { supabase } from "@/lib/supabaseClient"
+
+export default function LoginPage() {
+
+const handleGoogleLogin = async () => {
+await supabase.auth.signInWithOAuth({
+provider: "google",
+options: {
+redirectTo: ${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback
+}
+})
+}
+
+return (
+<div className="flex items-center justify-center min-h-screen bg-gray-50">
+<div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8">
+
+    <h1 className="text-2xl font-semibold mb-2 text-center">
+      Welcome to Resuma
+    </h1>
+
+
+    <p className="text-sm text-gray-500 mb-6 text-center">
+      Sign in to continue
+    </p>
+
+
+    <button
+      onClick={handleGoogleLogin}
+      className="w-full flex items-center justify-center gap-2 bg-black text-white py-3 rounded-lg hover:opacity-90 transition"
+    >
+      Continue with Google
+    </button>
+
+
+  </div>
+</div>
+
+)
+}
+
+SECTION 3: OPTIONAL UX IMPROVEMENT
+
+If user clicks:
+
+Start Free → text says "Create your account"
+
+If user clicks:
+
+Login → text says "Welcome back"
+
+To handle this, pass query param:
+
+/login?mode=signup
+/login?mode=login
+
+Inside page:
+
+const mode = searchParams.get("mode")
+
+Change subtitle dynamically.
+
+This makes it feel premium.
+
+SECTION 4: PROTECT LOGGED-IN USERS
+
+If already authenticated and user visits /login:
+
+Redirect to:
+
+/applykit/app
+
+Add inside login page:
+
+Check session.
+
+If session exists:
+router.push("/applykit/app")
+
+Prevents unnecessary login.
+
+SECTION 5: DO NOT CHANGE GOOGLE OAUTH LOGIC
+
+Your existing:
+
+supabase.auth.signInWithOAuth
+
+and
+
+/auth/callback
+
+Stay exactly the same.
+
+We are only inserting a UI layer before triggering OAuth.
+
+SECTION 6: FINAL FLOW
+
+New user:
+
+Landing → /login → Click Continue with Google → Google → callback → dashboard
+
+Returning user:
+
+Landing → /login → Click Continue with Google → Google auto-select account → callback → dashboard
+
+Logged in user:
+
+Landing → click login → auto-redirect to dashboard
+
+SECTION 7: ACCEPTANCE CRITERIA
+
+• Landing page no longer triggers OAuth directly
+• /login page exists
+• OAuth only starts when user clicks button
+• Google login still works
+• No duplicate user errors
+• No break in Stripe linkage
+• No break in protected routes
+
+FINAL RESULT
+
+Your product now feels like:
+
+Real SaaS
+Controlled auth flow
+Premium UX
+Professional login structure

@@ -14,10 +14,10 @@ export default function Landing() {
             <span className="font-serif font-bold text-lg tracking-tight" data-testid="text-brand-name">ApplyKit</span>
           </div>
           <div className="flex items-center gap-2">
-            <a href="/api/login">
+            <a href="/login?mode=login">
               <Button variant="ghost" data-testid="button-login">Log in</Button>
             </a>
-            <a href="/api/login">
+            <a href="/login?mode=signup">
               <Button data-testid="button-get-started">Get Started</Button>
             </a>
           </div>
@@ -40,7 +40,7 @@ export default function Landing() {
                 Upload your resume once. Paste any job description. Get a perfectly tailored resume, cover letter, and follow-up email in seconds.
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <a href="/api/login">
+                <a href="/login?mode=signup">
                   <Button size="lg" data-testid="button-hero-cta">
                     Start for free
                     <ArrowRight className="ml-2 h-4 w-4" />

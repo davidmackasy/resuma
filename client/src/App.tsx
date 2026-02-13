@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
+import LoginPage from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import ProfilePage from "@/pages/profile";
 import NewApplication from "@/pages/new-application";
@@ -72,6 +73,7 @@ function RootRouter() {
     return (
       <Switch>
         <Route path="/" component={Landing} />
+        <Route path="/login" component={LoginPage} />
         <Route>{() => { window.location.href = "/"; return null; }}</Route>
       </Switch>
     );
@@ -80,6 +82,7 @@ function RootRouter() {
   return (
     <Switch>
       <Route path="/">{() => { window.location.href = "/app"; return null; }}</Route>
+      <Route path="/login">{() => { window.location.href = "/app"; return null; }}</Route>
       <Route path="/app/*?" component={AppShell} />
       <Route component={NotFound} />
     </Switch>
