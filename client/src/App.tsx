@@ -18,6 +18,7 @@ import ApplicationsPage from "@/pages/applications";
 import ApplicationDetail from "@/pages/application-detail";
 import SettingsPage from "@/pages/settings";
 import ProfileSetup from "@/pages/profile-setup";
+import FitReport from "@/pages/fit-report";
 
 function AppShell() {
   const style = {
@@ -39,6 +40,7 @@ function AppShell() {
               <Route path="/app" component={Dashboard} />
               <Route path="/app/new" component={NewApplication} />
               <Route path="/app/applications" component={ApplicationsPage} />
+              <Route path="/app/applications/:id/fit-report" component={FitReport} />
               <Route path="/app/applications/:id" component={ApplicationDetail} />
               <Route path="/app/profile/setup" component={ProfileSetup} />
               <Route path="/app/profile" component={ProfilePage} />

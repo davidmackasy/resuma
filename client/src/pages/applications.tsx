@@ -53,7 +53,7 @@ export default function ApplicationsPage() {
       ) : (
         <div className="space-y-3">
           {applications.map((app) => (
-            <Link key={app.id} href={`/app/applications/${app.id}`}>
+            <Link key={app.id} href={app.status === "analyzed" ? `/app/applications/${app.id}/fit-report` : `/app/applications/${app.id}`}>
               <Card className="p-4 hover-elevate cursor-pointer" data-testid={`card-history-${app.id}`}>
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0 flex-1">
@@ -85,5 +85,6 @@ export default function ApplicationsPage() {
 
 function StatusBadge({ status }: { status: string }) {
   const variant = status === "generated" ? "default" : status === "failed" ? "destructive" : "secondary";
-  return <Badge variant={variant} className="text-xs">{status}</Badge>;
+  const label = status === "analyzed" ? "ready to generate" : status;
+  return <Badge variant={variant} className="text-xs">{label}</Badge>;
 }

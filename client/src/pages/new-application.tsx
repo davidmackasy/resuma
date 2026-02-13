@@ -14,7 +14,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Sparkles, ChevronDown, FileText, Loader2, AlertCircle } from "lucide-react";
+import { Search, ChevronDown, FileText, Loader2, AlertCircle } from "lucide-react";
 import type { Profile, Template } from "@shared/schema";
 
 const toneOptions = [
@@ -45,7 +45,7 @@ export default function NewApplication() {
     queryKey: ["/api/applykit/templates"],
   });
 
-  const generateMutation = useMutation({
+  const analyzeMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/applykit/applications", {
         jobDescription,
@@ -62,11 +62,10 @@ export default function NewApplication() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/applykit/applications"] });
       queryClient.invalidateQueries({ queryKey: ["/api/applykit/usage"] });
-      toast({ title: "Application generated!", description: "Your tailored documents are ready." });
-      navigate(`/app/applications/${data.id}`);
+      navigate(`/app/applications/${data.id}/fit-report`);
     },
     onError: (error) => {
-      toast({ title: "Generation failed", description: error.message, variant: "destructive" });
+      toast({ title: "Analysis failed", description: error.message, variant: "destructive" });
     },
   });
 
@@ -77,7 +76,7 @@ export default function NewApplication() {
       <div>
         <h1 className="text-2xl font-serif font-bold" data-testid="text-new-app-title">New Application</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Paste a job description to generate a tailored resume, cover letter, and follow-up email
+          Paste a job description to analyze fit and generate tailored documents
         </p>
       </div>
 
@@ -206,22 +205,22 @@ export default function NewApplication() {
 
       <div className="flex items-center justify-between gap-4">
         <p className="text-xs text-muted-foreground">
-          Uses 1 application from your monthly quota
+          Analyzes job fit first, then generates tailored documents
         </p>
         <Button
-          onClick={() => generateMutation.mutate()}
-          disabled={!jobDescription.trim() || !hasProfile || generateMutation.isPending}
-          data-testid="button-generate"
+          onClick={() => analyzeMutation.mutate()}
+          disabled={!jobDescription.trim() || !hasProfile || analyzeMutation.isPending}
+          data-testid="button-analyze"
         >
-          {generateMutation.isPending ? (
+          {analyzeMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
+              Analyzing...
             </>
           ) : (
             <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Generate Application
+              <Search className="mr-2 h-4 w-4" />
+              Analyze Job Fit
             </>
           )}
         </Button>
