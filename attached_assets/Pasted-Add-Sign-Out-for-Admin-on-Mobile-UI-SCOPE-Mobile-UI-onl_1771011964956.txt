@@ -1,0 +1,201 @@
+Add Sign Out for Admin on Mobile UI
+SCOPE: Mobile UI only
+DO NOT TOUCH: Desktop UI, authentication logic, backend, Stripe, charts, admin data, role logic
+
+Objective
+
+Admin users on mobile currently do NOT have a visible Sign Out option.
+
+Add a proper Sign Out button for admin users on mobile.
+Do not change any existing functionality.
+Do not restructure navigation.
+Do not modify desktop.
+
+This is a UI exposure fix only.
+
+Problem Summary
+
+On mobile:
+
+Admin bottom nav shows: Home, New, History, Profile, Admin
+
+No visible Sign Out option
+
+Admin dashboard screen does not expose logout
+
+Logout logic already exists.
+It is just not accessible in mobile admin flow.
+
+Where To Add Sign Out
+
+DO NOT add Sign Out to bottom navigation.
+
+Correct placement:
+
+Inside Profile page for admin users on mobile.
+
+If Profile page already exists:
+Add an Account section at the bottom.
+
+If Profile page is minimal:
+Append a Sign Out button under existing content.
+
+Do NOT modify Admin dashboard layout.
+Do NOT inject Sign Out inside charts screen.
+
+Implementation Details
+
+Inside Mobile Profile Page
+
+Add section at bottom:
+
+Section title
+Account
+
+Under it
+
+Button: Sign Out
+
+Button specs
+
+Full width
+
+Height: minimum 48px
+
+Border radius: 12px
+
+Margin-top: 24px
+
+Padding: 14px to 16px
+
+Background: subtle red or danger tone
+
+Text: Sign Out
+
+Font weight: medium
+
+Center aligned
+
+Add bottom spacing to prevent overlap with bottom nav.
+
+Must respect safe-area inset.
+
+Functional Logic
+
+Button must call the EXISTING logout handler.
+
+Do NOT:
+
+Create new logout function
+
+Modify auth provider
+
+Modify token logic
+
+Modify session handling
+
+Modify redirect behavior
+
+Use the same signOut() or logout() function used on desktop.
+
+After logout:
+
+Redirect to login or landing page
+
+Same behavior as desktop
+
+Role Logic
+
+All users must have access to Sign Out on mobile.
+
+Admin
+→ Profile tab → Sign Out visible
+
+Non-admin
+→ Settings tab already contains Sign Out
+
+Do NOT change non-admin flow.
+Only ensure admin also has access.
+
+Component Scope
+
+Modify only:
+
+MobileProfile component
+OR
+MobileAccountSection component
+
+Do NOT touch:
+
+MobileBottomNav logic
+
+Admin dashboard layout
+
+Chart components
+
+Desktop sidebar
+
+Role guards
+
+Testing Checklist
+
+Mobile viewport only
+
+Admin account
+
+Tap Profile
+
+Scroll down
+
+See Sign Out
+
+Tap Sign Out
+
+Session clears
+
+Redirect works
+
+No console errors
+
+Non-admin account
+
+Still sees Sign Out in Settings
+
+No duplicate buttons
+
+Desktop
+
+No layout change
+
+Logout still works
+
+Critical Protection
+
+Absolutely do NOT
+
+Modify authentication system
+
+Modify Google OAuth
+
+Modify Stripe
+
+Modify admin permissions
+
+Modify charts
+
+Modify bottom navigation structure
+
+Remove anything else
+
+This is a mobile UI visibility fix only.
+
+Final Expected Result
+
+On mobile:
+
+Admin user
+Profile → Sign Out → Logs out successfully
+
+Nothing else changes.
+
+End of dev note.

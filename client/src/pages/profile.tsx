@@ -16,7 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   Plus, Trash2, Save, User, Briefcase, GraduationCap,
   Award, Link2, PenLine, Upload, RefreshCw, Loader2,
-  CheckCircle, AlertTriangle, FileText
+  CheckCircle, AlertTriangle, FileText, LogOut, Settings
 } from "lucide-react";
 import type { Profile } from "@shared/schema";
 
@@ -276,6 +276,26 @@ export default function ProfilePage() {
         </div>
         {isReplacing && <Progress value={uploadProgress} className="h-1 mt-3" />}
       </Card>
+
+      <div className="md:hidden space-y-3 pt-2 pb-6">
+        <h3 className="text-sm font-medium text-muted-foreground">Account</h3>
+        <Link href="/app/settings">
+          <Button variant="outline" className="w-full justify-start" data-testid="button-profile-settings">
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </Button>
+        </Link>
+        <a href="/api/logout" className="block">
+          <Button
+            variant="outline"
+            className="w-full border-destructive/30 text-destructive"
+            data-testid="button-profile-sign-out"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
+        </a>
+      </div>
     </div>
   );
 }
