@@ -1,0 +1,255 @@
+TASK: Add Sign Out Button to Mobile UI
+SCOPE: Mobile UI only
+DO NOT TOUCH: Desktop UI, authentication logic, Stripe, backend, APIs, credit logic, role logic
+Objective
+Add a visible Sign Out button in the mobile UI.
+Currently missing on mobile only.
+Desktop logout must remain untouched.
+Do not modify authentication flow.
+Do not change session handling logic.
+This is strictly a UI exposure fix.
+
+
+
+Scope Limitation
+
+
+Applies only when screen width <= 768px.
+Do not modify:
+
+
+Desktop sidebar
+
+
+Desktop header
+
+
+Auth provider
+
+
+Google auth logic
+
+
+Token handling
+
+
+Session storage
+
+
+Admin logic
+
+
+Only add a visible way to trigger the existing logout function on mobile.
+
+
+
+Placement Strategy
+
+
+Sign Out must NOT be in the bottom navigation.
+Correct placement:
+Inside Settings page on mobile
+OR
+Inside Profile page under account section
+Preferred approach
+Place Sign Out at the bottom of Settings page.
+Reason
+
+
+Standard native app behavior
+
+
+Clean UX
+
+
+Avoid clutter in bottom nav
+
+
+
+
+
+Implementation Details
+
+
+Inside Mobile Settings screen
+Add a section at bottom
+Section label
+Account
+Under it
+Button: Sign Out
+Button specs
+
+
+Full width
+
+
+Height minimum 48px
+
+
+Border radius 12px
+
+
+Background: subtle red or danger tone
+
+
+Text: Sign Out
+
+
+Font weight: medium
+
+
+Clear tap area
+
+
+Spacing
+
+
+Margin-top: 24px from previous section
+
+
+Padding-bottom: 24px from bottom safe area
+
+
+Must respect safe-area inset.
+
+
+
+Functional Logic
+
+
+Button must call the existing logout function.
+Do NOT rewrite logout logic.
+Do NOT create new logout API.
+Do NOT duplicate auth handling.
+It must trigger the same function currently used on desktop logout.
+Example
+onClick → existingSignOutHandler()
+After logout
+→ Redirect to landing or login page
+→ Same behavior as desktop
+
+
+
+Admin vs Non-Admin
+
+
+Both admin and non-admin users must see Sign Out.
+This is independent of role.
+Do NOT conditionally hide it.
+
+
+
+Edge Case Handling
+
+
+If Settings page does not exist for admin on mobile
+Ensure admin can access Settings via Profile page
+OR
+Add a small Account section inside Profile page with Sign Out
+Do not restructure navigation.
+Only expose sign out.
+
+
+
+UI Requirements
+
+
+Must feel native
+
+
+Slight press animation
+
+
+No full page reload
+
+
+No layout shift
+
+
+No duplicate buttons
+
+
+Ensure it does not overlap with bottom nav.
+Add bottom padding equal to nav height.
+
+
+
+Testing Checklist
+
+
+Mobile only
+
+
+Sign Out visible in Settings
+
+
+Tapping logs user out
+
+
+Session clears properly
+
+
+Redirect works
+
+
+No console errors
+
+
+No infinite redirect
+
+
+No impact on Stripe
+
+
+No impact on credits
+
+
+No impact on role detection
+
+
+Desktop
+
+
+No UI changes
+
+
+Logout still works
+
+
+
+
+
+Critical Protection
+
+
+Do NOT
+
+
+Modify auth configuration
+
+
+Modify OAuth
+
+
+Modify backend routes
+
+
+Modify token refresh logic
+
+
+Modify user state management
+
+
+Modify desktop navigation
+
+
+This is UI-only exposure of existing logout functionality.
+
+Final Result
+On mobile
+User can go to Settings
+Scroll to bottom
+Tap Sign Out
+Successfully logs out
+Nothing else in the app changes.
+End of dev note.

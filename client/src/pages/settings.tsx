@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { User, CreditCard, Trash2, Shield, Loader2 } from "lucide-react";
+import { User, CreditCard, Trash2, Shield, Loader2, LogOut } from "lucide-react";
 import type { Usage } from "@shared/schema";
 
 export default function SettingsPage() {
@@ -140,6 +140,19 @@ export default function SettingsPage() {
           </AlertDialogContent>
         </AlertDialog>
       </Card>
+
+      <div className="pt-2 pb-6">
+        <a href="/api/logout" className="block">
+          <Button
+            variant="outline"
+            className="w-full border-destructive/30 text-destructive"
+            data-testid="button-sign-out"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
+        </a>
+      </div>
     </div>
   );
 }
