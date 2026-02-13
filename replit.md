@@ -4,6 +4,14 @@
 Resuma lets users upload their master resume/profile once, paste any job description, and automatically generate three tailored documents (resume, cover letter, follow-up email) using AI. Built with React + Express + PostgreSQL.
 
 ## Recent Changes
+- 2026-02-13: Admin Portal
+  - 4 new tables: applykit_admins, applykit_user_flags, applykit_user_overrides, applykit_events
+  - Admin middleware (isAdminMiddleware) protects /api/applykit/admin/* routes
+  - Ban enforcement: banned users blocked from POST/PUT on applications/documents
+  - Usage limit bypass: admins + forceUnlimited users skip 15/month caps
+  - Event tracking on analysis, generate, regenerate actions
+  - Frontend: dashboard with Recharts metrics, users list with search/pagination, user detail with ban/override controls, admin management page
+  - Admin routes: GET /admin/me, /admin/metrics, /admin/users, /admin/admins, POST ban/unban/override
 - 2026-02-13: Replaced Replit Auth with Google OAuth
   - Swapped Passport.js strategy from Replit OIDC to passport-google-oauth20
   - Kept session infrastructure (express-session + PostgreSQL store)
@@ -47,9 +55,15 @@ client/src/
     applications.tsx       - Application history list (links analyzed apps to fit report)
     application-detail.tsx - Document preview with tabs (resume/cover letter/email)
     settings.tsx           - Account settings & danger zone
+    admin-dashboard.tsx    - Admin metrics dashboard with Recharts
+    admin-users.tsx        - Admin user list with search/pagination
+    admin-user-detail.tsx  - User detail with ban/override controls
+    admin-admins.tsx       - Admin management page
   components/
-    app-sidebar.tsx        - Navigation sidebar using shadcn sidebar
+    app-sidebar.tsx        - Navigation sidebar using shadcn sidebar (conditional admin link)
     theme-toggle.tsx       - Dark/light mode toggle
+  hooks/
+    use-admin.ts           - Admin status hook (queries /admin/me)
 
 server/
   routes.ts               - All API endpoints under /api/applykit/*
@@ -82,6 +96,10 @@ shared/
 - `applykit_documents` - Generated documents (resume, cover_letter, followup_email) with relevanceSummary
 - `applykit_usage` - Monthly usage tracking (15 apps, 15 regenerations)
 - `applykit_templates` - Resume template configurations
+- `applykit_admins` - Admin user records (userId, email, role: owner/admin/support, isActive)
+- `applykit_user_flags` - User flags (isBanned, banReason)
+- `applykit_user_overrides` - Usage limit overrides (extraApplications, extraRegenerations, forceUnlimited)
+- `applykit_events` - Event tracking for admin metrics (eventType, userId, metadata)
 
 ## User Preferences
 - Monthly quota: 15 applications, 15 regenerations

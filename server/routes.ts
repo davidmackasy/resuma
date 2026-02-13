@@ -280,6 +280,7 @@ export async function registerRoutes(
         });
 
         await storage.updateApplicationStatus(application.id, "analyzed");
+        await storage.trackEvent(userId, "analysis", { applicationId: application.id });
 
         res.json({ id: application.id, status: "analyzed" });
       } catch (analysisError) {
@@ -371,6 +372,7 @@ export async function registerRoutes(
 
         await storage.updateApplicationStatus(id, "generated");
         await storage.incrementUsage(userId, "applicationsGenerated");
+        await storage.trackEvent(userId, "generate", { applicationId: id });
 
         res.json({ id, status: "generated" });
       } catch (genError) {
@@ -467,6 +469,7 @@ export async function registerRoutes(
 
       await storage.updateApplicationStatus(id, "generated");
       await storage.incrementUsage(userId, "regenerations");
+      await storage.trackEvent(userId, "regenerate", { applicationId: id });
 
       res.json({ success: true });
     } catch (error) {
@@ -475,7 +478,7 @@ export async function registerRoutes(
     }
   });
 
-  app.put("/api/applykit/documents/:docId", isAuthenticated, async (req: any, res) => {
+  app.put("/api/applykit/documents/:docId", isAuthenticated, checkBan, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const docId = parseInt(req.params.docId);

@@ -20,6 +20,10 @@ import ApplicationDetail from "@/pages/application-detail";
 import SettingsPage from "@/pages/settings";
 import ProfileSetup from "@/pages/profile-setup";
 import FitReport from "@/pages/fit-report";
+import AdminDashboard from "@/pages/admin-dashboard";
+import AdminUsers from "@/pages/admin-users";
+import AdminUserDetail from "@/pages/admin-user-detail";
+import AdminAdmins from "@/pages/admin-admins";
 
 function AppShell() {
   const style = {
@@ -46,6 +50,10 @@ function AppShell() {
               <Route path="/app/profile/setup" component={ProfileSetup} />
               <Route path="/app/profile" component={ProfilePage} />
               <Route path="/app/settings" component={SettingsPage} />
+              <Route path="/app/admin" component={AdminDashboard} />
+              <Route path="/app/admin/users/:userId" component={AdminUserDetail} />
+              <Route path="/app/admin/users" component={AdminUsers} />
+              <Route path="/app/admin/admins" component={AdminAdmins} />
               <Route component={NotFound} />
             </Switch>
           </main>

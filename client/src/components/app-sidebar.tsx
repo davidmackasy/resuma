@@ -1,5 +1,5 @@
 import { useLocation, Link } from "wouter";
-import { LayoutDashboard, PlusCircle, History, User, Settings, FileText, LogOut } from "lucide-react";
+import { LayoutDashboard, PlusCircle, History, User, Settings, FileText, LogOut, Shield } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useAdmin } from "@/hooks/use-admin";
 
 const navItems = [
   { title: "Dashboard", url: "/app", icon: LayoutDashboard },
@@ -27,6 +28,7 @@ const navItems = [
 export function AppSidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
 
   const isActive = (url: string) => {
     if (url === "/app") return location === "/app";
@@ -67,6 +69,27 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    data-active={isActive("/app/admin")}
+                    data-testid="link-nav-admin"
+                  >
+                    <Link href="/app/admin">
+                      <Shield className="h-4 w-4" />
+                      <span>Admin Portal</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter className="p-4 border-t">
         <div className="flex items-center gap-3">
