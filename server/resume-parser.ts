@@ -53,10 +53,11 @@ export async function extractTextFromFile(filePath: string, fileType: string): P
   const buffer = fs.readFileSync(filePath);
 
   if (fileType === "application/pdf" || filePath.endsWith(".pdf")) {
-    const pdfParseModule = await import("pdf-parse");
-    const pdfParse = (pdfParseModule as any).default || pdfParseModule;
-    const data = await pdfParse(buffer);
-    return data.text;
+    const { PDFParse, VerbosityLevel } = await import("pdf-parse");
+    const parser = new PDFParse({ verbosity: VerbosityLevel.ERRORS });
+    await parser.load(buffer);
+    const text = parser.getText();
+    return text;
   }
 
   if (

@@ -1,0 +1,210 @@
+PROJECT: RESUMA
+TASK: Fix PDF Upload Parsing Only (DOCX Already Working)
+SCOPE: PDF parsing backend only
+DO NOT TOUCH: DOCX logic, UI, mobile UI, auth, Stripe, admin, routes, credit logic
+
+Objective
+
+DOCX upload works correctly.
+PDF upload fails with:
+
+pdfParse is not a function
+
+We must fix PDF parsing only.
+Do not modify DOCX handling.
+Do not refactor upload flow.
+Do not change frontend.
+
+This is a backend import/runtime issue only.
+
+Root Cause
+
+Most likely causes:
+
+Wrong import syntax for pdf-parse
+
+Using ESM incorrectly
+
+Running in Edge runtime
+
+pdf-parse default export mismatch
+
+DOCX works, so upload pipeline is correct.
+The issue is strictly the pdf-parse import or runtime environment.
+
+First: Verify Runtime
+
+If using Next.js 13+ API routes:
+
+Ensure PDF route uses Node runtime.
+
+Add at top of route file:
+
+export const runtime = "nodejs"
+
+pdf-parse will NOT work in edge runtime.
+
+Do not change other routes.
+Only modify the PDF upload route file if needed.
+
+Fix Import Syntax Properly
+
+Do NOT guess. Use safe compatible pattern.
+
+If project uses CommonJS:
+
+Replace:
+
+import pdfParse from "pdf-parse"
+
+WITH:
+
+const pdfParse = require("pdf-parse")
+
+If project uses ESM:
+
+Replace:
+
+import pdfParse from "pdf-parse"
+
+WITH:
+
+import pdfParse from "pdf-parse"
+
+AND ensure you call it correctly:
+
+const parsed = await pdfParse(fileBuffer)
+
+If still failing, use compatibility fallback:
+
+import * as pdfParseModule from "pdf-parse"
+
+const pdfParse = pdfParseModule.default || pdfParseModule
+
+const parsed = await pdfParse(fileBuffer)
+
+This handles default export mismatch safely.
+
+Ensure Proper Buffer Usage
+
+Inside PDF route:
+
+Must use raw buffer.
+
+Correct:
+
+const fileBuffer = req.file.buffer
+
+const parsed = await pdfParse(fileBuffer)
+
+const text = parsed.text
+
+Do NOT pass:
+
+File path string
+
+Stream
+
+Undefined buffer
+
+DOCX works, so multer likely correct.
+Do not modify multer configuration.
+
+Confirm Dependency Installed
+
+Run:
+
+npm install pdf-parse
+
+Check package.json:
+
+"pdf-parse": "^1.x.x"
+
+Restart server after install.
+
+Do not modify other dependencies.
+
+Minimal Safe Patch Example
+
+Inside PDF upload route only:
+
+Before:
+
+import pdfParse from "pdf-parse"
+
+After (safe universal version):
+
+import * as pdfParseModule from "pdf-parse"
+
+const pdfParse =
+pdfParseModule.default || pdfParseModule
+
+Then inside handler:
+
+try {
+const parsed = await pdfParse(fileBuffer)
+const text = parsed.text
+
+return res.status(200).json({ text })
+} catch (err) {
+console.error("PDF parse error:", err)
+return res.status(500).json({ message: "Failed to parse PDF" })
+}
+
+No other logic changed.
+
+Do NOT Modify
+
+DOCX parser
+
+Upload UI
+
+Step progress UI
+
+Bottom navigation
+
+Auth
+
+Stripe
+
+Admin
+
+Application generation logic
+
+History logic
+
+Only fix pdf-parse import/runtime.
+
+Testing Checklist
+
+After patch:
+
+Upload PDF
+
+No “pdfParse is not a function”
+
+Extracted text returned
+
+Flow continues to next step
+
+DOCX still works
+
+No regression anywhere
+
+Test:
+
+Small PDF
+
+Multi-page PDF
+
+Mobile upload
+
+Desktop upload
+
+Expected Result
+
+DOCX continues working.
+PDF uploads work.
+No other part of app changes.
+
+End of dev note.
