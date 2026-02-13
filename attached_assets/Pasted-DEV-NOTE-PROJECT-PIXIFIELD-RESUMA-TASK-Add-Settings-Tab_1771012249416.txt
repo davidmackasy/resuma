@@ -1,0 +1,248 @@
+DEV NOTE
+PROJECT: PIXIFIELD / RESUMA
+TASK: Add Settings Tab to Mobile Bottom Navigation for Admin Users
+SCOPE: Mobile UI only
+DO NOT TOUCH: Desktop UI, authentication, Stripe, backend, API routes, role logic, credit system
+
+Objective
+
+On mobile UI for ADMIN users only, update bottom navigation to include both:
+
+Home
+New
+History
+Profile
+Settings
+Admin
+
+This change must apply only to:
+
+Admin accounts
+
+Mobile layout (<= 768px)
+
+Do NOT affect non-admin users.
+Do NOT affect desktop UI.
+
+Current State
+
+Admin mobile bottom nav currently shows:
+
+Home
+New
+History
+Profile
+Admin
+
+Settings is missing.
+
+We now need:
+
+Home
+New
+History
+Profile
+Settings
+Admin
+
+Only for admin mobile users.
+
+Important UI Constraint
+
+We are increasing bottom tabs from 5 to 6 for admin users only.
+
+Rules:
+
+Tabs must still be touch-friendly
+
+No overlapping
+
+No label truncation
+
+Icons must scale properly
+
+Minimum tap area: 44px
+
+If spacing becomes tight:
+
+Reduce icon size slightly (22px max)
+
+Reduce label font to 10px–11px
+
+Keep consistent spacing
+
+Do NOT remove labels.
+
+Conditional Rendering Logic
+
+Inside MobileBottomNav component only.
+
+Pseudo logic:
+
+If isMobile === true:
+
+If user.role === "admin":
+Render tabs:
+Home
+New
+History
+Profile
+Settings
+Admin
+
+Else:
+Render:
+Home
+New
+History
+Profile
+Settings
+
+Do NOT modify backend role logic.
+Only modify mobile rendering logic.
+
+Tab Order (Strict)
+
+Admin mobile order must be:
+
+Home
+
+New
+
+History
+
+Profile
+
+Settings
+
+Admin
+
+Do not rearrange.
+
+Routing Rules
+
+Ensure proper route mapping:
+
+Home → existing home route
+New → create route
+History → history route
+Profile → account/profile route
+Settings → settings route
+Admin → admin dashboard route
+
+Do NOT change route names.
+Do NOT modify route protection.
+Admin page must remain protected server-side.
+
+Visual Consistency
+
+Maintain:
+
+Same active color
+
+Same inactive color
+
+Same animation
+
+Same press feedback
+
+No redesign.
+No theme changes.
+
+Layout Adjustments
+
+Because there are now 6 tabs:
+
+Ensure equal width distribution
+
+No horizontal scroll
+
+No wrap to second row
+
+Fixed bottom bar height remains 60–70px
+
+Add safe-area padding if needed.
+
+Content pages must still have bottom padding equal to nav height.
+
+Do NOT Break
+
+Absolutely do NOT:
+
+Modify authentication
+
+Modify Stripe
+
+Modify session logic
+
+Modify credit deductions
+
+Modify admin permissions
+
+Modify desktop sidebar
+
+Modify API calls
+
+Modify chart logic
+
+This is strictly mobile bottom nav rendering logic.
+
+Testing Checklist
+
+Mobile – Admin user:
+
+Sees Home
+
+Sees New
+
+Sees History
+
+Sees Profile
+
+Sees Settings
+
+Sees Admin
+
+All tabs navigate correctly
+
+No overlap
+
+No UI clipping
+
+No console errors
+
+Mobile – Non-admin user:
+
+Still sees:
+Home
+New
+History
+Profile
+Settings
+
+Does NOT see Admin
+
+Desktop:
+
+No changes
+
+Sidebar intact
+
+Admin works normally
+
+Final Expected Result
+
+Admin mobile bottom navigation:
+
+Home
+New
+History
+Profile
+Settings
+Admin
+
+Non-admin mobile bottom navigation unchanged.
+
+Desktop completely untouched.
+
+End of dev note.
