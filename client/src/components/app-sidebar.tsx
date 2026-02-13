@@ -41,7 +41,7 @@ export function AppSidebar() {
             <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
               <FileText className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-serif font-bold text-lg tracking-tight">ApplyKit</span>
+            <span className="font-serif font-bold text-lg tracking-tight">Resuma</span>
           </div>
         </Link>
       </SidebarHeader>

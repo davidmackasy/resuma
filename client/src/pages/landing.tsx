@@ -11,7 +11,7 @@ export default function Landing() {
             <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
               <FileText className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-serif font-bold text-lg tracking-tight" data-testid="text-brand-name">ApplyKit</span>
+            <span className="font-serif font-bold text-lg tracking-tight" data-testid="text-brand-name">Resuma</span>
           </div>
           <div className="flex items-center gap-2">
             <a href="/login?mode=login">
@@ -138,7 +138,7 @@ export default function Landing() {
             <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
               <FileText className="h-3 w-3 text-primary-foreground" />
             </div>
-            <span className="text-sm font-medium">ApplyKit</span>
+            <span className="text-sm font-medium">Resuma</span>
           </div>
           <p className="text-xs text-muted-foreground">Built with care for job seekers everywhere.</p>
         </div>

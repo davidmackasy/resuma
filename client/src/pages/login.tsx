@@ -39,8 +39,8 @@ export default function LoginPage() {
           </h1>
           <p className="text-sm text-muted-foreground text-center">
             {isSignup
-              ? "Get started with ApplyKit for free"
-              : "Sign in to continue to ApplyKit"}
+              ? "Get started with Resuma for free"
+              : "Sign in to continue to Resuma"}
           </p>
         </div>
 

@@ -36,7 +36,7 @@ export default function SettingsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries();
-      toast({ title: "Data deleted", description: "All your ApplyKit data has been removed." });
+      toast({ title: "Data deleted", description: "All your Resuma data has been removed." });
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to delete data.", variant: "destructive" });
@@ -106,7 +106,7 @@ export default function SettingsPage() {
           <h2 className="font-medium text-destructive">Danger Zone</h2>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Permanently delete all your ApplyKit data including your profile, applications, and generated documents.
+          Permanently delete all your Resuma data including your profile, applications, and generated documents.
         </p>
         <AlertDialog>
           <AlertDialogTrigger asChild>

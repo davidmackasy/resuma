@@ -1,7 +1,7 @@
-# ApplyKit - Premium Resume Tailor Web App
+# Resuma - Premium Resume Tailor Web App
 
 ## Overview
-ApplyKit lets users upload their master resume/profile once, paste any job description, and automatically generate three tailored documents (resume, cover letter, follow-up email) using AI. Built with React + Express + PostgreSQL.
+Resuma lets users upload their master resume/profile once, paste any job description, and automatically generate three tailored documents (resume, cover letter, follow-up email) using AI. Built with React + Express + PostgreSQL.
 
 ## Recent Changes
 - 2026-02-13: Replaced Replit Auth with Google OAuth
