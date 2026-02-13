@@ -1,0 +1,244 @@
+Good decision.
+
+Replit auth is fine for prototypes.
+For production SaaS, you want control.
+
+You want:
+
+• Google OAuth for users in production
+• Optional email/password for dev only
+• No Replit auth dependency
+• Clean, scalable auth architecture
+
+Here’s a fully structured dev note your agent can follow.
+
+DEV NOTE
+FEATURE: Replace Replit Auth With Google OAuth
+GOAL: Remove Replit authentication completely. Implement Google OAuth for production. Allow optional email/password in development only.
+CRITICAL: Do not break existing ApplyKit tables. Do not break Stripe user linkage. Migrate safely.
+
+SECTION 1: AUTH ARCHITECTURE DECISION
+
+We will use:
+
+Supabase Auth
+OR
+NextAuth (if already using Next.js)
+
+If Supabase is already your DB, use Supabase Auth. It is simpler.
+
+Primary Production Auth:
+Google OAuth only
+
+Optional Dev Auth:
+Email/password (development environment only)
+
+SECTION 2: REMOVE REPLIT AUTH
+
+Steps:
+
+Remove any middleware checking Replit session.
+
+Remove Replit-specific user object references.
+
+Remove any reliance on replit_user_id.
+
+Replace user ID references with:
+auth.user.id (Supabase) or session.user.id (NextAuth)
+
+Search project for:
+replit
+ReplitAuth
+replitUser
+replitId
+
+Remove safely.
+
+SECTION 3: IMPLEMENT GOOGLE AUTH (SUPABASE VERSION)
+
+In Supabase Dashboard:
+Authentication → Providers
+Enable Google
+
+Add Google OAuth credentials:
+
+Client ID
+
+Client Secret
+
+Set redirect URL:
+https://yourdomain.com/auth/callback
+
+Add environment variables:
+
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+SECTION 4: LOGIN FLOW (PRODUCTION)
+
+Login Page:
+Route: /login
+
+Single button:
+
+Continue with Google
+
+Code:
+
+supabase.auth.signInWithOAuth({
+provider: 'google',
+options: {
+redirectTo: ${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback
+}
+})
+
+SECTION 5: AUTH CALLBACK
+
+Route: /auth/callback
+
+Logic:
+
+Supabase completes OAuth
+
+Session stored
+
+Redirect to /applykit/app
+
+SECTION 6: PRODUCTION-ONLY GOOGLE AUTH
+
+In login page:
+
+if (process.env.NODE_ENV === 'production') {
+show only Google button
+}
+
+if (process.env.NODE_ENV === 'development') {
+show:
+- Google button
+- Email/password login
+}
+
+SECTION 7: USER TABLE LINKAGE
+
+Important:
+
+All ApplyKit tables use:
+user_id (uuid)
+
+This must match:
+auth.users.id from Supabase
+
+When user logs in first time:
+
+Check if applykit_profile exists.
+If not, create blank profile record with:
+user_id = auth user id.
+
+Do not create duplicate users table.
+Use Supabase auth user id directly.
+
+SECTION 8: STRIPE USER LINKAGE
+
+If Stripe is tied to user_id:
+
+Ensure Stripe customer metadata includes:
+
+{
+user_id: supabase_user_id
+}
+
+On login:
+Fetch subscription status using user_id.
+
+Do not change billing logic.
+Just replace Replit user ID with Supabase user ID.
+
+SECTION 9: PROTECTED ROUTES
+
+Middleware:
+
+If no session:
+Redirect to /login
+
+Use:
+
+const { data: { session } } = await supabase.auth.getSession()
+
+Or server-side session check.
+
+SECTION 10: LOGOUT
+
+Logout button:
+
+await supabase.auth.signOut()
+redirect to /login
+
+SECTION 11: SECURITY CHECKLIST
+
+Enable RLS on ApplyKit tables
+
+Policy:
+user_id = auth.uid()
+
+Example RLS policy:
+
+CREATE POLICY "Users can only access their data"
+ON applykit_profiles
+FOR ALL
+USING (auth.uid() = user_id);
+
+Repeat for:
+
+applykit_applications
+
+applykit_documents
+
+applykit_job_analysis
+
+SECTION 12: CLEANUP TASKS
+
+Remove:
+
+Replit session storage
+
+Replit user references
+
+Replit middleware
+
+Any dependency on replit headers
+
+Ensure:
+All user logic uses Supabase auth user id.
+
+SECTION 13: ACCEPTANCE CRITERIA
+
+In production:
+
+Only Google login visible
+
+No Replit auth
+
+Users can sign in with Google
+
+Session persists
+
+Stripe still links correctly
+
+ApplyKit data remains intact
+
+In development:
+
+Google login works
+
+Email/password optional
+
+No broken routes
+
+FINAL RESULT
+
+You now have:
+
+Professional OAuth
+Scalable authentication
+No Replit dependency
+Production-ready user system
