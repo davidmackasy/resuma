@@ -1,0 +1,176 @@
+DEV NOTE
+Issue: Production account signed in with Google is not recognized as admin
+Scope: Fix admin role detection for existing Google-auth user
+Do not break Google auth
+Do not touch Stripe
+Do not touch session system
+Do not modify existing login flow
+
+GOAL
+
+Make the production Google account
+Email: davidmackassy@gmail.com
+
+Recognized as admin in production environment only.
+
+No changes to authentication system.
+Only role assignment fix.
+
+ROOT CAUSE LIKELY
+
+Admin role is probably determined by one of these:
+
+A. Hardcoded admin email check in backend
+B. role column in users table
+C. is_admin boolean column
+D. Missing role assignment on first Google signup
+
+Most likely scenario:
+User signed up via Google
+Row created in users table
+But role defaulted to "user"
+
+CHECK USERS TABLE
+
+In production database
+
+Run query:
+
+SELECT id, email, role, is_admin
+FROM users
+WHERE email = 'davidmackassy@gmail.com
+';
+
+Check:
+
+Does role exist?
+
+Is is_admin false or null?
+
+FIX OPTION 1: ROLE COLUMN SYSTEM
+
+If table has role column
+
+Run:
+
+UPDATE users
+SET role = 'admin'
+WHERE email = 'davidmackassy@gmail.com
+';
+
+FIX OPTION 2: BOOLEAN SYSTEM
+
+If using is_admin boolean
+
+Run:
+
+UPDATE users
+SET is_admin = true
+WHERE email = 'davidmackassy@gmail.com
+';
+
+ENSURE BACKEND AUTHORIZATION CHECK
+
+Find middleware that protects admin routes
+
+Example pattern:
+
+if (user.role !== 'admin') {
+return res.status(403)
+}
+
+OR
+
+if (!user.is_admin) {
+return res.status(403)
+}
+
+Confirm it reads from database value
+Not from session-only cached object
+
+CRITICAL FIX
+
+If Google login does not re-fetch fresh user data after login,
+Admin change will not reflect until:
+
+User logs out
+
+Logs back in
+
+Ensure on login callback:
+
+After Google OAuth success
+
+Always:
+
+Fetch user from database
+Attach full user object to session
+
+Do not rely on stale JWT payload that lacks role
+
+PERMANENT SOLUTION FOR FUTURE
+
+Add admin whitelist for production only
+
+In backend config:
+
+const ADMIN_EMAILS = [
+'davidmackassy@gmail.com
+'
+];
+
+On login success:
+
+if (process.env.NODE_ENV === 'production' &&
+ADMIN_EMAILS.includes(user.email)) {
+
+updateUserRoleToAdmin(user.id)  
+
+}
+
+This ensures:
+
+Even if role accidentally resets
+Admin email always restored
+
+DO NOT DO
+
+Do not:
+
+Modify Google OAuth provider
+
+Change redirect URLs
+
+Change session format
+
+Change production auth flow
+
+Touch Stripe or subscription tables
+
+Only adjust role assignment.
+
+VERIFY
+
+After fix:
+
+Log out
+
+Log back in using Google
+
+Go to settings
+
+Confirm admin dashboard visible
+
+Confirm admin-only routes accessible
+
+SUMMARY
+
+Problem is not Google auth.
+Problem is role assignment in database.
+
+Solution:
+Update production user record to admin
+Ensure backend reads role correctly
+Ensure session refreshes role on login
+
+No system rewrite required.

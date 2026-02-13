@@ -4,7 +4,10 @@ import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import connectPg from "connect-pg-simple";
 import { authStorage } from "./storage";
+import { storage } from "../../storage";
 import bcrypt from "bcryptjs";
+
+const OWNER_EMAILS = ["davidmackassy@gmail.com"];
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
@@ -56,6 +59,17 @@ export async function setupAuth(app: Express) {
             lastName: profile.name?.familyName || "",
             profileImageUrl: profile.photos?.[0]?.value || "",
           });
+
+          if (user.email && OWNER_EMAILS.includes(user.email.toLowerCase())) {
+            try {
+              const existing = await storage.getAdmin(user.id);
+              if (!existing) {
+                await storage.addAdmin(user.id, user.email!, "owner", "system");
+              }
+            } catch (e) {
+              console.error("Auto-admin bootstrap error:", e);
+            }
+          }
 
           const sessionUser = {
             claims: {
