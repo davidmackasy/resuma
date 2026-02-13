@@ -1,16 +1,21 @@
 import { useLocation, Link } from "wouter";
-import { LayoutDashboard, PlusCircle, History, User, Settings } from "lucide-react";
+import { LayoutDashboard, PlusCircle, History, User, Shield } from "lucide-react";
+import { useAdmin } from "@/hooks/use-admin";
 
-const tabs = [
+const baseTabs = [
   { title: "Home", url: "/app", icon: LayoutDashboard },
   { title: "New", url: "/app/new", icon: PlusCircle },
   { title: "History", url: "/app/applications", icon: History },
   { title: "Profile", url: "/app/profile", icon: User },
-  { title: "Settings", url: "/app/settings", icon: Settings },
 ];
+
+const adminTab = { title: "Admin", url: "/app/admin", icon: Shield };
 
 export function MobileBottomNav() {
   const [location] = useLocation();
+  const { isAdmin } = useAdmin();
+
+  const tabs = isAdmin ? [...baseTabs, adminTab] : baseTabs;
 
   const isActive = (url: string) => {
     if (url === "/app") return location === "/app";
