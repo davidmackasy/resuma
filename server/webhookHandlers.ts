@@ -1,36 +1,21 @@
-import { getStripeSync, getUncachableStripeClient } from './stripeClient';
+import { getStripeClient, getStripeWebhookSecret } from './stripeClient';
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 
 export class WebhookHandlers {
   static async processWebhook(payload: Buffer, signature: string): Promise<void> {
     if (!Buffer.isBuffer(payload)) {
-      throw new Error(
-        'STRIPE WEBHOOK ERROR: Payload must be a Buffer. ' +
-        'Received type: ' + typeof payload
-      );
+      throw new Error('STRIPE WEBHOOK ERROR: Payload must be a Buffer.');
     }
 
-    const sync = await getStripeSync();
-    await sync.processWebhook(payload, signature);
+    const stripe = getStripeClient();
+    const webhookSecret = getStripeWebhookSecret();
+    const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
 
-    try {
-      const stripe = await getUncachableStripeClient();
-      const webhookSecret = sync.webhookSigningSecret;
-
-      if (!webhookSecret) {
-        console.warn('No webhook signing secret available, skipping custom event handling');
-        return;
-      }
-
-      const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-      await WebhookHandlers.handleCustomEvent(event);
-    } catch (error) {
-      console.error('Error in custom webhook handler:', error);
-    }
+    await WebhookHandlers.handleEvent(event);
   }
 
-  static async handleCustomEvent(event: any): Promise<void> {
+  static async handleEvent(event: any): Promise<void> {
     const type = event.type;
     const data = event.data?.object;
 

@@ -1,0 +1,156 @@
+DEV NOTE
+Feature: Use Separate Stripe Account For This Project Only
+Critical: Do NOT modify existing Stripe integration used by other projects.
+Do NOT remove or overwrite any shared environment variables.
+
+OBJECTIVE
+
+This project must use:
+
+• A completely separate Stripe account
+• Separate API keys
+• Separate webhook endpoint
+• Separate product + price ID
+
+Nothing from the existing Replit-connected Stripe account should be used.
+
+STEP 1: STRIPE ACCOUNT ISOLATION
+
+User Action Required:
+
+Provide:
+
+STRIPE_SECRET_KEY (from new Stripe account)
+STRIPE_PUBLISHABLE_KEY (from new Stripe account)
+STRIPE_WEBHOOK_SECRET (generated after webhook setup)
+STRIPE_PRICE_ID (for $9.99 monthly plan in new account)
+
+These must come from the new Stripe account only.
+
+Do NOT reuse old keys.
+
+STEP 2: ENVIRONMENT VARIABLE SAFETY
+
+In this project only, define:
+
+STRIPE_SECRET_KEY_NEW
+STRIPE_PUBLISHABLE_KEY_NEW
+STRIPE_WEBHOOK_SECRET_NEW
+STRIPE_PRICE_ID_NEW
+
+Do NOT name them the same as other projects if those names are shared.
+
+Example safe naming:
+
+RESUME_STRIPE_SECRET_KEY
+RESUME_STRIPE_PUBLISHABLE_KEY
+RESUME_STRIPE_WEBHOOK_SECRET
+RESUME_STRIPE_PRICE_ID
+
+This prevents accidental usage of global Stripe credentials.
+
+STEP 3: BACKEND CONFIGURATION
+
+In Stripe initialization file:
+
+Instead of:
+
+new Stripe(process.env.STRIPE_SECRET_KEY)
+
+Use:
+
+new Stripe(process.env.RESUME_STRIPE_SECRET_KEY)
+
+This ensures this project references only its own Stripe account.
+
+STEP 4: WEBHOOK ISOLATION
+
+Create a webhook endpoint for this project only:
+
+/api/resume-stripe-webhook
+
+In Stripe dashboard for the new account:
+
+Add endpoint:
+https://yourappdomain.com/api/resume-stripe-webhook
+
+Generate webhook signing secret.
+
+Store it in:
+
+RESUME_STRIPE_WEBHOOK_SECRET
+
+Verify signature using only that secret.
+
+Do NOT share webhook endpoints between projects.
+
+STEP 5: PRODUCT + PRICE ISOLATION
+
+Inside new Stripe account:
+
+Create:
+
+Product: Resume Access Plan
+Price: $9.99/month recurring
+
+Copy that specific price ID into:
+
+RESUME_STRIPE_PRICE_ID
+
+Do not reference price IDs from other Stripe accounts.
+
+STEP 6: VERIFY CHECKOUT BRANDING
+
+Inside new Stripe dashboard:
+
+Update:
+
+Business name
+Logo
+Support email
+Statement descriptor
+
+So users do not see the branding from your other project.
+
+This avoids confusion.
+
+STEP 7: ENSURE NO CROSS-PROJECT IMPACT
+
+Important Safeguards:
+
+• Do NOT delete existing Stripe environment variables
+• Do NOT rename shared keys in Replit global secrets
+• Do NOT edit Stripe configuration files used by other apps
+• Do NOT modify Replit account-level Stripe integration
+
+All Stripe logic must live inside this project repository only.
+
+STEP 8: CONFIRMATION CHECKLIST
+
+After setup:
+
+• Payment page shows correct business name
+• Charges appear in new Stripe dashboard
+• Old Stripe dashboard remains untouched
+• Other projects continue functioning normally
+
+WHAT I NEED FROM YOU
+
+Provide:
+
+New Stripe Secret Key
+
+New Publishable Key
+
+New Price ID for $9.99 monthly
+
+Webhook secret after endpoint is created
+
+Once you provide these, I can give you:
+
+• Exact backend route structure
+• Exact middleware wiring
+• Exact environment variable setup
+• Exact Stripe Checkout creation code
+
+All fully isolated to this project only.

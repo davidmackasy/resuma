@@ -6,7 +6,7 @@ import { analyzeJob, generateFromAnalysis, generateDocuments, generateSingleDocu
 import { generateResumePdf, generateCoverLetterPdf } from "./export-pdf";
 import { generateResumeDocx, generateCoverLetterDocx } from "./export-docx";
 import { extractTextFromFile, parseResumeText } from "./resume-parser";
-import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
+import { getStripeClient, getStripePublishableKey, getStripePriceId } from "./stripeClient";
 import { authStorage } from "./replit_integrations/auth/storage";
 import { sql } from "drizzle-orm";
 import { db } from "./db";
@@ -90,10 +90,18 @@ export async function registerRoutes(
 
       let subscription = null;
       if (user?.stripeSubscriptionId) {
-        const result = await db.execute(
-          sql`SELECT * FROM stripe.subscriptions WHERE id = ${user.stripeSubscriptionId}`
-        );
-        subscription = result.rows?.[0] || null;
+        try {
+          const stripe = getStripeClient();
+          const sub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+          subscription = {
+            id: sub.id,
+            status: sub.status,
+            current_period_end: new Date((sub as any).current_period_end * 1000).toISOString(),
+            cancel_at_period_end: (sub as any).cancel_at_period_end,
+          };
+        } catch (e) {
+          console.error("Error fetching subscription from Stripe:", e);
+        }
       }
 
       res.json({
@@ -101,12 +109,7 @@ export async function registerRoutes(
         subscriptionStatus: user?.subscriptionStatus || null,
         stripeCustomerId: user?.stripeCustomerId || null,
         hasAccess: user?.subscriptionStatus === "active" || user?.subscriptionStatus === "trialing",
-        subscription: subscription ? {
-          id: subscription.id,
-          status: subscription.status,
-          current_period_end: subscription.current_period_end,
-          cancel_at_period_end: subscription.cancel_at_period_end,
-        } : null,
+        subscription,
       });
     } catch (error) {
       console.error("Error fetching subscription:", error);
@@ -116,7 +119,7 @@ export async function registerRoutes(
 
   app.get("/api/stripe/publishable-key", async (_req, res) => {
     try {
-      const key = await getStripePublishableKey();
+      const key = getStripePublishableKey();
       res.json({ publishableKey: key });
     } catch (error) {
       console.error("Error getting publishable key:", error);
@@ -135,7 +138,8 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Admins do not need a subscription" });
       }
 
-      const stripe = await getUncachableStripeClient();
+      const stripe = getStripeClient();
+      const priceId = getStripePriceId();
 
       let customerId = user.stripeCustomerId;
       if (!customerId) {
@@ -149,22 +153,11 @@ export async function registerRoutes(
         );
       }
 
-      const prices = await stripe.prices.list({
-        lookup_keys: undefined,
-        active: true,
-        type: 'recurring',
-        limit: 10,
-      });
-      const monthlyPrice = prices.data.find(p => p.unit_amount === 999 && p.recurring?.interval === 'month');
-      if (!monthlyPrice) {
-        return res.status(500).json({ message: "Subscription price not found" });
-      }
-
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
-        line_items: [{ price: monthlyPrice.id, quantity: 1 }],
+        line_items: [{ price: priceId, quantity: 1 }],
         mode: 'subscription',
         success_url: `${baseUrl}/app?subscription=success`,
         cancel_url: `${baseUrl}/subscribe?cancelled=true`,
@@ -185,7 +178,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: "No billing account found" });
       }
 
-      const stripe = await getUncachableStripeClient();
+      const stripe = getStripeClient();
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       const session = await stripe.billingPortal.sessions.create({
         customer: user.stripeCustomerId,
@@ -207,7 +200,7 @@ export async function registerRoutes(
         return res.json({ subscriptionStatus: null });
       }
 
-      const stripe = await getUncachableStripeClient();
+      const stripe = getStripeClient();
       const subscriptions = await stripe.subscriptions.list({
         customer: user.stripeCustomerId,
         status: 'all',

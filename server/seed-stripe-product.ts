@@ -1,7 +1,7 @@
-import { getUncachableStripeClient } from './stripeClient';
+import { getStripeClient } from './stripeClient';
 
 async function seedSubscriptionProduct() {
-  const stripe = await getUncachableStripeClient();
+  const stripe = getStripeClient();
 
   const products = await stripe.products.search({ query: "name:'Resuma Monthly Access'" });
   if (products.data.length > 0) {
@@ -28,6 +28,7 @@ async function seedSubscriptionProduct() {
 
   console.log('Created product:', product.id);
   console.log('Created price:', price.id, '- $9.99/month');
+  console.log('Set this as RESUME_STRIPE_PRICE_ID:', price.id);
 }
 
 seedSubscriptionProduct().catch(console.error);
