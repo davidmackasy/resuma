@@ -268,7 +268,10 @@ export default function ApplicationDetail() {
             </TabsContent>
 
             <TabsContent value="practice">
-              <PracticePanel practiceContent={application.practiceContent as any} />
+              <PracticePanel
+                practiceContent={application.practiceContent as any}
+                isGenerating={regenerateAllMutation.isPending || regenerateDocMutation.isPending}
+              />
             </TabsContent>
           </Tabs>
         </div>
@@ -511,7 +514,16 @@ function DocumentPanel({
   );
 }
 
-function PracticePanel({ practiceContent }: { practiceContent?: { questions: { question: string; bestAnswer: string }[] } | null }) {
+function PracticePanel({ practiceContent, isGenerating }: { practiceContent?: { questions: { question: string; bestAnswer: string }[] } | null; isGenerating?: boolean }) {
+  if (isGenerating) {
+    return (
+      <Card className="p-8 text-center mt-4">
+        <Loader2 className="h-8 w-8 text-muted-foreground mx-auto mb-2 animate-spin" />
+        <p className="text-sm text-muted-foreground">Generating practice questions...</p>
+      </Card>
+    );
+  }
+
   if (!practiceContent?.questions?.length) {
     return (
       <Card className="p-8 text-center mt-4">
@@ -532,7 +544,7 @@ function PracticePanel({ practiceContent }: { practiceContent?: { questions: { q
         <div className="p-4 space-y-3">
           {practiceContent.questions.map((item, index) => (
             <Collapsible key={index}>
-              <Card className="p-0">
+              <div className="rounded-md border" data-testid={`card-practice-question-${index}`}>
                 <CollapsibleTrigger className="w-full text-left p-3 flex items-start justify-between gap-2" data-testid={`button-practice-question-${index}`}>
                   <div className="flex-1 min-w-0">
                     <span className="text-xs font-medium text-muted-foreground">Question {index + 1}</span>
@@ -546,7 +558,7 @@ function PracticePanel({ practiceContent }: { practiceContent?: { questions: { q
                     <p className="text-sm leading-relaxed text-muted-foreground" data-testid={`text-practice-answer-${index}`}>{item.bestAnswer}</p>
                   </div>
                 </CollapsibleContent>
-              </Card>
+              </div>
             </Collapsible>
           ))}
         </div>

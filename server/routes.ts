@@ -624,7 +624,7 @@ export async function registerRoutes(
 
         if (docType === "resume") {
           try {
-            if (result.md) {
+            if (result.md && result.md !== "Generation failed - no resume content") {
               const practice = await generatePracticeQuestions(
                 result.md,
                 application.jobDescription,
