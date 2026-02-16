@@ -1,0 +1,244 @@
+DEV NOTE
+Feature Update: Mandatory $9.99 Stripe Subscription For Normal Users Only
+Admins Must Bypass Payment Permanently
+Critical: Do NOT break authentication, resume engine, admin panel, or anything currently working.
+
+OBJECTIVE
+
+Normal users:
+Must pay $9.99/month before accessing platform.
+
+Admins:
+Full lifetime access.
+No payment required.
+Never blocked by subscription logic.
+
+Resume limit remains 30 per billing cycle for normal users.
+Do not change how resume generation works internally.
+
+ROLE-BASED SUBSCRIPTION LOGIC
+
+Database Requirements
+
+Ensure Users table has:
+
+role: enum
+Values:
+admin
+user
+
+If role field does not exist, add it.
+Default new signups = user
+Manually assign admin via database or admin panel.
+
+Admins must bypass:
+
+• Stripe checkout redirect
+• Subscription middleware
+• Resume limits if desired
+• Payment failure blocking
+
+Do NOT interfere with existing admin dashboards.
+
+UPDATED SIGNUP FLOW
+
+Current:
+Signup → dashboard
+
+New Flow:
+
+If role === admin
+→ Redirect directly to dashboard
+→ Skip Stripe entirely
+
+If role === user
+→ Create Stripe customer
+→ Create subscription checkout session
+→ Redirect to Stripe payment
+
+Never redirect admins to payment.
+
+ACCESS CONTROL MIDDLEWARE UPDATE
+
+Modify requireActiveSubscription middleware:
+
+Pseudo logic:
+
+If user.role === admin
+→ allow access immediately
+
+Else if user.subscription_status === active
+→ allow access
+
+Else
+→ redirect to /subscribe
+
+This must apply to:
+
+Dashboard
+Resume generation endpoints
+Protected routes
+
+Do NOT apply to:
+
+Auth routes
+Webhook endpoint
+Billing page
+Admin-only routes
+
+Admins must never be blocked even if subscription fields are null.
+
+PAYMENT PAGE CONTENT (MOTIVATION + POSITIONING)
+
+When user lands on payment page, display structured value explanation.
+
+Page Title:
+Unlock Full Resume Discovery Access
+
+Section: Why $9.99/month?
+
+Clear bullet points:
+
+• Generate up to 30 resume discoveries every month
+• AI-optimized resumes tailored to job descriptions
+• Faster job application turnaround
+• Unlimited revisions during active billing period
+• Continuous feature updates and improvements
+• Priority AI processing performance
+
+Positioning Text:
+
+Your $9.99 monthly membership powers:
+• Advanced AI processing
+• Server infrastructure
+• Ongoing product improvements
+• Reliable resume generation at scale
+
+Call To Action Button:
+
+Start My $9.99 Monthly Access
+
+Make this page clean and professional.
+Match existing UI.
+Do not add red warning styles.
+
+RESUME LIMIT RULES
+
+Normal users:
+
+resume_generation_limit = 30
+resume_generation_count increments normally
+
+Reset count on invoice.paid event.
+
+Admins:
+
+Option A Recommended
+Unlimited resumes
+
+In resume limit check:
+
+If user.role === admin
+→ bypass limit
+
+Else
+→ enforce 30 limit
+
+Do not change resume generation engine.
+Only wrap logic around it.
+
+PAYMENT FAILURE + BLOCKING
+
+If normal user subscription_status becomes:
+
+past_due
+canceled
+unpaid
+
+Block access immediately.
+
+Admins are never affected.
+
+Banner for normal users:
+
+Your subscription is inactive. Please update your payment method to continue generating resumes.
+
+Redirect to billing page.
+
+BILLING PAGE LOGIC
+
+Normal users:
+
+Can view:
+Subscription status
+Next billing date
+Update payment method
+Cancel subscription
+
+Admins:
+
+Billing page should either:
+
+Option A
+Not be visible
+
+Option B
+Display: Admin accounts do not require billing.
+
+Cleaner option: hide billing page for admins.
+
+WEBHOOK LOGIC UPDATE
+
+Webhook must ignore admins entirely.
+
+When syncing subscription via webhook:
+
+If matched user.role === admin
+→ skip subscription updates
+→ return success
+
+Do not override admin access accidentally.
+
+SECURITY RULES
+
+Subscription enforcement must be server-side.
+Never trust frontend.
+
+Admins must be identified from database, not frontend flags.
+
+TESTING CHECKLIST
+
+Admin signup
+→ No payment page
+→ Full access
+
+Normal user signup
+→ Redirected to Stripe
+→ No dashboard access before payment
+
+Successful payment
+→ Access granted
+
+Payment failure
+→ Blocked
+
+Renewal
+→ Resume count resets
+
+Admin never blocked under any condition.
+
+FINAL RESULT
+
+Admins
+Permanent unrestricted access
+No Stripe dependency
+
+Normal Users
+Must subscribe to $9.99/month
+Access tied strictly to Stripe status
+30 resume discoveries per billing cycle
+Blocked on failed payment
+Restored automatically when payment succeeds
+
+No existing systems modified.
+Only subscription layer added around access control.
