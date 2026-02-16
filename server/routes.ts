@@ -6,6 +6,10 @@ import { analyzeJob, generateFromAnalysis, generateDocuments, generateSingleDocu
 import { generateResumePdf, generateCoverLetterPdf } from "./export-pdf";
 import { generateResumeDocx, generateCoverLetterDocx } from "./export-docx";
 import { extractTextFromFile, parseResumeText } from "./resume-parser";
+import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
+import { authStorage } from "./replit_integrations/auth/storage";
+import { sql } from "drizzle-orm";
+import { db } from "./db";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -55,6 +59,175 @@ export async function registerRoutes(
     }
     return next();
   };
+
+  const requireSubscription: any = async (req: any, res: any, next: any) => {
+    const userId = req.user?.claims?.sub;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const isAdminUser = await storage.isAdmin(userId);
+    if (isAdminUser) return next();
+
+    const user = await authStorage.getUser(userId);
+    if (user?.subscriptionStatus === "active" || user?.subscriptionStatus === "trialing") {
+      return next();
+    }
+    return res.status(403).json({ code: "SUBSCRIPTION_REQUIRED", message: "Active subscription required" });
+  };
+
+  app.get("/api/applykit/subscription", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      const isAdminUser = await storage.isAdmin(userId);
+
+      if (isAdminUser) {
+        return res.json({
+          isAdmin: true,
+          subscriptionStatus: "active",
+          hasAccess: true,
+        });
+      }
+
+      let subscription = null;
+      if (user?.stripeSubscriptionId) {
+        const result = await db.execute(
+          sql`SELECT * FROM stripe.subscriptions WHERE id = ${user.stripeSubscriptionId}`
+        );
+        subscription = result.rows?.[0] || null;
+      }
+
+      res.json({
+        isAdmin: false,
+        subscriptionStatus: user?.subscriptionStatus || null,
+        stripeCustomerId: user?.stripeCustomerId || null,
+        hasAccess: user?.subscriptionStatus === "active" || user?.subscriptionStatus === "trialing",
+        subscription: subscription ? {
+          id: subscription.id,
+          status: subscription.status,
+          current_period_end: subscription.current_period_end,
+          cancel_at_period_end: subscription.cancel_at_period_end,
+        } : null,
+      });
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
+      res.status(500).json({ message: "Failed to fetch subscription status" });
+    }
+  });
+
+  app.get("/api/stripe/publishable-key", async (_req, res) => {
+    try {
+      const key = await getStripePublishableKey();
+      res.json({ publishableKey: key });
+    } catch (error) {
+      console.error("Error getting publishable key:", error);
+      res.status(500).json({ message: "Failed to get Stripe key" });
+    }
+  });
+
+  app.post("/api/applykit/create-checkout", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const isAdminUser = await storage.isAdmin(userId);
+      if (isAdminUser) {
+        return res.status(400).json({ message: "Admins do not need a subscription" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email || undefined,
+          metadata: { userId },
+        });
+        customerId = customer.id;
+        await db.execute(
+          sql`UPDATE users SET stripe_customer_id = ${customerId} WHERE id = ${userId}`
+        );
+      }
+
+      const prices = await stripe.prices.list({
+        lookup_keys: undefined,
+        active: true,
+        type: 'recurring',
+        limit: 10,
+      });
+      const monthlyPrice = prices.data.find(p => p.unit_amount === 999 && p.recurring?.interval === 'month');
+      if (!monthlyPrice) {
+        return res.status(500).json({ message: "Subscription price not found" });
+      }
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{ price: monthlyPrice.id, quantity: 1 }],
+        mode: 'subscription',
+        success_url: `${baseUrl}/app?subscription=success`,
+        cancel_url: `${baseUrl}/subscribe?cancelled=true`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Error creating checkout:", error);
+      res.status(500).json({ message: "Failed to create checkout session" });
+    }
+  });
+
+  app.post("/api/applykit/create-portal", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user?.stripeCustomerId) {
+        return res.status(400).json({ message: "No billing account found" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const session = await stripe.billingPortal.sessions.create({
+        customer: user.stripeCustomerId,
+        return_url: `${baseUrl}/app/settings`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Error creating portal:", error);
+      res.status(500).json({ message: "Failed to create billing portal" });
+    }
+  });
+
+  app.post("/api/stripe/sync-subscription", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user?.stripeCustomerId) {
+        return res.json({ subscriptionStatus: null });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const subscriptions = await stripe.subscriptions.list({
+        customer: user.stripeCustomerId,
+        status: 'all',
+        limit: 1,
+      });
+
+      const sub = subscriptions.data[0];
+      if (sub) {
+        await db.execute(
+          sql`UPDATE users SET stripe_subscription_id = ${sub.id}, subscription_status = ${sub.status}, updated_at = NOW() WHERE id = ${userId}`
+        );
+        return res.json({ subscriptionStatus: sub.status });
+      }
+
+      return res.json({ subscriptionStatus: null });
+    } catch (error) {
+      console.error("Error syncing subscription:", error);
+      res.status(500).json({ message: "Failed to sync subscription" });
+    }
+  });
 
   app.get("/api/applykit/profile", isAuthenticated, checkBan, async (req: any, res) => {
     try {
@@ -235,7 +408,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/applykit/applications", isAuthenticated, checkBan, async (req: any, res) => {
+  app.post("/api/applykit/applications", isAuthenticated, checkBan, requireSubscription, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { jobDescription, companyName, roleTitle, jobLocation, jobUrl, hiringManager, tone, templateId } = req.body;
@@ -253,7 +426,7 @@ export async function registerRoutes(
       const isAdminUser = await storage.isAdmin(userId);
       const override = await storage.getUserOverride(userId);
       const isUnlimited = isAdminUser || (override?.forceUnlimited && (!override.overrideExpiresAt || override.overrideExpiresAt > new Date()));
-      const appLimit = 15 + (override?.extraApplications || 0);
+      const appLimit = 30 + (override?.extraApplications || 0);
       if (!isUnlimited && usage && usage.applicationsGenerated >= appLimit) {
         return res.status(403).json({ message: `Monthly application limit reached (${appLimit}/${appLimit})` });
       }
@@ -302,7 +475,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/applykit/applications/:id/generate", isAuthenticated, checkBan, async (req: any, res) => {
+  app.post("/api/applykit/applications/:id/generate", isAuthenticated, checkBan, requireSubscription, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const id = parseInt(req.params.id);
@@ -393,7 +566,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/applykit/applications/:id/regenerate", isAuthenticated, checkBan, async (req: any, res) => {
+  app.post("/api/applykit/applications/:id/regenerate", isAuthenticated, checkBan, requireSubscription, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const id = parseInt(req.params.id);
@@ -407,7 +580,7 @@ export async function registerRoutes(
       const isAdminUser = await storage.isAdmin(userId);
       const override = await storage.getUserOverride(userId);
       const isUnlimited = isAdminUser || (override?.forceUnlimited && (!override.overrideExpiresAt || override.overrideExpiresAt > new Date()));
-      const regenLimit = 15 + (override?.extraRegenerations || 0);
+      const regenLimit = 30 + (override?.extraRegenerations || 0);
       if (!isUnlimited && usage && usage.regenerations >= regenLimit) {
         return res.status(403).json({ message: `Monthly regeneration limit reached (${regenLimit}/${regenLimit})` });
       }

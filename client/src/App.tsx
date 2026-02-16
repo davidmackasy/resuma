@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -9,13 +9,16 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/use-auth";
+import { useSubscription } from "@/hooks/use-subscription";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText } from "lucide-react";
 import { Link } from "wouter";
+import { useEffect } from "react";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import LoginPage from "@/pages/login";
+import SubscribePage from "@/pages/subscribe";
 import Dashboard from "@/pages/dashboard";
 import ProfilePage from "@/pages/profile";
 import NewApplication from "@/pages/new-application";
@@ -100,6 +103,55 @@ function AppShell() {
   return isMobile ? <MobileShell /> : <DesktopShell />;
 }
 
+function SubscriptionGate() {
+  const { hasAccess, isAdmin, isLoading } = useSubscription();
+  const [location, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && !hasAccess && !isAdmin) {
+      if (location !== "/subscribe") {
+        setLocation("/subscribe");
+      }
+    }
+  }, [isLoading, hasAccess, isAdmin, location, setLocation]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("subscription") === "success") {
+      fetch("/api/stripe/sync-subscription", {
+        method: "POST",
+        credentials: "include",
+      }).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/applykit/subscription"] });
+        window.history.replaceState({}, "", "/app");
+      });
+    }
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Skeleton className="h-10 w-10 rounded-md mx-auto" />
+          <Skeleton className="h-4 w-32 mx-auto" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasAccess && !isAdmin) {
+    return <SubscribePage />;
+  }
+
+  return (
+    <Switch>
+      <Route path="/app/*?" component={AppShell} />
+      <Route path="/subscribe">{() => { window.location.href = "/app"; return null; }}</Route>
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
 function RootRouter() {
   const { user, isLoading } = useAuth();
 
@@ -128,7 +180,10 @@ function RootRouter() {
     <Switch>
       <Route path="/">{() => { window.location.href = "/app"; return null; }}</Route>
       <Route path="/login">{() => { window.location.href = "/app"; return null; }}</Route>
-      <Route path="/app/*?" component={AppShell} />
+      <Route path="/subscribe" component={SubscribePage} />
+      <Route path="/app/*?">
+        <SubscriptionGate />
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

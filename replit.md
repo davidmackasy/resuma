@@ -4,6 +4,21 @@
 Resuma lets users upload their master resume/profile once, paste any job description, and automatically generate three tailored documents (resume, cover letter, follow-up email) using AI. Built with React + Express + PostgreSQL.
 
 ## Recent Changes
+- 2026-02-16: Stripe Subscription Integration ($9.99/month)
+  - Added stripe_customer_id, stripe_subscription_id, subscription_status columns to users table
+  - Created stripeClient.ts with getStripeSync(), getUncachableStripeClient(), and webhook signing secret management
+  - Seeded Stripe product (prod_TzFHdA1jnIIvhA) with $9.99/month price (price_1T1GmSDKwzyilib0xz8l84Wg)
+  - Subscription middleware: requireSubscription checks admin status first, then subscription_status (active/trialing)
+  - Protected routes: POST /api/applykit/applications, /generate, /regenerate
+  - Stripe routes: POST /create-checkout (creates checkout session), POST /create-portal (billing portal), GET /subscription, POST /sync-subscription
+  - Webhook route registered BEFORE express.json() to receive raw Buffer payload
+  - WebhookHandlers: processWebhook syncs via stripe-replit-sync, then handles custom events (subscription.*, invoice.paid resets usage, checkout.session.completed)
+  - Frontend: SubscriptionGate in App.tsx redirects unsubscribed users to /subscribe page
+  - subscribe.tsx: Premium subscribe page with feature list and $9.99/month CTA
+  - settings.tsx: Shows subscription status, billing date, "Manage Billing" button linking to Stripe Customer Portal
+  - use-subscription.ts hook: Queries /api/applykit/subscription for hasAccess, isAdmin, subscriptionStatus
+  - Admin bypass: Admins get hasAccess=true automatically, skip all subscription checks
+  - Usage limits increased to 30 applications and 30 regenerations per month
 - 2026-02-13: Mobile Native UI
   - Added fixed bottom tab bar for mobile (≤767px) with 5 tabs: Home, New, History, Profile, Settings
   - Created MobileBottomNav component and MobileShell layout in App.tsx
@@ -116,7 +131,7 @@ shared/
 - `applykit_events` - Event tracking for admin metrics (eventType, userId, metadata)
 
 ## User Preferences
-- Monthly quota: 15 applications, 15 regenerations
+- Monthly quota: 30 applications, 30 regenerations
 - Skip PDF rendering for MVP - markdown preview with copy-to-clipboard
 - Manual profile entry (no file upload parsing)
 - ATS-safe output with strict rules against fabrication
