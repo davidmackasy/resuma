@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { storage } from "./storage";
-import { analyzeJob, generateFromAnalysis, generateDocuments, generateSingleDocument } from "./generation";
+import { analyzeJob, generateFromAnalysis, generateDocuments, generateSingleDocument, generatePracticeQuestions } from "./generation";
 import { generateResumePdf, generateCoverLetterPdf } from "./export-pdf";
 import { generateResumeDocx, generateCoverLetterDocx } from "./export-docx";
 import { extractTextFromFile, parseResumeText } from "./resume-parser";
@@ -548,6 +548,20 @@ export async function registerRoutes(
         await storage.incrementUsage(userId, "applicationsGenerated");
         await storage.trackEvent(userId, "generate", { applicationId: id });
 
+        try {
+          if (generated.resume.md && generated.resume.md !== "Generation failed - no resume content") {
+            const practice = await generatePracticeQuestions(
+              generated.resume.md,
+              application.jobDescription,
+              application.roleTitle || undefined,
+              application.companyName || undefined,
+            );
+            await storage.updateApplicationPracticeContent(id, practice);
+          }
+        } catch (practiceError) {
+          console.error("Practice generation failed (non-blocking):", practiceError);
+        }
+
         res.json({ id, status: "generated" });
       } catch (genError) {
         console.error("Generation error:", genError);
@@ -607,6 +621,22 @@ export async function registerRoutes(
           tokensUsed: result.tokensUsed,
           model: result.model,
         });
+
+        if (docType === "resume") {
+          try {
+            if (result.md) {
+              const practice = await generatePracticeQuestions(
+                result.md,
+                application.jobDescription,
+                application.roleTitle || undefined,
+                application.companyName || undefined,
+              );
+              await storage.updateApplicationPracticeContent(id, practice);
+            }
+          } catch (practiceError) {
+            console.error("Practice regeneration failed (non-blocking):", practiceError);
+          }
+        }
       } else {
         await storage.deleteDocumentsByApplication(id);
         const generated = await generateDocuments(genInput);
@@ -639,6 +669,20 @@ export async function registerRoutes(
             model: generated.model,
           }),
         ]);
+
+        try {
+          if (generated.resume.md && generated.resume.md !== "Generation failed - no resume content") {
+            const practice = await generatePracticeQuestions(
+              generated.resume.md,
+              application.jobDescription,
+              application.roleTitle || undefined,
+              application.companyName || undefined,
+            );
+            await storage.updateApplicationPracticeContent(id, practice);
+          }
+        } catch (practiceError) {
+          console.error("Practice regeneration failed (non-blocking):", practiceError);
+        }
       }
 
       await storage.updateApplicationStatus(id, "generated");

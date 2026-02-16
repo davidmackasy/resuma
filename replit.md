@@ -1,9 +1,17 @@
 # Resuma - Premium Resume Tailor Web App
 
 ## Overview
-Resuma lets users upload their master resume/profile once, paste any job description, and automatically generate three tailored documents (resume, cover letter, follow-up email) using AI. Built with React + Express + PostgreSQL.
+Resuma lets users upload their master resume/profile once, paste any job description, and automatically generate four tailored documents (resume, cover letter, follow-up email, practice questions) using AI. Built with React + Express + PostgreSQL.
 
 ## Recent Changes
+- 2026-02-16: Practice Questions (4th Output Tab)
+  - Auto-generates 7 interview practice questions with best answers after document generation
+  - Uses generated resume + job description as input to isolated GPT prompt
+  - Stored in practiceContent JSON column on applykit_applications table
+  - Practice tab in application-detail.tsx with collapsible Q&A cards
+  - Generates on: initial generate, regenerate all, and single resume regeneration
+  - Wrapped in try/catch — practice failure never blocks document generation
+  - No changes to existing prompts, credit logic, or authentication
 - 2026-02-16: Stripe Subscription Integration ($9.99/month) — Isolated Stripe Account
   - Uses dedicated Resuma Stripe account (NOT Replit connector)
   - Environment secrets: RESUME_STRIPE_SECRET_KEY, RESUME_STRIPE_PUBLISHABLE_KEY, RESUME_STRIPE_WEBHOOK_SECRET, RESUME_STRIPE_PRICE_ID

@@ -1,0 +1,270 @@
+Feature: Auto-Generate “Practice” Tab With Resume + Cover Letter + Follow-Up
+Priority: HIGH
+Rule: DO NOT modify any existing generation logic, prompts, authentication, or working flows
+
+OBJECTIVE
+
+When a user generates:
+
+• Resume
+• Cover Letter
+• Follow-up Email
+
+The system must ALSO automatically generate:
+
+• Practice Questions
+
+User now receives 4 outputs instead of 3.
+
+Nothing about the resume, cover letter, or follow-up generation should change.
+
+We are adding. Not modifying.
+
+ABSOLUTE RULES
+
+Do NOT:
+
+• Touch existing resume prompt
+• Touch cover letter prompt
+• Touch follow-up prompt
+• Modify authentication
+• Modify Stripe
+• Modify quotas
+• Modify credit logic
+• Modify template logic
+• Modify analysis logic
+• Modify regenerate logic for existing outputs
+• Change database schema fields already working
+• Refactor anything unrelated
+
+We are extending functionality only.
+
+HIGH-LEVEL FLOW
+
+Current flow:
+
+User pastes job description
+
+User selects template + completeness
+
+User clicks Analyze
+
+User clicks Generate
+
+System generates:
+
+Resume
+
+Cover Letter
+
+Follow-Up Email
+
+New flow:
+
+System generates:
+
+Resume
+
+Cover Letter
+
+Follow-Up Email
+
+Practice Questions ← NEW
+
+All four are generated in the same generation cycle.
+
+DATABASE UPDATE
+
+Add ONE nullable field to applications table:
+
+practice_content JSON NULL
+
+Do not modify existing columns.
+
+Structure:
+
+practice_content = {
+questions: [
+{
+question: string,
+bestAnswer: string
+}
+]
+}
+
+Migration:
+
+ALTER TABLE applications
+ADD COLUMN practice_content JSON NULL;
+
+No other schema changes.
+
+BACKEND IMPLEMENTATION
+
+File: /api/application/generate (or wherever final generation happens)
+
+After resume, cover letter, and follow-up are successfully generated and saved:
+
+Add one additional generation step:
+
+generatePracticeContent()
+
+IMPORTANT:
+This must run AFTER resume generation is complete because it must use the UPDATED resume.
+
+PRACTICE GENERATION INPUT
+
+Input to GPT:
+
+• Updated Resume content (final version that was generated)
+• Job description
+• Job title
+• Company name
+
+Nothing else.
+
+PRACTICE PROMPT
+
+This is a NEW isolated prompt.
+Do NOT reuse or modify existing prompts.
+
+SYSTEM PROMPT:
+
+You are the hiring manager for this specific role.
+
+Based on the job description and the candidate's updated resume:
+
+Ask the 7 hardest interview questions relevant to this role.
+
+For each question, write the best possible answer the candidate should give based strictly on their resume.
+
+Make answers realistic, confident, and specific to their background.
+
+Do not invent experience not present in the resume.
+
+Keep answers structured and professional.
+
+Return JSON format:
+
+{
+"questions": [
+{
+"question": "",
+"bestAnswer": ""
+}
+]
+}
+
+IMPORTANT SAFETY
+
+If resume is empty or failed:
+Do not attempt practice generation.
+
+If practice generation fails:
+Do NOT break resume generation.
+Resume must still succeed independently.
+
+Wrap practice generation in try/catch.
+Fail silently and log error.
+
+FRONTEND UPDATE
+
+Add 4th tab:
+
+Resume
+Cover Letter
+Follow-Up Email
+Practice ← NEW
+
+Only append tab.
+Do not reorder.
+
+PRACTICE TAB UI
+
+When user opens Practice tab:
+
+Display:
+
+Title: Interview Practice
+Subtitle: Practice for this exact role
+
+Then render:
+
+For each question:
+
+Card:
+Question #1
+Question text
+
+Collapsible section:
+Best Answer
+
+Keep UI consistent with existing design system.
+Use same card styling.
+No new theme changes.
+
+REGENERATE ALL
+
+When user clicks “Regenerate All”:
+
+System must regenerate:
+• Resume
+• Cover Letter
+• Follow-Up
+• Practice
+
+Do not change existing regenerate logic.
+Simply append practice regeneration.
+
+CREDIT LOGIC
+
+Do NOT change credit cost.
+Do NOT increase credit usage.
+Practice generation must be included within current generation cycle.
+
+No additional charge.
+
+PERFORMANCE
+
+Practice generation must:
+
+• Run asynchronously but in same final generation flow
+• Not block UI
+• Show loading spinner
+• Save result once complete
+
+If user navigates away and returns:
+Practice content must persist from database.
+
+TESTING CHECKLIST
+
+Generate resume only → Practice auto appears
+
+Regenerate all → Practice regenerates
+
+Regenerate only resume → Practice also regenerates
+
+Resume failure → Practice not attempted
+
+Authentication unchanged
+
+Stripe untouched
+
+Existing prompts unchanged
+
+END RESULT FOR USER
+
+User pastes job description.
+Clicks Generate.
+
+They now receive:
+
+Tab 1: Resume
+Tab 2: Cover Letter
+Tab 3: Follow-Up Email
+Tab 4: Practice Questions
+
+All aligned to the same role.
+
+No change to existing experience.
+Only enhancement.

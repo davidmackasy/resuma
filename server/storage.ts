@@ -35,6 +35,7 @@ export interface IStorage {
   getApplication(id: number, userId: string): Promise<Application | undefined>;
   createApplication(data: InsertApplication): Promise<Application>;
   updateApplicationStatus(id: number, status: string): Promise<void>;
+  updateApplicationPracticeContent(id: number, practiceContent: any): Promise<void>;
   getDocuments(applicationId: number): Promise<AppDocument[]>;
   getDocument(id: number): Promise<AppDocument | undefined>;
   getDocumentByType(applicationId: number, docType: string): Promise<AppDocument | undefined>;
@@ -106,7 +107,7 @@ class DatabaseStorage implements IStorage {
   }
 
   async createApplication(data: InsertApplication): Promise<Application> {
-    const [app] = await db.insert(applykit_applications).values(data).returning();
+    const [app] = await db.insert(applykit_applications).values(data as any).returning();
     return app;
   }
 
@@ -114,6 +115,13 @@ class DatabaseStorage implements IStorage {
     await db
       .update(applykit_applications)
       .set({ status, updatedAt: new Date() })
+      .where(eq(applykit_applications.id, id));
+  }
+
+  async updateApplicationPracticeContent(id: number, practiceContent: any): Promise<void> {
+    await db
+      .update(applykit_applications)
+      .set({ practiceContent, updatedAt: new Date() })
       .where(eq(applykit_applications.id, id));
   }
 

@@ -22,9 +22,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   Copy, Check, FileText, Mail, MessageSquare,
   Briefcase, MapPin, RefreshCw, Loader2, ArrowLeft,
-  Download, Pencil, X, Save
+  Download, Pencil, X, Save, GraduationCap, ChevronDown
 } from "lucide-react";
 import { Link } from "wouter";
 import type { Application, AppDocument } from "@shared/schema";
@@ -187,7 +192,7 @@ export default function ApplicationDetail() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Regenerate all documents?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will replace all three documents (resume, cover letter, and follow-up email) with freshly generated versions. Any edits you have made will be lost. This uses 1 regeneration from your monthly quota.
+                  This will replace all documents (resume, cover letter, follow-up email, and practice questions) with freshly generated versions. Any edits you have made will be lost. This uses 1 regeneration from your monthly quota.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -214,6 +219,10 @@ export default function ApplicationDetail() {
               <TabsTrigger value="email" data-testid="tab-email">
                 <Mail className="mr-1.5 h-3.5 w-3.5" />
                 Follow-up Email
+              </TabsTrigger>
+              <TabsTrigger value="practice" data-testid="tab-practice">
+                <GraduationCap className="mr-1.5 h-3.5 w-3.5" />
+                Practice
               </TabsTrigger>
             </TabsList>
 
@@ -256,6 +265,10 @@ export default function ApplicationDetail() {
                 isRegenerating={regenerateDocMutation.isPending}
                 canExport={false}
               />
+            </TabsContent>
+
+            <TabsContent value="practice">
+              <PracticePanel practiceContent={application.practiceContent as any} />
             </TabsContent>
           </Tabs>
         </div>
@@ -494,6 +507,50 @@ function DocumentPanel({
           </div>
         </ScrollArea>
       )}
+    </Card>
+  );
+}
+
+function PracticePanel({ practiceContent }: { practiceContent?: { questions: { question: string; bestAnswer: string }[] } | null }) {
+  if (!practiceContent?.questions?.length) {
+    return (
+      <Card className="p-8 text-center mt-4">
+        <GraduationCap className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+        <p className="text-sm text-muted-foreground">No practice questions available yet</p>
+        <p className="text-xs text-muted-foreground mt-1">Practice questions will be generated along with your documents</p>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="mt-4">
+      <div className="p-4 border-b">
+        <h3 className="font-semibold text-sm" data-testid="text-practice-title">Interview Practice</h3>
+        <p className="text-xs text-muted-foreground mt-0.5">Practice for this exact role</p>
+      </div>
+      <ScrollArea className="h-[560px]">
+        <div className="p-4 space-y-3">
+          {practiceContent.questions.map((item, index) => (
+            <Collapsible key={index}>
+              <Card className="p-0">
+                <CollapsibleTrigger className="w-full text-left p-3 flex items-start justify-between gap-2" data-testid={`button-practice-question-${index}`}>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-medium text-muted-foreground">Question {index + 1}</span>
+                    <p className="text-sm mt-0.5">{item.question}</p>
+                  </div>
+                  <ChevronDown className="h-4 w-4 mt-1 shrink-0 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="px-3 pb-3 pt-0 border-t">
+                    <span className="text-xs font-medium text-muted-foreground block mt-2 mb-1">Best Answer</span>
+                    <p className="text-sm leading-relaxed text-muted-foreground" data-testid={`text-practice-answer-${index}`}>{item.bestAnswer}</p>
+                  </div>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          ))}
+        </div>
+      </ScrollArea>
     </Card>
   );
 }

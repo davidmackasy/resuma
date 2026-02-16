@@ -459,6 +459,72 @@ ${input.hiringManager ? `HIRING MANAGER: ${input.hiringManager}` : ""}`;
   };
 }
 
+export interface PracticeContent {
+  questions: { question: string; bestAnswer: string }[];
+}
+
+export async function generatePracticeQuestions(
+  resumeContent: string,
+  jobDescription: string,
+  roleTitle?: string,
+  companyName?: string,
+): Promise<PracticeContent> {
+  const systemPrompt = `You are the hiring manager for this specific role.
+
+Based on the job description and the candidate's updated resume:
+
+Ask the 7 hardest interview questions relevant to this role.
+
+For each question, write the best possible answer the candidate should give based strictly on their resume.
+
+Make answers realistic, confident, and specific to their background.
+
+Do not invent experience not present in the resume.
+
+Keep answers structured and professional.
+
+Return JSON format:
+
+{
+  "questions": [
+    {
+      "question": "",
+      "bestAnswer": ""
+    }
+  ]
+}`;
+
+  const userPrompt = `CANDIDATE'S UPDATED RESUME:
+${resumeContent}
+
+JOB DESCRIPTION:
+${jobDescription.substring(0, 6000)}
+${roleTitle ? `\nJOB TITLE: ${roleTitle}` : ""}
+${companyName ? `\nCOMPANY: ${companyName}` : ""}
+
+Generate the 7 hardest interview questions and best answers.`;
+
+  const response = await openai.chat.completions.create({
+    model: MODEL,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    response_format: { type: "json_object" },
+    max_completion_tokens: 4000,
+  });
+
+  const content = response.choices[0]?.message?.content || "{}";
+  const parsed = JSON.parse(content);
+
+  return {
+    questions: (parsed.questions || []).map((q: any) => ({
+      question: q.question || "",
+      bestAnswer: q.bestAnswer || "",
+    })),
+  };
+}
+
 function buildFallbackResumeJson(profile: Profile): ResumeJson {
   const links = profile.links as any || {};
   const exp = profile.experience as any || { roles: [] };

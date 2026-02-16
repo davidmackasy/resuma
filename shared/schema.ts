@@ -41,6 +41,7 @@ export const applykit_applications = pgTable("applykit_applications", {
   tone: text("tone").notNull().default("professional"),
   templateId: text("template_id").notNull().default("modern_minimal"),
   status: text("status").notNull().default("draft"),
+  practiceContent: jsonb("practice_content").$type<{ questions: { question: string; bestAnswer: string }[] } | null>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
