@@ -1,0 +1,217 @@
+DEV NOTE
+Bug: Suggested Improvements section cannot scroll to view all items
+Priority: High
+Rule: Fix scroll behavior only. Do NOT change generation logic, selection logic, toggles, layout structure, or styling system.
+
+ISSUE SUMMARY
+
+On the “Suggested Improvements” section:
+
+• Users cannot scroll to see all suggestion cards
+• Bottom content gets cut off
+• Scroll is either disabled or constrained incorrectly
+• Generate button overlaps visible area
+
+This is a UI overflow / height constraint issue.
+
+No backend issue.
+
+ROOT CAUSE (Most Likely)
+
+One of these is happening:
+
+Parent container has fixed height with overflow hidden
+
+Flex container missing min-height: 0
+
+Scroll assigned to wrong wrapper
+
+Entire page scroll locked due to flex layout
+
+Nested scroll container incorrectly configured
+
+WHAT WE ARE FIXING
+
+We are ONLY fixing the scrolling behavior of the Suggested Improvements container.
+
+We are NOT:
+
+• Changing the generation flow
+• Changing how suggestions are selected
+• Changing toggle logic
+• Changing layout spacing
+• Changing theme
+• Changing button placement
+• Changing mobile nav
+• Changing any prompts
+
+EXPECTED BEHAVIOR
+
+• Suggested Improvements section scrolls independently
+• User can scroll to bottom suggestion
+• Generate button remains visible and accessible
+• Desktop and mobile both work
+• No layout shifts
+
+IMPLEMENTATION STEPS
+
+STEP 1: Identify Scroll Container
+
+Find the wrapper that contains:
+
+Header: “Suggested Improvements”
+Suggestion cards list
+
+Likely something like:
+
+<div className="suggestions-wrapper">
+
+STEP 2: Fix Flex Parent Height
+
+If parent layout uses flex column like:
+
+display: flex
+flex-direction: column
+
+You MUST add:
+
+min-height: 0;
+
+on the immediate flex parent of the scroll container.
+
+Example:
+
+.parent-container {
+display: flex;
+flex-direction: column;
+min-height: 0;
+}
+
+Without min-height: 0, overflow scrolling breaks.
+
+STEP 3: Make Suggestions Area Scrollable
+
+On the suggestions list container:
+
+Add:
+
+overflow-y: auto;
+max-height: 55vh;
+
+OR if layout requires full height:
+
+flex: 1;
+overflow-y: auto;
+
+Do NOT use fixed pixel height.
+
+Do NOT use overflow: hidden.
+
+STEP 4: Prevent Page Scroll Lock
+
+Ensure the BODY or main page wrapper does NOT have:
+
+overflow: hidden;
+
+If it does, remove it unless strictly required elsewhere.
+
+STEP 5: Keep Generate Button Outside Scroll
+
+The Generate Tailored Application button must NOT be inside the scroll container.
+
+Structure should be:
+
+Parent Layout
+├── Suggested Improvements (scrollable)
+└── Generate Button (fixed below)
+
+Example layout:
+
+<div class="application-layout"> <div class="suggestions-scroll-area"> ... suggestion cards ... </div> <div class="generate-button-area"> Generate Tailored Application </div> </div>
+
+STEP 6: Mobile Fix
+
+On mobile:
+
+• Ensure scroll container uses:
+height: calc(100vh - headerHeight - buttonHeight);
+
+OR
+
+• flex: 1 with parent using:
+display: flex;
+flex-direction: column;
+height: 100vh;
+
+And again:
+min-height: 0 must exist on flex parents.
+
+SAFE CSS PATCH EXAMPLE
+
+Add to suggestions container:
+
+.suggestions-scroll-area {
+overflow-y: auto;
+max-height: 60vh;
+padding-right: 4px;
+}
+
+If flex layout:
+
+.suggestions-scroll-area {
+flex: 1;
+min-height: 0;
+overflow-y: auto;
+}
+
+DO NOT TOUCH
+
+• Suggestion selection toggle logic
+• “Select All / Deselect All”
+• Analysis logic
+• Resume generation
+• Cover letter generation
+• Follow-up generation
+• Practice tab logic
+• Authentication
+• Stripe
+• Quota
+• API routes
+
+TESTING CHECKLIST
+
+Desktop:
+
+Scroll works
+
+Can reach last suggestion
+
+Toggle still works
+
+Generate button clickable
+
+Mobile:
+
+Scroll smooth
+
+No content cut off
+
+No layout overflow
+
+No double scroll conflict
+
+No regression in:
+
+Resume generation
+
+Cover letter generation
+
+Follow-up email generation
+
+Practice tab
+
+EXPECTED RESULT
+
+User can scroll freely through all Suggested Improvements.
+
+Everything else remains untouched.

@@ -324,7 +324,7 @@ export default function FitReport() {
           <p className="text-xs text-muted-foreground mb-4">
             These bullet upgrades will be applied to your tailored resume. Toggle the ones you want to include.
           </p>
-          <ScrollArea className="max-h-[400px]">
+          <ScrollArea className="max-h-[60vh]">
             <div className="space-y-3">
               {suggestedAdditions.map((sa: any) => (
                 <div
