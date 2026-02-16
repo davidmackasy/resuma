@@ -1,0 +1,177 @@
+DEV NOTE
+Bug: Matched Skills and Missing Skills chips overflow and break layout
+Priority: High
+Rule: Fix layout wrapping and overflow only. Do NOT change analysis logic, scoring logic, prompts, or data structure.
+
+ISSUE SUMMARY
+
+In the ATS Report:
+
+• Skill chips overflow outside their container
+• Long chips stretch beyond card width
+• Right column looks cut off
+• Layout breaks on smaller screens
+• Horizontal scroll appears
+
+This is a CSS wrapping and flexbox issue.
+
+No backend problem.
+
+ROOT CAUSE
+
+Most likely:
+
+• Chips container missing flex-wrap
+• Chips using white-space: nowrap
+• Container missing overflow handling
+• Card width constrained incorrectly
+• Grid column widths not responsive
+
+WHAT WE ARE FIXING
+
+Only:
+
+• Chip wrapping
+• Column overflow
+• Scroll behavior
+
+We are NOT touching:
+
+• ATS score logic
+• Matched skills logic
+• Missing skills logic
+• Risk flags
+• Transferable angle
+• Generation flow
+• Authentication
+• Stripe
+• Practice tab
+• Resume logic
+
+EXPECTED BEHAVIOR
+
+• Skill chips wrap naturally to next line
+• No horizontal scroll
+• Cards remain same size
+• Desktop and mobile both stable
+• No content clipped
+
+IMPLEMENTATION
+
+STEP 1: Fix Chip Container
+
+Find container wrapping skill tags inside:
+
+Matched Skills
+Missing Skills
+
+Likely something like:
+
+<div class="skills-container">
+
+Replace styling with:
+
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+align-items: flex-start;
+
+STEP 2: Fix Chip Styling
+
+Ensure chip class does NOT contain:
+
+white-space: nowrap;
+
+Instead use:
+
+white-space: normal;
+word-break: break-word;
+max-width: 100%;
+
+If chip is flex item:
+
+flex-shrink: 1;
+
+STEP 3: Prevent Card Overflow
+
+On the card container:
+
+overflow: hidden;
+
+Add:
+
+min-width: 0;
+
+If card is inside flex/grid, min-width: 0 is critical to prevent overflow expansion.
+
+STEP 4: Fix Grid Layout
+
+If layout uses grid:
+
+grid-template-columns: 1fr 1fr 1fr;
+
+Ensure responsive behavior:
+
+@media (max-width: 1024px) {
+grid-template-columns: 1fr;
+}
+
+OR
+
+grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+
+This prevents right column cut-off.
+
+STEP 5: Remove Horizontal Scroll
+
+Ensure parent container does NOT have:
+
+overflow-x: auto;
+
+If it does, replace with:
+
+overflow-x: hidden;
+
+SAFE CSS PATCH
+
+.skills-container {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+min-width: 0;
+}
+
+.skill-chip {
+max-width: 100%;
+word-break: break-word;
+white-space: normal;
+}
+
+.ats-card {
+min-width: 0;
+overflow: hidden;
+}
+
+TESTING CHECKLIST
+
+Desktop:
+• Chips wrap correctly
+• No horizontal scroll
+• All content visible
+• Layout aligned
+
+Tablet:
+• Cards stack properly
+• No overflow
+
+Mobile:
+• Single column layout
+• Chips wrap cleanly
+• No clipping
+
+RESULT
+
+• Matched Skills and Missing Skills display cleanly
+• No overflow
+• No broken layout
+• No regression anywhere else

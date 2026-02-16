@@ -181,7 +181,7 @@ export default function FitReport() {
           </p>
         </Card>
 
-        <Card className="p-5" data-testid="card-matched-skills">
+        <Card className="p-5 min-w-0" data-testid="card-matched-skills">
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
             <span className="text-sm font-medium">Matched Skills</span>
@@ -191,7 +191,7 @@ export default function FitReport() {
           </div>
           <div className="flex flex-wrap gap-1 mt-2">
             {matchedSkills.slice(0, 5).map((skill, i) => (
-              <Badge key={i} variant="secondary" className="text-xs" data-testid={`badge-matched-${i}`}>
+              <Badge key={i} variant="secondary" className="text-xs max-w-full whitespace-normal" data-testid={`badge-matched-${i}`}>
                 {skill}
               </Badge>
             ))}
@@ -201,7 +201,7 @@ export default function FitReport() {
           </div>
         </Card>
 
-        <Card className="p-5" data-testid="card-missing-skills">
+        <Card className="p-5 min-w-0" data-testid="card-missing-skills">
           <div className="flex items-center gap-2 mb-3">
             <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
             <span className="text-sm font-medium">Missing Skills</span>
@@ -211,7 +211,7 @@ export default function FitReport() {
           </div>
           <div className="flex flex-wrap gap-1 mt-2">
             {missingSkills.slice(0, 5).map((skill, i) => (
-              <Badge key={i} variant="outline" className="text-xs" data-testid={`badge-missing-${i}`}>
+              <Badge key={i} variant="outline" className="text-xs max-w-full whitespace-normal" data-testid={`badge-missing-${i}`}>
                 {skill}
               </Badge>
             ))}
