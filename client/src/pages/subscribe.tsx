@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle2, FileText, Zap, RefreshCw, Shield, Rocket, HeadphonesIcon } from "lucide-react";
+import { Loader2, CheckCircle2, FileText, Zap, RefreshCw, Shield, Rocket, HeadphonesIcon, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function SubscribePage() {
@@ -107,6 +107,20 @@ export default function SubscribePage() {
         <p className="text-center text-xs text-muted-foreground">
           Cancel anytime. Secure payment powered by Stripe.
         </p>
+
+        <div className="text-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              window.location.href = "/api/logout";
+            }}
+            data-testid="button-logout-subscribe"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign out
+          </Button>
+        </div>
       </div>
     </div>
   );

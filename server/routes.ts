@@ -74,11 +74,22 @@ export async function registerRoutes(
     return res.status(403).json({ code: "SUBSCRIPTION_REQUIRED", message: "Active subscription required" });
   };
 
+  const OWNER_EMAILS = ["davidmackassy@gmail.com", "giftmushili223@gmail.com"];
+
   app.get("/api/applykit/subscription", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await authStorage.getUser(userId);
-      const isAdminUser = await storage.isAdmin(userId);
+      let isAdminUser = await storage.isAdmin(userId);
+
+      if (!isAdminUser && user?.email && OWNER_EMAILS.includes(user.email.toLowerCase())) {
+        try {
+          await storage.addAdmin(userId, user.email, "owner", "system");
+          isAdminUser = true;
+        } catch (e) {
+          console.error("Auto-admin bootstrap in subscription check:", e);
+        }
+      }
 
       if (isAdminUser) {
         return res.json({
