@@ -7,7 +7,7 @@ import { authStorage } from "./storage";
 import { storage } from "../../storage";
 import bcrypt from "bcryptjs";
 
-const OWNER_EMAILS = ["davidmackassy@gmail.com"];
+const OWNER_EMAILS = ["davidmackassy@gmail.com", "giftmushili223@gmail.com"];
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
