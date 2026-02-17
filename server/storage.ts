@@ -1,4 +1,4 @@
-import { eq, desc, and, gte, lte, sql, count, like, or } from "drizzle-orm";
+import { eq, desc, and, gte, lte, sql, count, like, ilike, or } from "drizzle-orm";
 import { db } from "./db";
 import {
   applykit_profiles,
@@ -380,9 +380,9 @@ class DatabaseStorage implements IStorage {
     if (options.query) {
       const searchTerm = `%${options.query}%`;
       whereClause = or(
-        like(users.email, searchTerm),
-        like(users.firstName, searchTerm),
-        like(users.lastName, searchTerm)
+        ilike(users.email, searchTerm),
+        ilike(users.firstName, searchTerm),
+        ilike(users.lastName, searchTerm)
       );
     }
 

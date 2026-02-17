@@ -937,8 +937,8 @@ export async function registerRoutes(
       const { email, role } = req.body;
       if (!email) return res.status(400).json({ message: "Email is required" });
 
-      const { users: foundUsers } = await storage.getAllUsers({ query: email, limit: 1 });
-      const targetUser = foundUsers.find((u: any) => u.email === email);
+      const { users: foundUsers } = await storage.getAllUsers({ query: email, limit: 10 });
+      const targetUser = foundUsers.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
       if (!targetUser) return res.status(404).json({ message: "User must sign up first" });
 
       const admin = await storage.addAdmin(targetUser.id, email, role || "admin", adminUserId);
