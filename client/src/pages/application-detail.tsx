@@ -141,29 +141,29 @@ export default function ApplicationDetail() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6 overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <Link href="/app/applications">
             <Button size="icon" variant="ghost" data-testid="button-back">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <div>
-            <h1 className="text-xl font-serif font-bold" data-testid="text-detail-title">
+          <div className="min-w-0">
+            <h1 className="text-xl font-serif font-bold truncate" data-testid="text-detail-title">
               {application.roleTitle || "Application"}
             </h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5 flex-wrap">
               {application.companyName && (
                 <span className="flex items-center gap-1">
-                  <Briefcase className="h-3.5 w-3.5" />
-                  {application.companyName}
+                  <Briefcase className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{application.companyName}</span>
                 </span>
               )}
               {application.jobLocation && (
                 <span className="flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {application.jobLocation}
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{application.jobLocation}</span>
                 </span>
               )}
             </div>
@@ -204,10 +204,10 @@ export default function ApplicationDetail() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      <div className="grid lg:grid-cols-3 gap-6 min-w-0">
+        <div className="lg:col-span-2 min-w-0 overflow-hidden">
           <Tabs defaultValue="resume">
-            <TabsList className="w-full justify-start">
+            <TabsList className="w-full justify-start overflow-x-auto">
               <TabsTrigger value="resume" data-testid="tab-resume">
                 <FileText className="mr-1.5 h-3.5 w-3.5" />
                 Resume
@@ -376,7 +376,7 @@ function DocumentPanel({
   const hasStructuredContent = doc.contentJson && typeof doc.contentJson === "object" && Object.keys(doc.contentJson as any).length > 0;
 
   return (
-    <Card className="mt-4">
+    <Card className="mt-4 overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 p-3 border-b">
         <div className="flex items-center gap-1.5">
           {canExport && hasStructuredContent && onDownload ? (
@@ -505,7 +505,7 @@ function DocumentPanel({
         </ScrollArea>
       ) : (
         <ScrollArea className="h-[560px]">
-          <div className="p-6 whitespace-pre-wrap font-mono text-sm leading-relaxed" data-testid={`text-preview-${docType}`}>
+          <div className="p-4 sm:p-6 whitespace-pre-wrap break-words font-mono text-sm leading-relaxed" data-testid={`text-preview-${docType}`}>
             {doc.contentMd}
           </div>
         </ScrollArea>
@@ -535,7 +535,7 @@ function PracticePanel({ practiceContent, isGenerating }: { practiceContent?: { 
   }
 
   return (
-    <Card className="mt-4">
+    <Card className="mt-4 overflow-hidden">
       <div className="p-4 border-b">
         <h3 className="font-semibold text-sm" data-testid="text-practice-title">Interview Practice</h3>
         <p className="text-xs text-muted-foreground mt-0.5">Practice for this exact role</p>
@@ -570,7 +570,7 @@ function PracticePanel({ practiceContent, isGenerating }: { practiceContent?: { 
 function StyledResumePreview({ data }: { data: any }) {
   if (!data?.header) return <div className="p-6 text-sm text-muted-foreground">No structured data available</div>;
   return (
-    <div className="p-6 sm:p-8 max-w-[680px] mx-auto" data-testid="resume-styled-preview">
+    <div className="p-4 sm:p-8 max-w-full sm:max-w-[680px] mx-auto break-words" data-testid="resume-styled-preview">
       <div className="text-center mb-4">
         <h1 className="text-xl font-bold tracking-tight">{data.header.name}</h1>
         {data.header.title && <p className="text-sm text-muted-foreground mt-0.5">{data.header.title}</p>}
@@ -611,9 +611,9 @@ function StyledResumePreview({ data }: { data: any }) {
                 </p>
               )}
               {role.bullets?.length > 0 && (
-                <ul className="mt-1 space-y-0.5 pl-4">
+                <ul className="mt-1 space-y-0.5 pl-4 overflow-hidden">
                   {role.bullets.filter((b: string) => b.trim()).map((bullet: string, j: number) => (
-                    <li key={j} className="text-sm leading-relaxed list-disc text-muted-foreground">{bullet}</li>
+                    <li key={j} className="text-sm leading-relaxed list-disc text-muted-foreground break-words">{bullet}</li>
                   ))}
                 </ul>
               )}
@@ -669,7 +669,7 @@ function StyledResumePreview({ data }: { data: any }) {
 function StyledCoverLetterPreview({ data }: { data: any }) {
   if (!data?.senderName && !data?.opening) return <div className="p-6 text-sm text-muted-foreground">No structured data available</div>;
   return (
-    <div className="p-6 sm:p-8 max-w-[640px] mx-auto space-y-4" data-testid="cover-letter-styled-preview">
+    <div className="p-4 sm:p-8 max-w-full sm:max-w-[640px] mx-auto space-y-4 break-words" data-testid="cover-letter-styled-preview">
       <div>
         <p className="font-semibold text-sm">{data.senderName}</p>
         <p className="text-xs text-muted-foreground mt-0.5">
@@ -699,7 +699,7 @@ function StyledCoverLetterPreview({ data }: { data: any }) {
 function StyledEmailPreview({ data }: { data: any }) {
   if (!data?.subject && !data?.body) return <div className="p-6 text-sm text-muted-foreground">No structured data available</div>;
   return (
-    <div className="p-6 sm:p-8 max-w-[640px] mx-auto space-y-3" data-testid="email-styled-preview">
+    <div className="p-4 sm:p-8 max-w-full sm:max-w-[640px] mx-auto space-y-3 break-words" data-testid="email-styled-preview">
       {data.subject && (
         <div className="pb-3 border-b">
           <span className="text-xs font-medium text-muted-foreground">Subject:</span>
