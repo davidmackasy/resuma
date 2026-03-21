@@ -1,0 +1,443 @@
+DEV NOTE: RESUMA UI/UX IMPROVEMENT PLAN FOR MOBILE, DESKTOP, AND LANDING PAGE
+
+Important
+Do not break any working feature, auth flow, resume generation flow, payment flow, file upload flow, or export/download logic.
+This task is a UI and layout refinement task only unless a small UX improvement is directly tied to the interface.
+Keep all current core functionality intact.
+Do not remove existing pages or working sections unless explicitly mentioned below.
+Focus on making the app feel more premium, modern, trustworthy, and easier to use on both desktop and mobile.
+
+Goal
+Improve the full Resuma experience so it looks more polished, more professional, and more conversion-focused across:
+
+Landing page
+Desktop app UI
+Mobile app UI
+
+Main design direction
+The current UI is clean, but it still feels a bit basic and too empty in some places. We need to improve:
+
+spacing
+hierarchy
+responsiveness
+button styling
+card design
+visual trust
+premium SaaS feel
+mobile usability
+conversion clarity
+
+Use a clean, modern SaaS design system with:
+
+soft borders
+subtle shadows
+better spacing
+more consistent card radius
+stronger typography hierarchy
+cleaner section separation
+more polished CTA styling
+better content width control
+improved responsive behavior
+
+DESKTOP UI IMPROVEMENTS
+
+Global layout cleanup
+Improve desktop page structure so content feels intentional, not too stretched, and not too empty.
+Tasks:
+Use a proper max-width container for main content areas
+Add consistent horizontal padding
+Improve vertical spacing between sections
+Standardize page section widths so cards and forms do not feel randomly placed
+Align headers, cards, and action buttons consistently
+
+Recommended direction:
+
+Main content max width around 1200px to 1280px
+Hero content max width controlled so text does not stretch too wide
+Better spacing between navbar, hero, trust elements, and next section
+Typography hierarchy
+The heading is strong, but the layout can feel slightly unbalanced.
+Tasks:
+Improve font sizing consistency for headline, subheadline, labels, and helper text
+Tighten line-height on hero heading
+Improve readability of body text
+Make secondary text slightly darker for better contrast
+Use clearer section titles and subtext
+
+Recommended direction:
+
+Strong bold headline
+Supporting text slightly narrower in width
+More visual difference between primary content and muted content
+Navbar refinement
+Current navbar is simple but can look more premium.
+Tasks:
+Improve navbar height and spacing
+Better align logo, nav items, and CTA buttons
+Make Get Started button feel more premium
+Add subtle hover states
+Improve responsive collapse behavior for smaller widths
+
+Recommended desktop navbar:
+
+Left: logo
+Middle or right: minimal nav links if available
+Right: Log in and primary CTA
+Sticky navbar with subtle background blur or thin border on scroll
+Hero section redesign
+This is the most important landing page section and should convert better.
+Current issue:
+Too much empty space
+Right card is okay, but the whole hero can feel flat
+Missing product confidence cues
+CTA area can be stronger
+
+Tasks:
+
+Keep the left/right hero split
+Improve balance between text and preview card
+Make the right preview card feel more like a real product mockup
+Add better spacing between badge, heading, subtext, CTA, and trust indicators
+Improve button size and interaction
+Reduce visual dead space around the hero
+
+Left side improvements:
+
+Keep headline, but refine line breaks for better visual balance
+Make the green highlighted words feel more intentional
+Improve subtext width for readability
+Add stronger CTA row:
+Primary button
+Secondary CTA or lightweight text link like “See how it works”
+Add small trust line under CTA:
+ATS-friendly
+Resume tailored in seconds
+No writing from scratch
+
+Right side improvements:
+
+Redesign preview card to look more realistic and premium
+Add better status styling
+Improve row spacing
+Add subtle iconography
+Add document stack feel or layered card effect
+Make “Download All” button stronger and more product-like
+Add tiny badges like “ATS optimized”, “AI tailored”, “Ready to send”
+Section design below hero
+The “How it works” section is too far and disconnected visually.
+Tasks:
+Reduce awkward white space between hero and next section
+Add proper transition spacing
+Introduce section divider or soft background shift
+Improve how each section starts so users feel guided down the page
+
+Landing page sections to improve:
+
+How it works
+Features
+Why choose Resuma
+Testimonials or social proof
+Final CTA
+Footer
+Card system
+Across desktop app pages, all cards should be upgraded.
+Tasks:
+Standardize card radius
+Add subtle shadow
+Use soft border color
+Better internal padding
+Improve label alignment
+Improve empty states
+
+Recommended card behavior:
+
+Soft hover lift on interactive cards
+Stronger title styling
+Cleaner action buttons
+Consistent spacing between stacked cards
+Forms and inputs
+If the app has upload fields, job description input, and generation forms, improve all input styling.
+Tasks:
+Increase input height slightly
+Improve placeholder contrast
+Better focus states
+Add helper text under important fields
+Improve drag-and-drop upload styling
+Better file success state after resume upload
+Make generation actions visually clearer
+
+MOBILE UI IMPROVEMENTS
+
+Mobile layout priorities
+Mobile should not feel like a squeezed desktop page.
+Tasks:
+Rebuild page sections for true mobile stacking
+Reduce horizontal crowding
+Improve spacing above and below cards
+Use larger tap targets
+Prevent text from feeling too wide or too cramped
+Ensure buttons are full-width or near full-width when appropriate
+Mobile navbar / header
+Tasks:
+Keep logo visible and clean
+Use a proper mobile menu if needed
+Make primary CTA easy to tap
+Keep header compact but not tiny
+Ensure spacing is balanced on smaller screens
+
+Recommended:
+
+Logo left
+Menu or auth actions right
+Primary CTA visible if possible
+Sticky top nav on mobile for better usability
+Mobile hero redesign
+The hero must be redesigned specifically for mobile, not just scaled down.
+Tasks:
+Stack content vertically
+Headline first
+Subtext second
+CTA third
+Product preview card after CTA
+Reduce line breaks so headline remains readable
+Ensure preview card fits within viewport without overflow
+Improve spacing between each block
+
+Recommended order on mobile:
+
+badge
+headline
+subheadline
+primary CTA
+secondary CTA
+trust micro-points
+product preview card
+Mobile buttons and actions
+Tasks:
+Increase button height
+Make primary CTAs full width
+Ensure spacing between buttons is enough for thumb interaction
+Improve button weight and readability
+Make “Download All” and generation buttons easy to tap
+Mobile product cards
+Tasks:
+Ensure all cards stack properly
+Remove any horizontal overflow
+Ensure status labels align correctly on small screens
+Make rows readable without feeling cramped
+Avoid tiny text
+Improve padding inside cards
+Mobile section spacing
+Tasks:
+Reduce giant blank spaces
+Add consistent top and bottom padding per section
+Improve scrolling rhythm
+Make each section feel like a clean block instead of disconnected pieces
+Mobile app dashboard pages
+For the actual logged-in app UI on mobile:
+Improve bottom spacing around forms and actions
+Make upload area easier to use
+Make job description entry feel less intimidating
+Break long workflows into steps or collapsible cards if needed
+Keep sticky primary action when useful
+Improve generated output cards to feel clean and easy to scan
+
+LANDING PAGE SPECIFIC IMPROVEMENTS
+
+Improve conversion clarity
+Landing page should instantly explain:
+what the app does
+who it is for
+why it is better
+what users get
+how fast it works
+
+Tasks:
+
+Make headline benefit-driven
+Make subheadline more specific
+Add clearer supporting product proof
+Add trust-building microcopy
+Add stronger CTA repetition throughout page
+
+Suggested messaging direction:
+
+Upload your resume once
+Paste any job description
+Get a tailored resume, cover letter, follow-up email, and interview prep fast
+Add social proof
+Landing page needs more trust.
+Add:
+testimonials
+user count or usage stats if available
+ATS benefit messaging
+“trusted by job seekers”
+mini review cards
+employer/role examples if relevant
+Improve feature section
+Instead of generic blocks, use visual product cards.
+Feature cards can include:
+Tailored resume
+Cover letter generation
+Follow-up email
+ATS score insights
+Interview prep questions
+Fast export/download
+
+Each feature card should have:
+
+icon
+clear title
+one short explanation
+optional micro preview or badge
+Better “How it works” section
+Use a cleaner 3-step or 4-step flow.
+Suggested:
+Upload your current resume
+Paste the job description
+Let AI tailor your application package
+Download and apply
+
+Make this section visually easier to scan with step cards.
+
+Final CTA section
+Landing page should end with a strong CTA block.
+Add:
+clear headline
+one-line reassurance
+primary CTA
+optional secondary CTA
+subtle trust note underneath
+
+VISUAL STYLE UPGRADES
+
+Color usage
+The green accent is good but needs better control.
+Tasks:
+Use green mainly for CTA, highlights, active states, and important product cues
+Avoid overusing bright green in too many areas
+Use neutral background tones to let green feel more premium
+Improve muted text contrast
+Shadows and borders
+Tasks:
+Use very soft shadows only
+Use thin soft-gray borders
+Avoid harsh outlines
+Make cards feel layered but clean
+Radius system
+Tasks:
+Standardize corner radius across:
+buttons
+cards
+inputs
+modals
+Use a more premium consistent radius system
+Icons and status
+Tasks:
+Standardize icon sizes
+Improve status dots and labels
+Use more polished readiness states
+Make export/download actions visually stronger
+
+RESPONSIVE REQUIREMENTS
+
+Make sure the agent handles these breakpoints properly:
+
+mobile
+tablet
+laptop
+desktop
+wide desktop
+
+Tasks:
+
+No overflow
+No broken alignment
+No cramped text
+No awkward white gaps
+No CTA misalignment
+No preview card stretching too much
+No inconsistent card heights where avoidable
+
+APP PAGES TO IMPROVE AFTER LANDING PAGE
+
+For the actual Resuma app experience, improve these areas consistently:
+
+upload resume screen
+job description input area
+generation/loading state
+generated results page
+exported documents page
+profile/settings billing if available
+
+For each page:
+
+improve spacing
+improve card design
+improve CTA visibility
+improve hierarchy
+improve mobile usability
+keep flows exactly working as they already do
+
+MICRO UX IMPROVEMENTS
+
+Add or improve:
+
+better loading states
+skeleton loaders
+success states after resume upload
+more polished progress indicators during generation
+clearer completion states
+hover states on desktop
+tap feedback on mobile
+empty states with guidance
+inline helper text where users may get stuck
+
+DO NOT CHANGE
+Do not change:
+
+business logic
+auth
+upload backend
+AI generation logic
+Stripe/payment logic
+resume export logic
+download logic
+existing page routing
+anything unrelated to UI/UX improvement
+
+DELIVERABLE EXPECTATION FOR AGENT
+
+Please update the UI across:
+
+Landing page
+Desktop logged-in UI
+Mobile logged-in UI
+
+Make the experience feel:
+
+cleaner
+more premium
+more modern
+more responsive
+more trustworthy
+more conversion-focused
+
+Do a full UI polish pass while preserving all current functionality.
+
+PRIORITY ORDER
+
+Landing page hero and section spacing
+Mobile responsiveness and stacking
+Desktop app layout consistency
+Cards, buttons, and input refinement
+Micro-interactions and trust-building visuals
+
+If you want, I can also turn this into a much stronger agent-ready version with exact sections like:
+
+Problem
+Goal
+Scope
+Files to inspect
+Exact UI changes
+Acceptance checklist

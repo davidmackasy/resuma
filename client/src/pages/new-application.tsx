@@ -14,14 +14,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Search, ChevronDown, FileText, Loader2, AlertCircle } from "lucide-react";
+import { Search, ChevronDown, FileText, Loader2, AlertCircle, Sparkles } from "lucide-react";
 import type { Profile, Template } from "@shared/schema";
 
 const toneOptions = [
-  { value: "professional", label: "Professional" },
-  { value: "confident", label: "Confident" },
-  { value: "warm", label: "Warm" },
-  { value: "direct", label: "Direct" },
+  { value: "professional", label: "Professional", desc: "Polished & formal" },
+  { value: "confident", label: "Confident", desc: "Bold & direct" },
+  { value: "warm", label: "Warm", desc: "Friendly & approachable" },
+  { value: "direct", label: "Direct", desc: "Concise & clear" },
 ];
 
 export default function NewApplication() {
@@ -70,31 +70,36 @@ export default function NewApplication() {
   });
 
   const hasProfile = profile && profile.fullName && profile.structuredComplete;
+  const charCount = jobDescription.length;
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-serif font-bold" data-testid="text-new-app-title">New Application</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Paste a job description to analyze fit and generate tailored documents
+    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="space-y-1">
+        <h1 className="text-2xl sm:text-3xl font-serif font-bold" data-testid="text-new-app-title">
+          New Application
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Paste a job description to analyze fit and generate your tailored application package
         </p>
       </div>
 
+      {/* Profile warning */}
       {profileLoading ? (
-        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-[88px] w-full" />
       ) : !hasProfile ? (
-        <Card className="p-4 border-destructive/50 bg-destructive/5">
+        <Card className="p-4 border-amber-500/30 bg-amber-500/5">
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-sm">Career profile required</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Complete your career profile setup before generating applications.
+            <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="font-semibold text-sm">Career profile required</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Complete your career profile before generating applications.
               </p>
               <Button
                 variant="outline"
                 size="sm"
-                className="mt-2"
+                className="mt-3 border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
                 onClick={() => navigate("/app/profile/setup")}
                 data-testid="button-go-to-profile"
               >
@@ -105,60 +110,80 @@ export default function NewApplication() {
         </Card>
       ) : null}
 
-      <Card className="p-5">
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="jobDescription">Job Description *</Label>
-            <Textarea
-              id="jobDescription"
-              value={jobDescription}
-              onChange={(e) => setJobDescription(e.target.value)}
-              placeholder="Paste the full job description here..."
-              className="mt-1.5 min-h-[200px]"
-              data-testid="input-job-description"
-            />
-            <p className="text-xs text-muted-foreground mt-1.5">
-              {jobDescription.length > 0 ? `${jobDescription.length} characters` : "Paste the complete job posting for best results"}
-            </p>
-          </div>
-
-          <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="w-full justify-between" data-testid="button-toggle-details">
-                Optional details
-                <ChevronDown className={`h-4 w-4 transition-transform ${detailsOpen ? "rotate-180" : ""}`} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-3 pt-3">
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div>
-                  <Label>Company Name</Label>
-                  <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Acme Corp" data-testid="input-company-name" />
-                </div>
-                <div>
-                  <Label>Role Title</Label>
-                  <Input value={roleTitle} onChange={(e) => setRoleTitle(e.target.value)} placeholder="Senior Engineer" data-testid="input-role-title" />
-                </div>
-                <div>
-                  <Label>Location</Label>
-                  <Input value={jobLocation} onChange={(e) => setJobLocation(e.target.value)} placeholder="San Francisco, CA" />
-                </div>
-                <div>
-                  <Label>Job URL</Label>
-                  <Input value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} placeholder="https://..." />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label>Hiring Manager</Label>
-                  <Input value={hiringManager} onChange={(e) => setHiringManager(e.target.value)} placeholder="Name of hiring manager (optional)" />
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+      {/* Job Description */}
+      <Card className="p-5 space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <h2 className="font-semibold text-sm">Job Description</h2>
+          <span className="text-xs text-destructive font-medium">Required</span>
         </div>
+
+        <div>
+          <Textarea
+            id="jobDescription"
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            placeholder="Paste the full job description here — the more detail, the better your results..."
+            className="min-h-[220px] resize-y text-sm"
+            data-testid="input-job-description"
+          />
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-xs text-muted-foreground">
+              {charCount > 0
+                ? `${charCount.toLocaleString()} characters · Paste the complete job posting for best results`
+                : "Include requirements, responsibilities, and qualifications"}
+            </p>
+            {charCount > 0 && (
+              <span className={`text-xs font-medium ${charCount >= 200 ? "text-primary" : "text-muted-foreground"}`}>
+                {charCount >= 200 ? "✓ Good length" : `${200 - charCount} more recommended`}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full"
+              data-testid="button-toggle-details"
+            >
+              <ChevronDown className={`h-4 w-4 transition-transform shrink-0 ${detailsOpen ? "rotate-180" : ""}`} />
+              Optional details (company, role, hiring manager)
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-3 pt-4">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Company Name</Label>
+                <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Acme Corp" data-testid="input-company-name" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Role Title</Label>
+                <Input value={roleTitle} onChange={(e) => setRoleTitle(e.target.value)} placeholder="Senior Engineer" data-testid="input-role-title" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Location</Label>
+                <Input value={jobLocation} onChange={(e) => setJobLocation(e.target.value)} placeholder="San Francisco, CA" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Job URL</Label>
+                <Input value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} placeholder="https://..." />
+              </div>
+              <div className="sm:col-span-2 space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Hiring Manager</Label>
+                <Input value={hiringManager} onChange={(e) => setHiringManager(e.target.value)} placeholder="Name of hiring manager (optional)" />
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </Card>
 
+      {/* Template selection */}
       <Card className="p-5">
-        <h2 className="font-medium mb-4">Template</h2>
+        <div className="mb-4">
+          <h2 className="font-semibold text-sm mb-0.5">Resume Template</h2>
+          <p className="text-xs text-muted-foreground">Choose the style for your generated resume</p>
+        </div>
         {templatesLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
@@ -170,44 +195,71 @@ export default function NewApplication() {
                 key={tpl.id}
                 type="button"
                 onClick={() => setTemplateId(tpl.id)}
-                className={`p-3 rounded-md border text-left transition-colors toggle-elevate ${
-                  templateId === tpl.id ? "toggle-elevated border-primary" : ""
+                className={`relative p-3 rounded-md border text-left transition-all toggle-elevate ${
+                  templateId === tpl.id
+                    ? "toggle-elevated border-primary bg-primary/5"
+                    : "hover:border-foreground/20"
                 }`}
                 data-testid={`button-template-${tpl.id}`}
               >
-                <FileText className="h-5 w-5 mb-2 text-muted-foreground" />
-                <p className="text-sm font-medium leading-tight">{tpl.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{tpl.description}</p>
+                {templateId === tpl.id && (
+                  <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                    <span className="text-[8px] text-primary-foreground font-bold">✓</span>
+                  </div>
+                )}
+                <FileText className="h-4 w-4 mb-2 text-muted-foreground" />
+                <p className="text-xs font-semibold leading-tight">{tpl.name}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{tpl.description}</p>
               </button>
             ))}
           </div>
         )}
       </Card>
 
+      {/* Tone selection */}
       <Card className="p-5">
-        <h2 className="font-medium mb-4">Tone</h2>
-        <div className="flex flex-wrap gap-2">
+        <div className="mb-4">
+          <h2 className="font-semibold text-sm mb-0.5">Writing Tone</h2>
+          <p className="text-xs text-muted-foreground">How you want your documents to sound</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {toneOptions.map((t) => (
             <button
               key={t.value}
               type="button"
               onClick={() => setTone(t.value)}
-              className={`px-4 py-2 rounded-md border text-sm font-medium transition-colors toggle-elevate ${
-                tone === t.value ? "toggle-elevated border-primary" : ""
+              className={`relative p-3 rounded-md border text-left transition-all toggle-elevate ${
+                tone === t.value
+                  ? "toggle-elevated border-primary bg-primary/5"
+                  : "hover:border-foreground/20"
               }`}
               data-testid={`button-tone-${t.value}`}
             >
-              {t.label}
+              {tone === t.value && (
+                <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                  <span className="text-[8px] text-primary-foreground font-bold">✓</span>
+                </div>
+              )}
+              <p className="text-xs font-semibold">{t.label}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{t.desc}</p>
             </button>
           ))}
         </div>
       </Card>
 
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-xs text-muted-foreground">
-          Analyzes job fit first, then generates tailored documents
-        </p>
+      {/* Submit */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2 pb-6">
+        <div className="space-y-0.5">
+          <p className="text-xs font-medium text-muted-foreground">
+            Analyzes job fit first, then generates all 4 documents
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Takes ~30 seconds · Uses 1 of your 30 monthly applications
+          </p>
+        </div>
         <Button
+          size="lg"
+          className="font-semibold w-full sm:w-auto"
           onClick={() => analyzeMutation.mutate()}
           disabled={!jobDescription.trim() || !hasProfile || analyzeMutation.isPending}
           data-testid="button-analyze"
@@ -215,11 +267,11 @@ export default function NewApplication() {
           {analyzeMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing...
+              Analyzing job fit...
             </>
           ) : (
             <>
-              <Search className="mr-2 h-4 w-4" />
+              <Sparkles className="mr-2 h-4 w-4" />
               Analyze Job Fit
             </>
           )}
