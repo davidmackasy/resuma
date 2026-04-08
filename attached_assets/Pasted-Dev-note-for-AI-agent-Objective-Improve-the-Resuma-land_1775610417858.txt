@@ -1,0 +1,428 @@
+Dev note for AI agent
+
+Objective
+
+Improve the Resuma landing page UI/UX so it looks more polished, balanced, and professional, closer to the reference style shown earlier. This task is UI-only. Do not touch backend logic, auth flow, Stripe flow, document generation flow, ATS logic, upload flow, or anything else that is currently working. Do not refactor working business logic. Do not change routes or app structure unless absolutely required for layout only.
+
+Main rule
+
+Only improve the landing page presentation and motion design.
+Do not break or affect anything else that is currently working.
+
+Tech stack direction
+
+Use the existing frontend stack already in the project.
+Keep all work inside the current landing page components and related style files only.
+If the project uses React + Tailwind, stay in Tailwind.
+If the project uses React + CSS modules or SCSS, stay in that system.
+Do not introduce a new UI library unless it is already installed and already used.
+Do not add heavy animation libraries unless Framer Motion is already in the codebase. If it is already installed, use it. If not, use lightweight CSS animation only.
+
+What must be changed
+
+1. Hero headline must be rewritten and resized
+
+The current headline is too large, awkward, and visually unbalanced. It makes the page feel unfinished.
+
+Current issue
+“Land more interviews with AI-tailored applications” is too long, too oversized, and the phrase “AI-tailored applications” feels forced and not clean.
+
+What to do
+Replace the hero copy with cleaner, more professional messaging that sounds like a premium resume product, not an AI gimmick.
+
+Use one of these improved headline directions
+
+Option A
+Land more interviews with a smarter resume builder
+
+Option B
+Build stronger job applications in minutes
+
+Option C
+Create job-ready resumes, cover letters, and more
+
+Option D
+Everything you need to apply with confidence
+
+Recommended final choice
+Land more interviews with a smarter resume builder
+
+Supporting paragraph under headline
+Create tailored resumes, cover letters, follow-up emails, and interview prep from one job description.
+
+Rules for hero text
+Keep headline width controlled
+Do not let the text stretch too wide
+Use a max-width on the text block
+Use tighter line-height
+Reduce font size on desktop
+Scale properly on tablet and mobile
+Do not let the green highlighted words overpower the whole headline
+Avoid oversized line breaks that look accidental
+The headline should feel balanced like the Enhancv reference
+
+Suggested typography direction
+Desktop headline around 56 to 72px max, depending on container
+Tablet smaller
+Mobile much smaller and tighter
+Use strong but clean font weight
+Use clean letter spacing
+Use proper max-width so the heading wraps intentionally, not awkwardly
+
+2. Improve hero CTA area
+
+Current issue
+Buttons do not feel premium enough and the hierarchy is weak.
+
+What to do
+Keep two buttons only
+Primary button should be the strongest visual action
+Secondary button should be quieter and cleaner
+
+Recommended button labels
+Primary: Build Your Resume
+Secondary: See How It Works
+
+Button design direction
+Primary button:
+Solid brand green background
+Dark text or white text depending on best contrast
+Slightly rounded corners
+Clear hover state
+Comfortable horizontal padding
+Medium-large height
+
+Secondary button:
+White or very light background
+Subtle border
+Dark text
+Same height as primary
+Cleaner and more premium than current
+
+Spacing
+Leave more breathing room between headline, paragraph, buttons, proof row, and bullet points
+The hero should feel organized and premium, not cramped
+
+3. Improve hero layout alignment
+
+Current issue
+The left text block and overall composition feel disorganized compared to the reference.
+
+What to do
+Refine the hero into a proper two-column layout
+Left side:
+headline
+supporting text
+CTA buttons
+trust row
+benefit bullets
+
+Right side:
+product visual in a polished mockup card/browser style
+
+Rules
+Vertically align the hero content better
+Do not let the left content feel too low or too high
+Keep the right visual large and clean, but not oversized
+Use more controlled spacing and consistent alignment
+The whole hero should look intentionally designed
+
+4. Improve the right-side product visual
+
+Current issue
+The current visual is okay, but it can look more premium and more structured.
+
+What to do
+Wrap the moving documents or UI preview inside a polished browser-style frame
+Use a Mac browser style top bar
+Three small circles on the left
+Subtle address bar
+Rounded container
+Soft border
+Soft shadow
+Light glass or neutral background if needed
+
+Important
+This should be visual only
+Do not build a fake complex app feature
+Do not connect it to real logic
+This is a landing page showcase component only
+
+5. Remove the full 4-step section
+
+Remove this entire section:
+“From job post to full package in 4 steps”
+
+This section should be removed fully from the landing page.
+Do not leave empty spacing after removal.
+Close the layout gap cleanly.
+
+6. Replace or redesign the “One paste. Four documents.” section
+
+Current issue
+This section feels static and weak.
+The user wants this improved into a premium animated showcase.
+
+What to do
+Do not keep it as plain cards in a normal grid.
+Replace it with a moving visual section inside a Mac browser style frame.
+
+New direction for this section
+Create a showcase section that visually presents:
+Tailored Resume
+Cover Letter
+Follow-up Email
+Interview Prep
+ATS Fit Report if it still looks useful
+
+Animation direction
+The document cards should slide horizontally from left to right or auto-scroll smoothly
+The movement should be slow, premium, and subtle
+It should not feel like a cheap carousel
+It should feel like a product demo
+Cards should be larger than current
+Cards should be spaced nicely
+Animation should loop smoothly without jank
+Pause on hover if possible on desktop
+Should degrade gracefully on mobile
+
+Visual structure
+Section container
+Mac browser frame
+Inside it, a horizontal sliding track of polished document cards
+Each card should feel like a mini feature tile or preview panel
+Use subtle icons
+Use short labels
+Use one-line or two-line descriptions max
+
+Recommended section title
+Everything you need in one place
+
+Recommended subtitle
+Generate polished application materials from a single job description.
+
+Alternative title
+Your full application package, built for you
+
+Recommended cards
+Tailored Resume
+Resume rewritten for the role you want
+
+Cover Letter
+Personalized to match the job requirements
+
+Follow-up Email
+Ready to send after your application
+
+Interview Prep
+Likely questions and model answers for the role
+
+ATS Fit Report
+See your match before you apply
+
+Smart Gap Fixer can stay only if it visually fits
+If it makes the section crowded, remove it from this showcase
+
+7. Improve visual quality of all landing page cards
+
+Make all landing-page cards feel more premium
+
+Card direction
+Softer borders
+Slightly larger radius
+Cleaner shadows
+Better padding
+Better hierarchy between title, badge, and description
+More breathing room
+Consistent icon box sizes
+Consistent text sizing
+Consistent alignment
+
+Badges
+Use subtle green tint badges
+Do not make them too bright
+Keep them small and refined
+
+8. Improve navbar polish
+
+Do not change the nav structure too much, but refine it visually
+
+Adjust
+Better spacing between nav items
+Slightly cleaner font weight
+Better button polish for Get Started
+Better vertical alignment in header
+More premium hover states
+Keep it minimal and trustworthy
+
+9. Improve trust row below hero
+
+The review row and application count row should feel cleaner
+
+What to do
+Keep this row compact
+Align icons and text properly
+Reduce clutter
+Make the stat numbers clearer
+Make the divider subtle
+Use better spacing so it feels like real social proof and not random text
+
+10. Improve color balance
+
+The current green is good, but the landing page needs more control
+
+What to do
+Use green as the accent, not everywhere
+Keep the base mostly neutral
+Use soft gray text for supporting copy
+Use strong dark text for headings
+Keep backgrounds light and premium
+Do not overuse bright green in large blocks of text
+
+11. Improve responsive behavior
+
+This is very important
+
+Desktop
+Hero should feel balanced and wide
+Text should not stretch too far
+Right visual should not crowd the text
+
+Tablet
+Hero should still feel premium
+Possibly reduce the visual size and stack more carefully
+
+Mobile
+Headline must shrink properly
+Buttons should stack or align neatly
+Browser mockup should remain attractive and readable
+Sliding card section should still feel smooth
+No overflow issues
+No broken wrapping
+No giant empty spaces
+
+12. Animation rules
+
+Animations must be subtle and premium
+
+Allowed
+Slow horizontal slide
+Fade-in on section load
+Gentle floating or hover lift
+Soft transition timing
+
+Not allowed
+Fast movement
+Flashy effects
+Bouncy cartoon motion
+Heavy parallax
+Anything that hurts performance
+
+Animation should not reduce performance or block interaction
+
+13. Performance and safety rules
+
+Do not slow down the landing page
+Do not introduce layout shift
+Do not break hydration
+Do not cause memory leaks with animations
+Do not use timers recklessly
+If auto-scrolling is used, implement it cleanly and efficiently
+Respect reduced motion preferences if possible
+
+14. Exact implementation direction
+
+Hero section
+Refactor spacing, typography, CTA hierarchy, and right-side visual
+Rewrite hero copy with cleaner messaging
+Use controlled max-width for the headline block
+Make layout match a modern SaaS landing page
+
+Remove section
+Delete “From job post to full package in 4 steps”
+
+Replace section
+Redesign “One paste. Four documents.” into a browser-framed animated sliding showcase
+
+Browser frame design
+Rounded top container
+Thin border
+Light neutral header
+Three macOS circles
+Optional fake URL bar
+Subtle shadow
+Soft background behind the frame
+
+15. Do not touch these
+
+Do not change login logic
+Do not change signup flow
+Do not change ATS generation logic
+Do not change resume generation logic
+Do not change cover letter generation logic
+Do not change email generation logic
+Do not change interview prep logic
+Do not change API routes
+Do not change database logic
+Do not change billing
+Do not change working navigation behavior unless purely visual
+Do not break any current responsive behavior outside the landing page
+
+16. Final expected result
+
+The landing page should feel:
+More premium
+More organized
+More trustworthy
+More intentional
+Closer to a high-converting SaaS product
+
+A user landing on the page should immediately feel:
+This is polished
+This is professional
+This is easy to use
+This is worth trying
+
+17. Acceptance checklist
+
+Use this checklist before finishing:
+
+Hero headline rewritten and no longer uses “AI-tailored applications”
+Headline size reduced and aligned properly
+Hero text block feels balanced and premium
+CTA buttons improved visually
+Hero right-side mockup looks more polished
+4-step section removed fully
+“One paste. Four documents.” section redesigned into animated browser-style showcase
+Sliding cards work smoothly
+Cards are bigger and better designed
+Navbar spacing and polish improved
+Trust row cleaned up
+Desktop looks premium
+Tablet looks clean
+Mobile looks clean
+No broken logic
+No broken layout
+No regression in existing functionality
+
+18. Recommended final copy
+
+Hero headline
+Land more interviews with a smarter resume builder
+
+Hero subtext
+Create tailored resumes, cover letters, follow-up emails, and interview prep from one job description.
+
+Primary CTA
+Build Your Resume
+
+Secondary CTA
+See How It Works
+
+Replacement section title
+Everything you need in one place
+
+Replacement section subtitle
+Generate polished application materials from a single job description.
+
+If you want, I can turn this into an even stricter AI-agent handoff format with exact section names, component targets, and step-by-step implementation order.
