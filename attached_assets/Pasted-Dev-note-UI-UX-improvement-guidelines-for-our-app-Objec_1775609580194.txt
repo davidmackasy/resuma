@@ -1,0 +1,49 @@
+Dev note: UI/UX improvement guidelines for our app
+Objective
+
+This note instructs the AI agents responsible for our app’s front‑end to implement UI/UX improvements inspired by Enhancv’s landing page, as researched in the accompanying report The goal is to make our landing page feel modern, professional and trustworthy—similar to the aesthetic seen on Enhancv—without modifying any existing functionality. Do not change or refactor back‑end logic, API routes or non‑UI features. Focus solely on presentation (HTML/CSS/JS/React).
+
+Current tech stack
+
+Assuming our front‑end uses React with HTML/CSS/JavaScript and possibly a CSS‑in‑JS solution (e.g. Styled Components or Tailwind). If another framework is used, apply equivalent concepts. The guidelines below are technology‑agnostic and can be implemented with plain CSS or a framework. Ensure any CSS changes are scoped to avoid global conflicts.
+
+Key design principles to adopt
+Benefit‑driven headline with sub‑headline.
+Create a hero section at the top of the landing page with a large, bold headline that communicates the primary benefit of our app (e.g., “Land more interviews…” on Enhancv). Underneath, include a concise sub‑headline summarising key features.
+Use a modern sans‑serif font (e.g., Inter, Poppins or Montserrat) and a strong font weight for the headline.
+Clear call‑to‑action buttons.
+Place one primary CTA (e.g., “Get started for free” or “Try it now”) and, optionally, a secondary CTA (e.g., “Learn more”) beneath the headline. The primary button should have a saturated background colour (green or another brand colour) with white text; the secondary button can have a white background with a coloured border.
+Ensure buttons are large enough for touch targets and include hover/focus states for accessibility.
+Feature highlights with icons.
+Add a short list of 2–3 key benefits next to or below the CTAs, each accompanied by a simple icon (check mark or line icon). Keep the text succinct—see how Enhancv lists “Intuitive editor,” “Step‑by‑step guidance” and “Designed by hiring experts” in the screenshot.
+Use consistent spacing and align icons/text horizontally.
+Social proof and trust signals.
+Beneath the feature list, include trust‑building elements such as the number of users, reviews or testimonials (e.g., Enhancv cites “28,452 users landed interviews last month”). If we have customer reviews or ratings, display them here with small star icons.
+Two‑column layout with illustrative imagery.
+Implement a responsive two‑column layout in the hero section: left column for text and CTAs; right column for an illustrative image or screenshot of our app. Use CSS Grid or Flexbox for layout. On mobile, stack the columns vertically and center content.
+Ensure the image is high quality, has rounded corners and doesn’t distract from the text.
+Consistent colour palette and typography.
+Adopt a limited palette inspired by Enhancv: a primary accent colour (a lively green or our brand colour) for CTAs and icons; a secondary accent (e.g., purple) for highlights; dark grey/black for text; and light grey/off‑white for backgrounds.
+Define these colours as CSS variables or theme tokens to maintain consistency. Ensure sufficient contrast between text and backgrounds to meet WCAG AA accessibility guidelines.
+Whitespace and spacing.
+Increase padding and margin around sections to give the design room to breathe. Group related elements together and separate distinct sections with whitespace or subtle background colours.
+Responsive behaviour.
+Ensure the design looks good on desktop, tablet and mobile. Use media queries or responsive utility classes to adjust font sizes, button sizes and layout. Navigation should collapse into a hamburger menu on small screens.
+CSS implementation considerations.
+Organize styles using a modular approach (e.g., CSS modules, SCSS partials or Tailwind classes) to avoid interfering with existing styles.
+Avoid global resets that could break other pages. Test changes on staging before deploying.
+Use Flexbox/Grid for layout; avoid absolute positioning unless necessary.
+Preserve existing functionality.
+Do not modify or refactor JavaScript that handles data fetching, state management or business logic. Only wrap existing components in new layouts or adjust styling props.
+Use feature flags or branches so that UI changes can be rolled back if issues arise.
+Suggested next steps for AI agents
+Analyse current components to determine where the landing page’s hero section can be refactored. Identify the container component for the top of the landing page.
+Introduce new style variables (colours, font sizes, spacing) at the app‑wide theme level. Set up a design system if none exists.
+Build the two‑column hero using a div or section with Flexbox/Grid. Place the headline, sub‑headline, CTA buttons and feature bullets in one column; place an SVG or image component representing our product in the other.
+Create reusable button components for primary and secondary CTAs with variant props controlling colour and style. Ensure they adhere to the new palette and accessibility requirements.
+Update CSS for typography and spacing across the landing page. Use rem units for responsive scaling.
+Add a section for trust & social proof below the hero. Integrate existing user testimonials or metrics here. Use star icons for ratings.
+Test responsiveness by resizing the browser and using device emulation. Address any layout breakpoints.
+Verify no regressions by running existing tests and manual checks. Confirm that forms, links and interactive elements behave as before.
+
+By following these guidelines, our app’s landing page will achieve a more polished and modern look similar to Enhancv’s, improving user perception and professionalism while preserving all existing functionality.

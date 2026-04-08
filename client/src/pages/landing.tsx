@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import {
   FileText, Sparkles, Download, ArrowRight, Zap, Shield, Target,
   CheckCircle2, Star, Clock, Users, TrendingUp, Mail, MessageSquare,
-  ChevronRight, BookOpen
+  ChevronRight, BookOpen, Brain, BarChart3
 } from "lucide-react";
 
 const FEATURES = [
@@ -49,7 +49,7 @@ const STEPS = [
   {
     step: "01",
     title: "Build your profile",
-    desc: "Enter your experience, skills, and education once. Resuma keeps everything structured and ready to use.",
+    desc: "Enter your experience, skills, and education once. Resuma keeps everything structured and ready.",
     icon: FileText,
   },
   {
@@ -93,28 +93,148 @@ const TESTIMONIALS = [
   },
 ];
 
+function ProductMockup() {
+  return (
+    <div className="relative w-full max-w-[480px] mx-auto lg:mx-0 lg:ml-auto">
+      {/* Glow / gradient backdrop */}
+      <div className="absolute -inset-6 rounded-3xl bg-gradient-to-br from-primary/20 via-primary/5 to-violet-500/10 blur-2xl pointer-events-none" />
+
+      {/* Main document card */}
+      <div className="relative bg-white dark:bg-card border border-border/60 rounded-2xl shadow-xl overflow-hidden">
+        {/* Document header */}
+        <div className="bg-muted/40 px-5 py-4 border-b border-border/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                <FileText className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-foreground">Alex Johnson</p>
+                <p className="text-[10px] text-muted-foreground">Senior Product Designer</p>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold bg-primary/15 text-primary px-2 py-1 rounded-full">92% ATS fit</span>
+          </div>
+        </div>
+
+        {/* Resume content simulation */}
+        <div className="px-5 py-4 space-y-3">
+          {/* Summary block */}
+          <div>
+            <div className="h-2 bg-foreground/80 rounded w-16 mb-2" />
+            <div className="space-y-1">
+              <div className="h-1.5 bg-muted-foreground/20 rounded w-full" />
+              <div className="h-1.5 bg-muted-foreground/20 rounded w-5/6" />
+              <div className="h-1.5 bg-muted-foreground/20 rounded w-4/6" />
+            </div>
+          </div>
+
+          {/* Experience block */}
+          <div>
+            <div className="h-2 bg-foreground/80 rounded w-20 mb-2" />
+            <div className="space-y-2">
+              {[
+                { role: "Lead Designer", co: "Acme Corp", w: "3/4" },
+                { role: "UX Designer", co: "Startup XYZ", w: "2/3" },
+              ].map((job) => (
+                <div key={job.role} className="pl-2 border-l-2 border-primary/40 space-y-1">
+                  <div className="flex justify-between items-center">
+                    <div className="h-1.5 bg-foreground/40 rounded w-24" />
+                    <div className="h-1 bg-muted-foreground/20 rounded w-14" />
+                  </div>
+                  <div className="h-1.5 bg-muted-foreground/20 rounded w-20" />
+                  <div className="h-1 bg-muted-foreground/15 rounded w-5/6" />
+                  <div className="h-1 bg-muted-foreground/15 rounded w-4/6" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Skills */}
+          <div>
+            <div className="h-2 bg-foreground/80 rounded w-12 mb-2" />
+            <div className="flex flex-wrap gap-1">
+              {["Figma", "Research", "Prototyping", "Design Systems", "Stakeholder Mgmt"].map((s) => (
+                <span key={s} className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">{s}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* AI Assistant overlay */}
+        <div className="border-t border-border/50 bg-muted/30 px-5 py-3">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+              <Brain className="h-3 w-3 text-primary-foreground" />
+            </div>
+            <span className="text-[10px] font-bold text-foreground">AI ASSISTANT</span>
+          </div>
+          <div className="space-y-1.5">
+            {[
+              { icon: "✦", label: "Generate skills from job" },
+              { icon: "↗", label: "Tailor for this role" },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-2 text-[10px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+                <span className="text-primary font-bold">{item.icon}</span>
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Floating document badges */}
+      <div className="absolute -left-6 top-1/3 bg-white dark:bg-card border border-border rounded-xl px-3 py-2 shadow-lg flex items-center gap-2 animate-none">
+        <div className="w-6 h-6 rounded-md bg-green-500/15 flex items-center justify-center">
+          <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+        </div>
+        <div>
+          <p className="text-[9px] font-bold text-foreground leading-none">Cover Letter</p>
+          <p className="text-[9px] text-muted-foreground">Generated ✓</p>
+        </div>
+      </div>
+
+      <div className="absolute -right-4 bottom-1/4 bg-white dark:bg-card border border-border rounded-xl px-3 py-2 shadow-lg flex items-center gap-2">
+        <div className="w-6 h-6 rounded-md bg-violet-500/15 flex items-center justify-center">
+          <BookOpen className="h-3.5 w-3.5 text-violet-600" />
+        </div>
+        <div>
+          <p className="text-[9px] font-bold text-foreground leading-none">Interview Prep</p>
+          <p className="text-[9px] text-muted-foreground">7 questions ready</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b bg-background/90 backdrop-blur-md">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/60">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <FileText className="h-4 w-4 text-primary-foreground" />
             </div>
             <span className="font-serif font-bold text-lg tracking-tight" data-testid="text-brand-name">Resuma</span>
           </div>
+
+          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
+            <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
+            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
+            <a href="#testimonials" className="hover:text-foreground transition-colors">Reviews</a>
+          </div>
+
           <div className="flex items-center gap-2">
             <a href="/login?mode=login">
-              <Button variant="ghost" size="sm" data-testid="button-login" className="hidden sm:inline-flex">
-                Log in
+              <Button variant="ghost" size="sm" data-testid="button-login" className="font-medium">
+                Sign in
               </Button>
             </a>
             <a href="/login?mode=signup">
               <Button size="sm" data-testid="button-get-started" className="font-semibold">
                 Get Started
-                <ChevronRight className="ml-1 h-3.5 w-3.5" />
               </Button>
             </a>
           </div>
@@ -122,174 +242,115 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 sm:pt-40 sm:pb-28 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            {/* Left: Copy */}
-            <div className="space-y-7">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/15 text-primary text-xs font-semibold tracking-wide uppercase">
-                <Sparkles className="h-3.5 w-3.5" />
-                AI-Powered Career Tools
-              </div>
+      <section className="relative pt-24 pb-16 sm:pt-32 sm:pb-20 px-4 sm:px-6 overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-background" />
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-primary/8 via-primary/3 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/5 via-transparent to-transparent rounded-full blur-3xl" />
+        </div>
 
-              <div className="space-y-3">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left: Copy */}
+            <div className="space-y-8">
+              <div className="space-y-5">
                 <h1
-                  className="font-serif text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight leading-[1.1]"
+                  className="text-[2.6rem] sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight leading-[1.1] text-foreground"
                   data-testid="text-hero-title"
                 >
-                  Land your dream job with{" "}
-                  <span className="text-primary">tailored applications</span>
+                  Land more interviews with{" "}
+                  <span className="text-primary">AI-tailored applications</span>
                 </h1>
-                <p className="text-muted-foreground text-lg leading-relaxed max-w-[480px]">
-                  Upload your resume once. Paste any job description. Get a perfectly tailored resume, cover letter, follow-up email, and interview prep — in seconds.
+                <p className="text-muted-foreground text-lg leading-relaxed max-w-[500px]">
+                  ATS scoring, resume tailoring, cover letter, follow-up email, and interview prep — all generated from one job paste.
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row items-start gap-3">
                 <a href="/login?mode=signup">
-                  <Button size="lg" className="font-semibold px-6 h-12 text-base" data-testid="button-hero-cta">
-                    Start for free
+                  <Button size="lg" className="font-semibold px-7 h-12 text-[15px] w-full sm:w-auto" data-testid="button-hero-cta">
+                    Build Your Application
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </a>
-                <a href="/login?mode=login">
-                  <Button variant="ghost" size="lg" className="h-12 text-base text-muted-foreground" data-testid="button-hero-signin">
-                    Already have an account?
+                <a href="#how-it-works">
+                  <Button variant="outline" size="lg" className="h-12 text-[15px] font-medium w-full sm:w-auto" data-testid="button-hero-learn">
+                    See how it works
                   </Button>
                 </a>
               </div>
 
-              <div className="flex flex-wrap items-center gap-5 text-sm text-muted-foreground pt-1">
-                <span className="flex items-center gap-1.5">
-                  <Shield className="h-3.5 w-3.5 text-primary" />
-                  ATS-optimized output
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Zap className="h-3.5 w-3.5 text-primary" />
-                  Generated in seconds
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Users className="h-3.5 w-3.5 text-primary" />
-                  Trusted by job seekers
-                </span>
+              {/* Inline social proof — Enhancv style */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 pt-1">
+                <div className="flex items-center gap-2">
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <span className="text-sm text-muted-foreground font-medium">4.9 · <strong className="text-foreground">500+ reviews</strong></span>
+                </div>
+                <div className="h-4 w-px bg-border hidden sm:block" />
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Users className="h-4 w-4 text-primary" />
+                  <span><strong className="text-foreground">2,400+</strong> applications tailored this month</span>
+                </div>
+              </div>
+
+              {/* Feature bullets */}
+              <div className="flex flex-col gap-2 pt-1">
+                {[
+                  "Tailored resume, cover letter & follow-up email in one click",
+                  "ATS fit score so you know your chances before applying",
+                  "Interview questions and model answers specific to the role",
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* Right: Product mockup */}
-            <div className="hidden lg:block">
-              <div className="relative">
-                <div className="absolute -inset-4 bg-primary/5 rounded-2xl" />
-                <Card className="relative p-6 space-y-5 shadow-lg">
-                  <div className="flex items-center gap-3 pb-4 border-b">
-                    <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                      <FileText className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-sm">Senior Product Designer</p>
-                      <p className="text-xs text-muted-foreground">Acme Corp · San Francisco, CA</p>
-                    </div>
-                    <div className="ml-auto shrink-0">
-                      <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded-full">92% fit</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    {[
-                      { label: "Tailored Resume", color: "bg-green-500", badge: "ATS optimized" },
-                      { label: "Cover Letter", color: "bg-blue-500", badge: "Personalized" },
-                      { label: "Follow-up Email", color: "bg-orange-500", badge: "Ready to send" },
-                      { label: "Interview Prep", color: "bg-violet-500", badge: "7 questions" },
-                    ].map((doc) => (
-                      <div
-                        key={doc.label}
-                        className="flex items-center justify-between p-3 rounded-md bg-muted/50"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div className={`w-2 h-2 rounded-full ${doc.color}`} />
-                          <span className="text-sm font-medium">{doc.label}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded-full border">
-                          {doc.badge}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-2 pt-1">
-                    <Button className="flex-1 font-semibold" size="sm">
-                      <Download className="mr-1.5 h-3.5 w-3.5" />
-                      Download All
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      View Documents
-                    </Button>
-                  </div>
-                </Card>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Social Proof Bar */}
-      <section className="py-8 px-4 sm:px-6 border-y bg-muted/30">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2 font-medium">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                ))}
-              </div>
-              <span>4.9 / 5 rating</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" />
-              <span><strong className="text-foreground">500+</strong> job seekers helped</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              <span><strong className="text-foreground">30 seconds</strong> average generation time</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-primary" />
-              <span><strong className="text-foreground">100%</strong> ATS-safe output</span>
+            <div className="hidden lg:flex justify-end">
+              <ProductMockup />
             </div>
           </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6">
+      <section id="how-it-works" className="py-20 sm:py-28 px-4 sm:px-6 border-t border-border/60 bg-muted/20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-muted-foreground text-xs font-semibold uppercase tracking-wide mb-4">
-              Simple Process
-            </div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold mb-3" data-testid="text-features-title">
-              How it works
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-primary mb-3">Simple Process</span>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3 tracking-tight" data-testid="text-features-title">
+              From job post to full package in 4 steps
             </h2>
-            <p className="text-muted-foreground max-w-md mx-auto text-lg">
-              Four steps from profile to perfect application package
+            <p className="text-muted-foreground max-w-md mx-auto text-base">
+              No templates to fill out. No generic outputs. Just your profile matched to each job.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {STEPS.map((step, i) => (
               <div key={step.step} className="relative">
                 {i < STEPS.length - 1 && (
-                  <div className="hidden lg:block absolute top-6 left-[calc(100%-0px)] w-full h-px border-t border-dashed border-border z-0" />
+                  <div className="hidden lg:block absolute top-8 left-[calc(100%+0px)] w-full h-px border-t-2 border-dashed border-primary/20 z-0" />
                 )}
-                <Card className="p-5 h-full relative z-10">
-                  <div className="flex items-center gap-2.5 mb-4">
-                    <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                      <step.icon className="h-4.5 w-4.5 text-primary h-[18px] w-[18px]" />
+                <div className="bg-background border border-border rounded-xl p-5 h-full relative z-10 hover:border-primary/30 hover:shadow-sm transition-all">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <step.icon className="h-[18px] w-[18px] text-primary" />
                     </div>
-                    <span className="text-xs font-mono font-bold text-primary">{step.step}</span>
+                    <span className="text-xs font-bold font-mono text-primary/60">{step.step}</span>
                   </div>
-                  <h3 className="font-semibold mb-2 text-sm">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
-                </Card>
+                  <h3 className="font-semibold text-sm mb-1.5">{step.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -297,112 +358,126 @@ export default function Landing() {
       </section>
 
       {/* Features */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 bg-muted/20 border-y">
+      <section id="features" className="py-20 sm:py-28 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-muted-foreground text-xs font-semibold uppercase tracking-wide mb-4">
-              Everything included
-            </div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold mb-3">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-primary mb-3">Everything included</span>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3 tracking-tight">
               One paste. Four documents.
             </h2>
-            <p className="text-muted-foreground max-w-md mx-auto text-lg">
-              Everything you need to stand out at every stage of the application process.
+            <p className="text-muted-foreground max-w-md mx-auto text-base">
+              Everything you need to stand out at every stage of your application process.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((feature) => (
-              <Card key={feature.title} className="p-5 hover-elevate group">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <feature.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <h3 className="font-semibold text-sm">{feature.title}</h3>
-                      <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                        {feature.badge}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
-                  </div>
+              <div
+                key={feature.title}
+                className="group flex items-start gap-4 p-5 bg-background border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all"
+              >
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary/15 transition-colors">
+                  <feature.icon className="h-5 w-5 text-primary" />
                 </div>
-              </Card>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <h3 className="font-semibold text-sm">{feature.title}</h3>
+                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                      {feature.badge}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{feature.desc}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6">
+      <section id="testimonials" className="py-20 sm:py-28 px-4 sm:px-6 border-y border-border/60 bg-muted/20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-muted-foreground text-xs font-semibold uppercase tracking-wide mb-4">
-              Real results
-            </div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold mb-3">
-              What job seekers say
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-primary mb-3">Real results</span>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3 tracking-tight">
+              Job seekers who got interviews
             </h2>
           </div>
 
           <div className="grid sm:grid-cols-3 gap-5">
             {TESTIMONIALS.map((t) => (
-              <Card key={t.name} className="p-5 space-y-4">
+              <div key={t.name} className="bg-background border border-border rounded-xl p-5 space-y-4 hover:border-primary/20 hover:shadow-sm transition-all">
                 <div className="flex">
                   {[...Array(t.stars)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                    <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">"{t.quote}"</p>
-                <div>
-                  <p className="text-sm font-semibold">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.role}</p>
+                <div className="flex items-center gap-2.5 pt-1">
+                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                    {t.name[0]}
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold">{t.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{t.role}</p>
+                  </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 border-t bg-muted/20">
+      <section className="py-20 sm:py-28 px-4 sm:px-6 relative overflow-hidden">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-background" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 rounded-full blur-3xl" />
+        </div>
         <div className="max-w-2xl mx-auto text-center space-y-6">
-          <div className="w-14 h-14 rounded-xl bg-primary/15 flex items-center justify-center mx-auto">
-            <Sparkles className="h-7 w-7 text-primary" />
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wide">
+            <Sparkles className="h-3.5 w-3.5" />
+            Start today
           </div>
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold">
-            Ready to apply smarter?
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            Ready to land more interviews?
           </h2>
           <p className="text-muted-foreground text-lg max-w-md mx-auto">
-            Stop sending generic applications. Start getting interviews.
+            Stop sending generic applications. Start sending ones that are built for each job.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <a href="/login?mode=signup">
-              <Button size="lg" className="font-semibold px-8 h-12 text-base" data-testid="button-final-cta">
+              <Button size="lg" className="font-semibold px-8 h-12 text-[15px]" data-testid="button-final-cta">
                 Get started — $9.99/mo
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </a>
+            <a href="/login?mode=login">
+              <Button variant="outline" size="lg" className="h-12 text-[15px] font-medium">
+                Sign in to your account
+              </Button>
+            </a>
           </div>
           <p className="text-xs text-muted-foreground">
-            Cancel anytime · Secure payments via Stripe · No writing from scratch
+            Cancel anytime · Secure payments via Stripe · ATS-safe output guaranteed
           </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8 px-4 sm:px-6">
+      <footer className="border-t border-border/60 py-8 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
               <FileText className="h-3.5 w-3.5 text-primary-foreground" />
             </div>
-            <span className="text-sm font-semibold">Resuma</span>
+            <span className="text-sm font-bold">Resuma</span>
           </div>
           <div className="flex flex-wrap items-center gap-6 text-xs text-muted-foreground">
+            <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
+            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
             <a href="/login?mode=signup" className="hover:text-foreground transition-colors">Get started</a>
-            <a href="/login?mode=login" className="hover:text-foreground transition-colors">Log in</a>
+            <a href="/login?mode=login" className="hover:text-foreground transition-colors">Sign in</a>
             <span>© {new Date().getFullYear()} Resuma. All rights reserved.</span>
           </div>
         </div>
