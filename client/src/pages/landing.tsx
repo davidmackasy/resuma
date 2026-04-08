@@ -246,11 +246,11 @@ export default function Landing() {
             <div className="space-y-7 max-w-[540px]">
               <div className="space-y-4">
                 <h1
-                  className="text-[2.4rem] sm:text-[2.9rem] lg:text-[3.2rem] font-bold tracking-tight leading-[1.12] text-foreground"
+                  className="text-[2.1rem] sm:text-[2.6rem] lg:text-[3rem] font-bold tracking-tight leading-[1.14] text-foreground"
                   data-testid="text-hero-title"
                 >
-                  Land more interviews with a{" "}
-                  <span className="text-primary">smarter resume builder</span>
+                  <span className="block">Land more interviews</span>
+                  <span className="block">with a <span className="text-primary">smarter resume builder</span></span>
                 </h1>
                 <p className="text-muted-foreground text-base sm:text-[17px] leading-relaxed max-w-[460px]">
                   Create tailored resumes, cover letters, follow-up emails, and interview prep from one job description.

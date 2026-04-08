@@ -1,0 +1,112 @@
+Dev note for AI agent
+
+Objective
+
+Fix the hero headline line breaks on both mobile and desktop so the main landing page title looks clean and professional.
+
+Main rule
+
+Do not change anything else.
+Do not touch backend logic, auth, Stripe, ATS flow, resume generation, routing, or any working functionality.
+This is a UI-only typography and layout fix for the hero heading.
+
+Issue to fix
+
+The hero heading currently wraps badly.
+
+Current result:
+Mobile shows too many stacked lines.
+Desktop shows three lines.
+This makes the landing page look unpolished.
+
+Required result
+
+Make the hero headline render in exactly two lines on:
+Mobile
+Desktop
+
+It should feel intentional and balanced, not auto-wrapped awkwardly.
+
+Target headline
+
+Land more interviews with a smarter resume builder
+
+Line-break direction
+
+Use controlled line breaks so the title always looks clean.
+
+Preferred structure:
+Line 1: Land more interviews
+Line 2: with a smarter resume builder
+
+If that exact split does not fit perfectly across all breakpoints, use a controlled variant that still keeps it to only two lines and looks balanced.
+
+Do not let it become:
+three lines on desktop
+three or four lines on mobile
+awkward uneven wrapping
+
+Implementation direction
+
+1. Control headline width
+   Set a proper max-width on the hero text container.
+   Do not let the heading stretch too wide or too narrow.
+
+2. Control the line breaks
+   Do not rely only on natural browser wrapping.
+   Use one of these clean approaches:
+   insert a controlled line break in the heading
+   wrap each line in separate span/div blocks
+   use responsive display blocks so the split stays intentional
+
+3. Use responsive typography
+   Desktop:
+   Reduce or rebalance font size so the heading holds two lines cleanly
+
+Mobile:
+Reduce font size enough so the heading still fits in two lines
+Tighten line-height slightly
+Keep spacing professional
+
+4. Keep visual balance
+   The second line should not look overly long compared to the first.
+   The text block should feel centered within its own column alignment.
+   Do not let highlighted words dominate the layout.
+
+5. Preserve style quality
+   Maintain strong headline hierarchy
+   Keep the same premium tone
+   Do not make the heading too small
+   Do not compress letter spacing too much
+   Do not create overlap or clipping
+
+Suggested technical approach
+
+If using React:
+Wrap the heading in controlled spans, for example:
+first line as one block
+second line as one block
+
+If using Tailwind:
+Use responsive text sizes, tighter leading, and max-width utilities
+Use block spans to control the line split
+
+If using CSS/SCSS:
+Apply breakpoint-specific font-size, line-height, and max-width rules
+Use display block on line groups
+
+Acceptance checklist
+
+Mobile hero title shows only two lines
+Desktop hero title shows only two lines
+No awkward third line
+No overflow
+No clipping
+No broken layout
+No changes to anything except the hero heading layout and responsive typography
+
+Exact priority
+
+This is not a copy rewrite task.
+This is a line-break, sizing, and layout polish task.
+Focus on making the heading look intentional and professional on all screen sizes.
