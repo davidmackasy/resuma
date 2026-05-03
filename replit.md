@@ -4,6 +4,17 @@
 Resuma lets users upload their master resume/profile once, paste any job description, and automatically generate four tailored documents (resume, cover letter, follow-up email, practice questions) using AI. Built with React + Express + PostgreSQL.
 
 ## Recent Changes
+- 2026-05-03: Dark Mode Only + Resume Template Gallery
+  - App locked to dark mode: ThemeProvider always forces `.dark` class, no toggle, localStorage always set to "dark"
+  - ThemeToggle component removed from both MobileShell and DesktopShell headers
+  - New ResumeTemplateGallery component (client/src/components/resume-template-gallery.tsx):
+    - 8 templates: Modern Minimal, Executive Clean, Tech & Product, Corporate Classic, Creative Edge, Student Starter, Sales & Growth, Simple ATS
+    - Each card shows a distinct mini resume preview (white doc, scaled to fit) via template-specific React components
+    - Each card shows: template name, description, "Best for" badge, selected state with green border + checkmark
+    - 2-col grid on mobile, 3-col on tablet, 4-col on desktop
+  - new-application.tsx: Replaced old 4-button template grid with ResumeTemplateGallery
+  - server/storage.ts: seedTemplates now seeds all 8 templates with bestFor + promptModifier in config, upserts on restart
+  - server/generation.ts: templateId included in AI system prompt for generateFromAnalysis
 - 2026-02-16: Practice Questions (4th Output Tab)
   - Auto-generates 7 interview practice questions with best answers after document generation
   - Uses generated resume + job description as input to isolated GPT prompt
@@ -99,7 +110,8 @@ client/src/
     admin-admins.tsx       - Admin management page
   components/
     app-sidebar.tsx        - Navigation sidebar using shadcn sidebar (conditional admin link)
-    theme-toggle.tsx       - Dark/light mode toggle
+    theme-toggle.tsx       - Dark/light mode toggle (no longer used — app is dark-only)
+    resume-template-gallery.tsx - Template gallery with mini previews + TEMPLATE_CONFIGS array
   hooks/
     use-admin.ts           - Admin status hook (queries /admin/me)
 

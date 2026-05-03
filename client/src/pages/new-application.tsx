@@ -14,8 +14,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Search, ChevronDown, FileText, Loader2, AlertCircle, Sparkles } from "lucide-react";
-import type { Profile, Template } from "@shared/schema";
+import { ChevronDown, Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { ResumeTemplateGallery } from "@/components/resume-template-gallery";
+import type { Profile } from "@shared/schema";
 
 const toneOptions = [
   { value: "professional", label: "Professional", desc: "Polished & formal" },
@@ -39,10 +40,6 @@ export default function NewApplication() {
 
   const { data: profile, isLoading: profileLoading } = useQuery<Profile>({
     queryKey: ["/api/applykit/profile"],
-  });
-
-  const { data: templates, isLoading: templatesLoading } = useQuery<Template[]>({
-    queryKey: ["/api/applykit/templates"],
   });
 
   const analyzeMutation = useMutation({
@@ -73,7 +70,7 @@ export default function NewApplication() {
   const charCount = jobDescription.length;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6 pb-10">
       {/* Header */}
       <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-serif font-bold" data-testid="text-new-app-title">
@@ -178,43 +175,19 @@ export default function NewApplication() {
         </Collapsible>
       </Card>
 
-      {/* Template selection */}
-      <Card className="p-5">
-        <div className="mb-4">
-          <h2 className="font-semibold text-sm mb-0.5">Resume Template</h2>
-          <p className="text-xs text-muted-foreground">Choose the style for your generated resume</p>
+      {/* Resume Template Gallery */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="font-semibold text-base mb-0.5">Choose a Resume Template</h2>
+          <p className="text-sm text-muted-foreground">
+            Select the style for your generated resume. All templates are ATS-friendly.
+          </p>
         </div>
-        {templatesLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {(templates || []).map((tpl) => (
-              <button
-                key={tpl.id}
-                type="button"
-                onClick={() => setTemplateId(tpl.id)}
-                className={`relative p-3 rounded-md border text-left transition-all toggle-elevate ${
-                  templateId === tpl.id
-                    ? "toggle-elevated border-primary bg-primary/5"
-                    : "hover:border-foreground/20"
-                }`}
-                data-testid={`button-template-${tpl.id}`}
-              >
-                {templateId === tpl.id && (
-                  <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                    <span className="text-[8px] text-primary-foreground font-bold">✓</span>
-                  </div>
-                )}
-                <FileText className="h-4 w-4 mb-2 text-muted-foreground" />
-                <p className="text-xs font-semibold leading-tight">{tpl.name}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{tpl.description}</p>
-              </button>
-            ))}
-          </div>
-        )}
-      </Card>
+        <ResumeTemplateGallery
+          selectedId={templateId}
+          onSelect={setTemplateId}
+        />
+      </div>
 
       {/* Tone selection */}
       <Card className="p-5">

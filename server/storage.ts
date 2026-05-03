@@ -239,28 +239,56 @@ class DatabaseStorage implements IStorage {
         id: "modern_minimal",
         name: "Modern Minimal",
         description: "Clean lines, ample whitespace, contemporary feel",
-        config: { fontFamily: "Inter", headerStyle: "bold-left", spacing: "relaxed", bulletStyle: "dash" },
-        isActive: true,
-      },
-      {
-        id: "professional_corporate",
-        name: "Professional Corporate",
-        description: "Traditional layout suited for enterprise roles",
-        config: { fontFamily: "Merriweather", headerStyle: "centered", spacing: "compact", bulletStyle: "bullet" },
-        isActive: true,
-      },
-      {
-        id: "tech_product",
-        name: "Tech & Product",
-        description: "Optimized for technical and product roles",
-        config: { fontFamily: "JetBrains Mono", headerStyle: "bold-left", spacing: "normal", bulletStyle: "dash" },
+        config: { fontFamily: "Inter", headerStyle: "bold-left", spacing: "relaxed", bulletStyle: "dash", bestFor: "Design, Marketing, Product", promptModifier: "Use a clean minimal layout with generous whitespace and dash bullets." },
         isActive: true,
       },
       {
         id: "executive_clean",
         name: "Executive Clean",
-        description: "Polished layout for senior leadership positions",
-        config: { fontFamily: "Playfair Display", headerStyle: "elegant", spacing: "generous", bulletStyle: "bullet" },
+        description: "Polished and authoritative for senior leadership roles",
+        config: { fontFamily: "Georgia", headerStyle: "centered-serif", spacing: "generous", bulletStyle: "bullet", bestFor: "C-Suite, Directors, VP", promptModifier: "Use an elegant authoritative layout with centered header and small-caps section titles." },
+        isActive: true,
+      },
+      {
+        id: "tech_product",
+        name: "Tech & Product",
+        description: "Optimized for technical roles with skills front and center",
+        config: { fontFamily: "JetBrains Mono", headerStyle: "bold-left", spacing: "normal", bulletStyle: "dash", bestFor: "Engineering, Data, DevOps", promptModifier: "Use a technical precise layout with skills near the top grouped by category." },
+        isActive: true,
+      },
+      {
+        id: "corporate_classic",
+        name: "Corporate Classic",
+        description: "Traditional format trusted in enterprise and finance",
+        config: { fontFamily: "Times New Roman", headerStyle: "centered-double-line", spacing: "compact", bulletStyle: "bullet", bestFor: "Finance, Law, Consulting", promptModifier: "Use a traditional conservative layout with double-line section dividers and centered header." },
+        isActive: true,
+      },
+      {
+        id: "creative_edge",
+        name: "Creative Edge",
+        description: "Modern asymmetric layout with strong visual accent",
+        config: { fontFamily: "Inter", headerStyle: "color-block-top", spacing: "normal", bulletStyle: "dash", bestFor: "Creative, UX, Branding", promptModifier: "Use a modern bold layout with accent color header block. Portfolio and visual skills prominent." },
+        isActive: true,
+      },
+      {
+        id: "student_starter",
+        name: "Student Starter",
+        description: "Simple and clear — ideal for new grads and entry-level roles",
+        config: { fontFamily: "Inter", headerStyle: "simple-left", spacing: "relaxed", bulletStyle: "bullet", bestFor: "New Grads, Internships, Entry-Level", promptModifier: "Use a clean simple layout with education near the top. Highlight projects and transferable skills." },
+        isActive: true,
+      },
+      {
+        id: "sales_resume",
+        name: "Sales & Growth",
+        description: "Results-focused with bold metrics and achievement-first bullets",
+        config: { fontFamily: "Inter", headerStyle: "bold-left-accent", spacing: "normal", bulletStyle: "metric-first", bestFor: "Sales, BizDev, Account Mgmt", promptModifier: "Use a bold results-oriented layout. Lead every bullet with quantified achievements. Revenue, quota, and growth metrics prominent." },
+        isActive: true,
+      },
+      {
+        id: "simple_ats",
+        name: "Simple ATS",
+        description: "Bare-bones, keyword-rich, parseable by any ATS system",
+        config: { fontFamily: "Arial", headerStyle: "plain-left", spacing: "normal", bulletStyle: "bullet", bestFor: "High-volume Applications, ATS-heavy", promptModifier: "Use the most ATS-compatible plain layout. No special characters. Maximize keyword density and use standard section names." },
         isActive: true,
       },
     ];
@@ -269,6 +297,8 @@ class DatabaseStorage implements IStorage {
       const existing = await db.select().from(applykit_templates).where(eq(applykit_templates.id, tpl.id));
       if (existing.length === 0) {
         await db.insert(applykit_templates).values(tpl);
+      } else {
+        await db.update(applykit_templates).set({ name: tpl.name, description: tpl.description, config: tpl.config }).where(eq(applykit_templates.id, tpl.id));
       }
     }
   }

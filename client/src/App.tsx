@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/lib/theme-provider";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
-import { ThemeToggle } from "@/components/theme-toggle";
+
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -64,7 +64,6 @@ function MobileShell() {
             <span className="font-serif font-bold text-base tracking-tight">Resuma</span>
           </div>
         </Link>
-        <ThemeToggle />
       </header>
       <main className="flex-1 overflow-auto" style={{ paddingBottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))" }}>
         <AppRoutes />
@@ -87,7 +86,6 @@ function DesktopShell() {
         <div className="flex flex-col flex-1 min-w-0">
           <header className="flex items-center justify-between gap-4 px-4 py-2.5 border-b sticky top-0 z-50 bg-background/90 backdrop-blur-md">
             <SidebarTrigger data-testid="button-sidebar-toggle" className="text-muted-foreground hover:text-foreground" />
-            <ThemeToggle />
           </header>
           <main className="flex-1 overflow-auto bg-muted/10">
             <AppRoutes />

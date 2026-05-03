@@ -1,0 +1,210 @@
+DEV NOTE: Add Resume Template Selection + Lock App to Dark Mode
+
+Project goal:
+Add a professional resume template system to the existing resume generation flow.
+
+Do not change, delete, rebuild, or break the current resume generation flow.
+Do not change the job description based generation logic.
+Do not affect cover letter generation, user accounts, billing, saved resumes, exports, or existing AI prompts unless required for template support.
+
+Main change:
+Users should be able to preview real resume templates, choose one, and then continue with the same current resume generation flow.
+
+Resume Template Gallery
+
+Add a new template selection step inside the resume flow.
+
+Placement:
+After the user starts creating a resume.
+Before final resume generation/export.
+The user should still generate the resume based on the job description exactly like before.
+
+Gallery layout:
+Desktop:
+Show templates in a clean grid.
+3 templates per row if space allows.
+
+Mobile:
+Show templates in a scrollable card layout.
+1 template per row.
+Make previews large enough to read.
+
+Each template card should show:
+Template preview that looks like a real resume
+Template name
+Short description
+Best for label
+Select button
+Preview button
+
+Example templates:
+Modern Professional
+Executive Clean
+Tech Minimal
+Creative Edge
+Student Starter
+Healthcare Resume
+Sales Resume
+Corporate Classic
+Simple ATS
+Bold Header
+
+Resume Preview Design
+
+Each template preview must look like an actual resume, not a blank card.
+
+Use sample placeholder content:
+Name
+Job title
+Contact info
+Professional summary
+Work experience
+Skills
+Education
+Certifications
+
+Important:
+The preview must show the structure, spacing, fonts, and layout style.
+Do not show random fake design boxes only.
+Make it feel like Canva / Resume.io style preview cards.
+
+Template Data Structure
+
+Create a resumeTemplates config file.
+
+Example fields:
+
+id
+name
+description
+bestFor
+layoutType
+fontStyle
+headerStyle
+sectionStyle
+spacing
+accentStyle
+atsFriendly
+previewContent
+templatePromptModifier
+
+Each template should control:
+Header layout
+Section order
+Typography
+Spacing
+Accent lines or borders
+Skill display style
+Experience bullet style
+Export styling
+
+AI Prompt Support
+
+Keep the existing ChatGPT resume generation logic.
+
+Add only one new variable:
+selectedTemplateId
+
+When generating the resume, pass the selected template style into the AI prompt.
+
+Prompt instruction example:
+
+“Generate the resume content using the selected template style: Modern Professional. Keep the resume ATS friendly, clear, concise, and tailored to the job description. Do not invent false experience. Format the content to fit the selected template sections.”
+
+Important:
+ChatGPT should generate content.
+The app template should control the visual layout.
+Do not rely on ChatGPT to design the resume visually every time.
+
+Template Rendering
+
+Create reusable resume rendering components.
+
+Suggested components:
+ResumeTemplateGallery
+ResumeTemplateCard
+ResumePreviewModal
+ResumeRenderer
+ResumeExportLayout
+
+ResumeRenderer should accept:
+resumeData
+selectedTemplateId
+userInfo
+jobDescription
+theme
+
+The selected template should apply to:
+On-screen preview
+PDF export
+Download version
+Saved resume preview
+
+PDF Export
+
+Make sure the exported PDF matches the selected template.
+
+Do not let the preview look different from the final PDF.
+
+PDF must include:
+Correct margins
+Clean spacing
+Readable font size
+Proper page breaks
+No cut-off sections
+No broken layout on page 2
+ATS-friendly structure for simple templates
+
+Dark Mode Only
+
+Change the full app to dark mode only.
+
+Requirements:
+Remove light mode switching from the UI.
+Remove theme toggle if it exists.
+Set dark mode as the default and only theme.
+Make sure all pages, modals, dropdowns, forms, cards, buttons, and PDF preview screens look correct in dark mode.
+
+Do not break:
+Resume generation
+Cover letter generation
+Dashboard
+Saved documents
+Export/download
+Auth
+Payments
+Existing user data
+
+Dark mode styling:
+Background: deep dark
+Cards: slightly lighter dark
+Borders: soft gray
+Text: white / off-white
+Secondary text: muted gray
+Buttons: strong accent color
+Inputs: dark field with visible border
+Error messages: clean app-style popup, not harsh red blocks
+
+User Flow
+
+Updated flow:
+
+User clicks Create Resume
+User enters job description and required info
+User selects a resume template
+User previews the template
+User clicks Generate Resume
+AI generates resume content based on the job description
+Resume appears using selected template
+User can edit, save, export, or download
+
+Important Rules
+
+Do not remove the current resume flow.
+Do not rebuild the app.
+Do not change anything unrelated.
+Do not change billing, auth, database, or existing saved resume logic unless template ID needs to be stored.
+Ask for approval before touching anything outside resume templates and dark mode.
+
+Final expected result:
+The app should feel more premium, like a real resume builder. Users should see professional resume templates, choose one, generate a tailored resume from a job description, and export a polished PDF that matches the selected design.

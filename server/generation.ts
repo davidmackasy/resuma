@@ -225,6 +225,7 @@ INTELLIGENT RELEVANCE FILTERING:
 - Reorder skills to prioritize those mentioned in the job description
 
 TONE: ${input.tone}
+${input.templateId ? `RESUME TEMPLATE STYLE: ${input.templateId.replace(/_/g, " ")}. Tailor the resume content structure and section ordering to match this template style while keeping it ATS-friendly.` : ""}
 ${input.companyName ? `COMPANY: ${input.companyName}` : ""}
 ${input.roleTitle ? `TARGET ROLE: ${input.roleTitle}` : ""}
 ${input.hiringManager ? `HIRING MANAGER: ${input.hiringManager}` : ""}`;
