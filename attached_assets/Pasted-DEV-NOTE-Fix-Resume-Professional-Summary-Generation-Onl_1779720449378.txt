@@ -1,0 +1,297 @@
+DEV NOTE: Fix Resume Professional Summary Generation Only
+
+Goal
+
+Fix only the Professional Summary section.
+
+Do not touch anything else.
+
+The title is now okay.
+The resume body is okay.
+The experience section is okay.
+The cover letter is okay.
+The follow-up email is okay.
+
+Only fix how the resume summary is generated.
+
+Problem
+
+The current summary is still being written like a job description keyword dump.
+
+Bad example:
+
+Roofing Labourer / Crew Support — installation-focused candidate with strengths in safety procedures, heavy lifting, team work, and on-site problem solving...
+
+This is wrong because it sounds like the AI is summarizing the job being applied to.
+
+The Professional Summary should summarize the applicant, not the job.
+
+Correct Rule
+
+The Professional Summary must be based on the applicant’s actual resume, work history, skills, and previous experience.
+
+The job description should only be used to decide which parts of the applicant’s real background are most relevant.
+
+Do not invent experience.
+Do not claim the applicant did job duties they never did.
+Do not turn the job description into the summary.
+Do not write “installation-focused candidate” unless the applicant actually has installation experience.
+
+Main Instruction
+
+Rewrite the resume summary generator using this logic:
+
+Read the applicant’s existing resume/profile first.
+Extract real previous roles.
+Extract real responsibilities.
+Extract real transferable skills.
+Compare those real experiences to the target job.
+Write a short professional summary about the applicant.
+Only include job-related wording when it connects naturally to the applicant’s real experience.
+
+The summary should answer:
+
+Who is this person?
+What work experience do they actually have?
+What useful skills do they bring?
+Why does their background make sense for this job?
+
+It should not answer:
+
+What is this job description asking for?
+
+Required Summary Formula
+
+Use this structure:
+
+Sentence 1:
+Start with the applicant’s real background.
+
+Sentence 2:
+Mention actual previous responsibilities and strengths.
+
+Sentence 3:
+Connect those strengths to the job being applied for.
+
+Optional sentence 4:
+Mention reliability, teamwork, safety, communication, or attention to detail if supported by the resume.
+
+Example Based On The Current Applicant
+
+If the applicant’s real history includes:
+
+Supervisor
+Customer service
+Call center/customer support
+Equipment or supply tracking
+Quality inspections
+Team supervision
+Record keeping
+Cash handling
+Problem solving
+
+Then the summary should sound like this:
+
+Professional Summary
+
+Reliable worker with experience in supervision, customer service, team coordination, equipment tracking, and daily quality checks. Skilled at supporting frontline staff, maintaining organized records, solving customer issues, and following workplace procedures. Brings strong communication, attention to detail, safety awareness, and dependable work habits that can transfer well into hands-on labour, crew support, and field-based roles.
+
+This is correct because it is about the applicant.
+
+It does not pretend the applicant already worked in roofing.
+It does not pretend the applicant already worked in installation.
+It does not summarize the job description.
+It connects real experience to the target job naturally.
+
+Another Good Example
+
+Professional Summary
+
+Dependable worker with a background in supervision, customer support, staff training, inventory tracking, and quality-assurance checks. Experienced in keeping teams organized, handling daily operational tasks, maintaining accurate records, and resolving customer concerns. Known for reliability, communication, attention to detail, and the ability to follow procedures in fast-paced work environments.
+
+This is also correct.
+
+It focuses on the applicant’s real background.
+
+What Not To Generate
+
+Do not generate summaries like this:
+
+Roofing labourer with experience in shingles, roof repair, heavy lifting, and crew support.
+
+Unless the resume clearly says the applicant has done roofing work.
+
+Do not generate:
+
+Installation-focused candidate with cable routing, construction support, and site labour experience.
+
+Unless the applicant’s profile clearly proves that.
+
+Do not generate:
+
+Window and door installer with caulking and carpentry experience.
+
+Unless the applicant actually has that experience.
+
+Do not generate:
+
+Candidate with skills from the job description.
+
+That is not a resume summary.
+
+Prompt Update
+
+Replace the current Professional Summary prompt with this:
+
+Write the Professional Summary using the applicant’s real resume/profile as the primary source. The job description is only a guide for choosing which real experiences to emphasize. Do not summarize the job description. Do not copy job duties into the summary unless the applicant has actually done them. The summary must describe the applicant’s previous experience, transferable skills, work habits, and strengths, then naturally connect those strengths to the target role.
+
+Add this exact rule:
+
+The first sentence must be based on the applicant’s actual work history, not the target job title.
+
+Add this exact rule:
+
+Do not start the summary with the target job title unless the applicant has already worked in that exact role.
+
+Bad first sentence:
+
+Roofing Labourer / Crew Support with strengths in...
+
+Good first sentence:
+
+Reliable worker with experience in supervision, customer service, team coordination, equipment tracking, and quality checks.
+
+Add this exact rule:
+
+Never invent job-specific experience from the job description.
+
+Add this exact rule:
+
+Use job description keywords only when they match or relate to the applicant’s real experience.
+
+Data Priority
+
+Professional Summary generation must use this priority:
+
+Applicant’s real previous roles
+Applicant’s real work responsibilities
+Applicant’s real skills
+Applicant’s real achievements
+Transferable strengths
+Target job description only as a relevance filter
+
+The job description must never be the main content source for the summary.
+
+Validation Step
+
+After generating the summary, run this check:
+
+Question 1:
+Is this summary mostly about the applicant’s real background?
+
+Question 2:
+Did it avoid copying the job description?
+
+Question 3:
+Did it avoid inventing experience?
+
+Question 4:
+Would an HR person understand the applicant’s background before reading the experience section?
+
+Question 5:
+Does it connect to the job without pretending the applicant already did that exact job?
+
+If any answer fails, regenerate only the Professional Summary.
+
+Do not regenerate the full resume.
+
+Hard Rule
+
+The summary must not include job-specific skills unless they exist in the applicant profile.
+
+For example:
+
+Do not mention roofing unless applicant has roofing experience.
+Do not mention installation unless applicant has installation experience.
+Do not mention cable routing unless applicant has cable routing experience.
+Do not mention construction unless applicant has construction experience.
+Do not mention caulking unless applicant has caulking experience.
+Do not mention carpentry unless applicant has carpentry experience.
+
+Use transferable wording instead.
+
+Safe transferable wording:
+
+hands-on work habits
+team coordination
+following procedures
+equipment tracking
+quality checks
+organized work areas
+customer service
+problem solving
+safety awareness
+record keeping
+dependable attendance
+frontline supervision
+
+Current Screenshot Fix
+
+Replace the current summary with something like:
+
+Professional Summary
+
+Reliable worker with experience in supervision, customer service, staff training, equipment tracking, quality checks, and daily operations. Skilled at supporting teams, keeping accurate records, solving customer issues, and following workplace procedures. Brings strong communication, attention to detail, safety awareness, and dependable work habits that can transfer well into hands-on crew support and field-based roles.
+
+This is the correct direction.
+
+Implementation Notes
+
+Find the code that generates only:
+
+professionalSummary
+summary
+resume.summary
+professional_summary
+
+Update only that prompt or generation block.
+
+Do not modify:
+
+resume title generation
+job title extraction
+experience bullets
+skills
+cover letter
+follow-up email
+practice questions
+PDF export
+DOCX export
+template rendering
+application page UI
+
+Acceptance Criteria
+
+The summary is about the applicant’s real experience.
+The summary is not a rewritten job description.
+The summary does not invent experience.
+The summary does not start with the target job title unless the applicant actually held that role.
+The summary uses the job description only to choose relevant real experience.
+The resume title stays unchanged.
+The rest of the resume stays unchanged.
+Cover letter stays unchanged.
+Follow-up email stays unchanged.
+Practice tab stays unchanged.
+No unrelated files are touched.
+
+Final Instruction
+
+Fix only the Professional Summary generation.
+
+The summary must describe the applicant’s actual background first, then connect that background to the job.
+
+Do not summarize the job description.
+
+Do not invent job-specific experience.
+
+Do not touch anything else.
