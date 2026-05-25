@@ -178,9 +178,10 @@ export default function NewApplication() {
       {/* Resume Template Gallery */}
       <div className="space-y-4">
         <div>
-          <h2 className="font-semibold text-base mb-0.5">Choose a Resume Template</h2>
+          <h2 className="font-semibold text-base mb-0.5">Choose your resume style</h2>
           <p className="text-sm text-muted-foreground">
-            Select the style for your generated resume. All templates are ATS-friendly.
+            Pick a layout that matches your role. Every template is clean, professional, and ATS-friendly.{" "}
+            <span className="text-muted-foreground/60">You can change this later before downloading.</span>
           </p>
         </div>
         <ResumeTemplateGallery

@@ -1,0 +1,385 @@
+Yes. The current template cards look cheap because they are trying to show tiny resume previews that are too small to read, poorly spaced, and visually weak.
+
+Here is a proper dev note to fix it.
+
+DEV NOTE: Improve Resume Template Selection UI and Resume Template Quality
+
+Goal
+
+Redesign the resume template selection screen so it feels premium, modern, professional, and trustworthy.
+
+The current resume preview cards look too small, empty, and low quality. If we cannot make the resume previews look excellent, use clean template title cards instead of showing bad thumbnails.
+
+Do not break or affect anything else in the resume generation flow.
+
+Scope
+
+Only update:
+
+Resume template selection UI
+Resume template card design
+Template preview thumbnails or fallback cards
+Template names, descriptions, and tags
+Selected template state
+Mobile responsiveness
+
+Do not change:
+
+Resume generation logic
+AI resume content generation
+User onboarding
+Authentication
+Payment logic
+Saved resumes
+Export/download logic
+PDF rendering unless needed for thumbnail quality only
+
+Current Problem
+
+The current UI shows tiny resume previews that look unfinished and unprofessional.
+
+Issues:
+
+Resume thumbnails are too small to understand
+White preview area looks empty
+Cards have weak hierarchy
+Template names are not premium
+Tags look random
+Selected state feels basic
+Spacing is inconsistent
+The whole section feels unfinished
+The templates do not look like something users would trust for jobs
+
+Required Fix
+
+Replace the current card layout with a premium template selector.
+
+Option A: Use High-Quality Resume Preview Cards
+
+Use this only if the thumbnails can look clean and sharp.
+
+Each card should include:
+
+Large polished resume preview
+Clean shadow
+Rounded corners
+Better spacing
+Clear template title
+Short professional description
+Best-use labels
+Selected badge
+Hover state
+Mobile-friendly layout
+
+Card Design
+
+Each template card should look like this:
+
+Top area:
+
+Resume preview image
+Full card width
+Aspect ratio close to document preview
+Clean white paper mockup
+Subtle shadow
+No blurry tiny text
+No excessive blank space
+No ugly cropped preview
+
+Bottom area:
+
+Template name
+Short description
+Best for tags
+Select button or selected state
+
+Example:
+
+Modern Minimal
+Clean layout for product, marketing, and creative roles.
+
+Best for:
+Design
+Marketing
+Product
+
+Selected state:
+
+Blue border
+Check icon in top-right
+Subtle glow
+“Selected” label
+Do not use loud colors
+
+Hover state:
+
+Slight lift
+Border highlight
+Preview shadow increase
+Cursor pointer
+
+Option B: Use Premium Title Cards Instead of Resume Thumbnails
+
+If thumbnails still look bad, remove the resume preview thumbnails completely.
+
+Use title-based template cards instead.
+
+This is better than showing bad templates.
+
+Each card should include:
+
+Template title
+Professional category icon
+Short description
+ATS-friendly label
+Best-use tags
+Small style sample line
+Selected state
+
+Example card layout:
+
+Modern Minimal
+
+ATS-friendly
+Clean, simple layout with clear spacing and modern section structure.
+
+Best for:
+Marketing
+Product
+Design
+
+Style preview:
+Name / Summary / Experience / Skills
+
+This will look much more professional than bad resume thumbnails.
+
+Recommended Templates
+
+Replace the current template list with better naming and clearer use cases.
+
+Use these templates:
+
+Modern Minimal
+
+Clean layout with strong spacing and simple section structure.
+
+Best for:
+Product
+Marketing
+Design
+General roles
+
+Professional Classic
+
+Traditional format built for corporate and office roles.
+
+Best for:
+Finance
+Admin
+Law
+Consulting
+
+Executive Clean
+
+Polished format for senior professionals and leadership roles.
+
+Best for:
+Managers
+Directors
+Executives
+Operations
+
+Tech Focus
+
+Skill-first resume built for technical roles.
+
+Best for:
+Software
+Data
+Engineering
+DevOps
+
+Student Starter
+
+Simple layout for students, interns, and entry-level applicants.
+
+Best for:
+Students
+Internships
+New grads
+Part-time roles
+
+Sales & Growth
+
+Results-focused layout for metrics, achievements, and revenue impact.
+
+Best for:
+Sales
+Growth
+Customer Success
+Business Development
+
+Creative Professional
+
+Clean creative layout that still stays ATS-friendly.
+
+Best for:
+Creators
+Designers
+Content
+Brand roles
+
+Simple ATS
+
+Bare-bones resume structure optimized for job portals and scanners.
+
+Best for:
+High-volume applications
+ATS systems
+General jobs
+
+UI Layout
+
+Desktop:
+
+Use a responsive grid.
+4 cards per row on large screens.
+3 cards per row on medium screens.
+2 cards per row on tablets.
+1 card per row on mobile.
+
+Mobile:
+
+Cards should be full width.
+Do not shrink the resume preview too much.
+Keep the selected badge visible.
+Keep the continue button sticky at the bottom if this is part of a multi-step flow.
+
+Header Section
+
+Update the top copy.
+
+Current:
+
+Choose a Resume Template
+Select the style for your generated resume. All templates are ATS-friendly.
+
+Replace with:
+
+Choose your resume style
+Pick a layout that matches your role. Every template is clean, professional, and ATS-friendly.
+
+Add small helper text:
+
+You can change this later before downloading.
+
+Card Styling
+
+Use a premium dark UI style that matches the app.
+
+Card background:
+
+Dark gray or near-black
+Subtle border
+Soft shadow
+Rounded 16px to 20px
+
+Preview background:
+
+White paper mockup
+Light gray canvas behind paper
+Subtle document shadow
+
+Text:
+
+Template title should be clear and bold
+Description should be readable
+Tags should be small and clean
+Avoid tiny unreadable text
+
+Tag style:
+
+Small pill labels
+Muted blue or neutral gray
+No bright random colors
+
+Selected Card
+
+Selected card must be obvious.
+
+Use:
+
+Blue border
+Check icon
+Selected badge
+Slight glow
+Background highlight
+
+Example:
+
+Selected badge in top-right:
+✓ Selected
+
+Do not rely only on border color.
+
+Resume Thumbnail Quality Requirements
+
+If using preview thumbnails:
+
+Generate real preview images from the actual template layout.
+Do not use fake tiny unreadable screenshots.
+Do not crop the preview badly.
+Do not show too much empty blank page.
+Use realistic sample content so the template looks complete.
+
+Each thumbnail should include:
+
+Name
+Title
+Summary
+Experience
+Skills
+Education
+
+The preview should look like a real finished resume, not a blank document.
+
+If real thumbnails are not available, use the title-card version instead.
+
+Important
+
+Do not show weak resume previews just for the sake of having thumbnails.
+
+A clean title card is better than a bad resume preview.
+
+Recommended Direction
+
+Use title cards first.
+
+Then later add premium real thumbnails once the actual resume template rendering is polished.
+
+This will instantly make the page feel cleaner and more professional.
+
+Acceptance Criteria
+
+The template screen must feel premium and polished.
+No tiny unreadable resume previews.
+No ugly empty white cards.
+Selected template state is clear.
+Cards are responsive on all devices.
+Template names and descriptions feel professional.
+No changes to resume generation logic.
+No changes to authentication, Stripe, onboarding, or export flow.
+Existing selected template data must continue working.
+Users should clearly understand which template is best for them.
+
+Final Instruction
+
+Fix only the resume template selection design and template presentation.
+
+Do not touch anything else.
+
+Do not break the resume builder.
+
+Do not change the resume content generation flow.
+
+If high-quality thumbnails cannot be created properly, remove thumbnails and use premium title-based cards instead.
