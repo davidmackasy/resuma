@@ -226,13 +226,18 @@ RESUME TITLE RULES (HIGHEST PRIORITY):
 - Right: "Window & Door Installation Assistant" or "Construction & Installation Support Worker"
 
 RESUME SUMMARY RULES (HIGHEST PRIORITY):
-- Sentence 1: Name the target role/job type and lead with the most relevant skills from the JOB DESCRIPTION
-- Sentence 2: Connect matching or transferable skills from the candidate's actual experience to the job requirements
-- Sentence 3: Mention reliability, safety, teamwork, or quality — whatever the job description emphasizes
-- Sentence 4 (optional): End with seeking to contribute to [company] in [target role area]
-- Do NOT open the summary with the candidate's old job title (e.g. do not start "Customer service professional..." for a construction job)
-- Use careful bridging language if experience is transferable but not direct (e.g. "installation-focused candidate", "construction-adjacent experience")
-- The summary MUST mention at least 2-4 specific skills or responsibilities from the job description
+Write the summary as if a recruiter asked: "Tell me about this person's work background before I read the full resume."
+- 3 to 5 short, human-sounding sentences
+- Lead with the APPLICANT'S REAL experience and strongest responsibilities from their work history (NOT the target job title)
+- Second sentence: mention their strongest transferable skills, work habits, and responsibilities from previous roles
+- Third sentence: naturally connect their background to the target role using bridging language
+- Use the job description ONLY to decide which parts of the applicant's background to emphasize — do NOT restate the job posting
+- Do NOT open with "[Target Job Title] with skills in X, Y, Z..." if the applicant has not directly held that role
+- Do NOT keyword-dump job description terms into sentence 1
+- If experience is transferable but not direct, use phrases like: "transferable to", "suited for", "can contribute to", "hands-on work habits", "supports"
+- NEVER claim the applicant is an "experienced installer" or "expert carpenter" unless the profile clearly proves it
+- Good example: "Reliable worker with experience supervising frontline staff, managing equipment inventory, and completing quality-assurance checks. Strong background in customer service, problem solving, and team coordination. Brings attention to detail and safety awareness that transfer well to installation and field support roles."
+- Bad example: "Window & Door Installer with skills in cable-routing, installation support, and site quality-assurance inspections." (sounds fake if they haven't done that)
 
 INTELLIGENT RELEVANCE FILTERING:
 - Include ONLY the top 2-4 most relevant roles in the resume
@@ -349,12 +354,18 @@ RESUME TITLE RULES (HIGHEST PRIORITY):
 - Example right: "Window & Door Installation Assistant" or "Construction & Site Support Worker"
 
 RESUME SUMMARY RULES (HIGHEST PRIORITY):
-- Sentence 1: Name the target role/job type and lead with the most relevant skills from the JOB DESCRIPTION
-- Sentence 2: Connect matching or transferable skills from the candidate's actual experience to the job requirements
-- Sentence 3: Mention reliability, safety, teamwork, or quality — whatever the job description emphasizes
-- Do NOT open the summary with the candidate's old job title if it doesn't match the target role
-- Use careful bridging language if experience is transferable but not direct
-- The summary MUST mention at least 2-4 specific skills or responsibilities from the job description
+Write the summary as if a recruiter asked: "Tell me about this person's work background before I read the full resume."
+- 3 to 5 short, human-sounding sentences
+- Lead with the APPLICANT'S REAL experience and strongest responsibilities from their work history (NOT the target job title)
+- Second sentence: mention their strongest transferable skills, work habits, and responsibilities from previous roles
+- Third sentence: naturally connect their background to the target role using bridging language
+- Use the job description ONLY to decide which parts of the applicant's background to emphasize — do NOT restate the job posting
+- Do NOT open with "[Target Job Title] with skills in X, Y, Z..." if the applicant has not directly held that role
+- Do NOT keyword-dump job description terms into sentence 1
+- If experience is transferable but not direct, use phrases like: "transferable to", "suited for", "can contribute to", "hands-on work habits"
+- NEVER claim the applicant is an expert in something unless their profile clearly proves it
+- Good: "Reliable worker with experience supervising staff, managing equipment, and completing quality checks. Brings attention to detail and safety awareness that transfer well to installation and field support roles."
+- Bad: "Window & Door Installer with skills in cable-routing and installation support." (forced/fake if they haven't done that)
 
 INTELLIGENT RELEVANCE FILTERING:
 - Analyze the job description to identify: required skills, industry, responsibilities, keywords, seniority level
@@ -454,7 +465,7 @@ export async function generateSingleDocument(
 - "json": Structured resume with { header: { name, title, email, phone, location, linkedin?, portfolio?, github? }, summary: string, experience: [{ title, company, location, startDate, endDate, bullets: string[], relevanceScore: number }], skills: [{ name, items: string[] }], education: [{ school, degree, field, year }], certifications: [{ name, issuer, year }] }
 
 RESUME TITLE: The header.title MUST match the target job, not the candidate's previous title. If experience is transferable, create a bridge title using keywords from the job description.
-RESUME SUMMARY: Must open by naming the target role type, then connect transferable skills to the job's requirements. Do NOT reuse the candidate's old job title in the summary opening.
+RESUME SUMMARY: Lead with the applicant's REAL work experience and strongest responsibilities. Use the job description only to guide which parts of their background to emphasize. Do NOT open with the target job title followed by keyword-dumping. Write it as a natural human summary of who this person is, then connect to the target role in the final sentence. 3-5 sentences max.
 RELEVANCE FILTERING: Analyze job description, include only top 2-4 most relevant roles with 3-5 best bullets each. Exclude irrelevant experience. Reorder skills by relevance.`,
     cover_letter: `Generate a cover letter (250-350 words) as JSON with keys:
 - "md": Full cover letter in markdown

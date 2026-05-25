@@ -1,0 +1,273 @@
+Yes. I understand the issue now.
+
+The resume title should match the job being applied for.
+
+But the professional summary should not become a paragraph about the job description.
+
+The summary should describe the applicant’s real background, strongest experience, and transferable skills, then lightly connect that background to the target job.
+
+Right now, the summary is too weird because it is repeating the target title and forcing job keywords into the first sentence.
+
+Here is the corrected dev note.
+
+DEV NOTE: Fix Resume Professional Summary Only
+
+Goal
+
+Fix only the Professional Summary section of the resume.
+
+The resume title is now working better. Do not touch it.
+
+The rest of the resume is okay. Do not touch it.
+
+Only adjust how the Professional Summary is generated.
+
+Do not change:
+
+Resume title logic
+Experience section
+Skills section
+Education section
+Cover letter
+Follow-up email
+Practice tab
+Templates
+PDF/DOCX export
+Authentication
+Application flow
+History page
+Dashboard
+Any unrelated feature
+
+Current Problem
+
+The resume title is now aligned with the target job, but the Professional Summary is not written like a real resume summary.
+
+Example bad output:
+
+“Cathodic Protection Field Support Labourer with skills in installation support, equipment maintenance, cable-routing assistance and site quality-assurance inspections...”
+
+This sounds forced and unnatural.
+
+It reads like the AI is trying to summarize the job posting instead of summarizing the applicant.
+
+A resume summary should quickly explain who the applicant is, what experience they have, and what strengths they bring.
+
+It should not sound like a pasted job-description rewrite.
+
+Correct Resume Summary Purpose
+
+The Professional Summary should answer:
+
+Who is this applicant?
+What kind of work experience do they have?
+What are their strongest transferable skills?
+Why do they make sense for this role?
+
+It should be based mostly on the applicant’s actual work history.
+
+It can include job-relevant keywords, but only naturally.
+
+Required Summary Style
+
+The summary should be 3 to 5 short lines.
+
+It should sound human, professional, and grounded.
+
+It should describe the applicant’s background first.
+
+Then connect that background to the target role.
+
+Correct structure:
+
+Line 1:
+Describe the applicant’s real experience and background.
+
+Line 2:
+Mention strongest work habits, responsibilities, or transferable skills from previous jobs.
+
+Line 3:
+Connect those strengths to the target role in a natural way.
+
+Line 4 optional:
+Mention reliability, safety, teamwork, customer service, or attention to detail if relevant.
+
+Bad Summary Pattern
+
+Do not write this type of summary:
+
+“[Target Job Title] with skills in [job keyword], [job keyword], [job keyword]...”
+
+This sounds fake when the applicant has not directly held that exact role.
+
+Avoid:
+
+Overloading the first sentence with job-posting keywords
+Making the applicant sound like they already worked the exact job if they did not
+Repeating the job title too many times
+Using awkward phrases like “with skills installation support”
+Writing a summary that sounds like a keyword dump
+Writing the summary as if it is about the company or job posting
+
+Better Summary Example For This Resume
+
+Use something closer to this:
+
+Professional Summary
+
+Reliable worker with experience supervising frontline staff, managing equipment inventory, completing quality checks, and supporting daily site operations. Strong background in customer service, problem solving, team coordination, record keeping, and maintaining organized work environments. Brings strong attention to detail, safety awareness, and hands-on work habits that transfer well into installation, construction, and field support roles.
+
+This is much better because:
+
+It summarizes the applicant’s actual background
+It mentions supervision
+It mentions equipment inventory
+It mentions quality checks
+It mentions customer service
+It connects naturally to installation and field work
+It does not pretend the applicant is already an expert installer
+
+Another Acceptable Version
+
+Professional Summary
+
+Dependable worker with experience in supervision, equipment tracking, quality assurance checks, customer support, and daily operational coordination. Skilled at following procedures, maintaining accurate records, solving customer issues, and supporting teams in fast-paced work environments. Brings strong communication, safety awareness, attention to detail, and hands-on reliability suited for window and door installation support.
+
+Prompt Update
+
+Update only the resume summary prompt with this rule:
+
+The Professional Summary must summarize the applicant’s real background and strongest transferable experience first. It should not simply restate the target job description. Use the target job only to guide which parts of the applicant’s background to emphasize.
+
+Add this instruction:
+
+Write the summary as if a recruiter is quickly asking: “Tell me about this person’s work background before I read the full resume.”
+
+Add this instruction:
+
+Use previous experience, skills, and achievements from the applicant profile as the main source. Use the job description only to decide which experience is most relevant.
+
+Add this instruction:
+
+Do not overclaim direct experience. If the applicant has transferable experience but not direct experience, use phrases like:
+
+transferable to
+suited for
+relevant to
+supports
+prepared for
+can contribute to
+hands-on work habits
+site support
+installation support
+
+Do not say:
+
+expert installer
+experienced window installer
+certified carpenter
+proven window and door installer
+
+unless the applicant profile clearly proves it.
+
+Summary Generation Logic
+
+The AI should follow this priority order:
+
+Applicant’s actual work experience
+Applicant’s actual skills and responsibilities
+Applicant’s strongest transferable strengths
+Target job keywords only where natural
+Final sentence connecting the applicant to the target role
+
+The summary should not lead with the target role unless the applicant already has direct experience in that exact role.
+
+Example:
+
+If applicant has direct installation experience:
+
+“Window and door installer with 3 years of experience...”
+
+If applicant does not have direct installation experience:
+
+“Reliable worker with experience in supervision, equipment handling, quality checks, and site operations...”
+
+This is the correct behavior.
+
+Specific Fix For Current Screenshot
+
+Current summary should not say:
+
+“Cathodic Protection Field Support Labourer with skills in installation support...”
+
+Replace with a cleaner applicant-focused version:
+
+Professional Summary
+
+Reliable worker with experience supervising frontline staff, managing equipment and supplies, completing quality-assurance checks, and supporting daily operations. Strong background in customer service, problem solving, record keeping, cash handling, and team coordination. Brings attention to detail, safety awareness, and hands-on work habits that transfer well to installation, construction, and field support roles.
+
+This is the type of summary the system should generate.
+
+Validation Check
+
+After generating the Professional Summary, run a quality check:
+
+Question 1:
+Does the summary mainly describe the applicant?
+
+Question 2:
+Does it avoid sounding like a job description?
+
+Question 3:
+Does it avoid pretending the applicant has experience they do not have?
+
+Question 4:
+Does it naturally connect the applicant’s background to the target job?
+
+If any answer fails, regenerate only the Professional Summary.
+
+Do not regenerate the full resume.
+
+Do not change the title.
+
+Do not change the experience section.
+
+Acceptance Criteria
+
+The resume title stays fixed and job-targeted.
+
+The Professional Summary is applicant-focused.
+
+The summary describes real previous experience.
+
+The summary uses the job description only as guidance.
+
+The summary does not sound like a keyword dump.
+
+The summary does not overclaim direct experience.
+
+The summary sounds like a real professional resume summary.
+
+Cover letter remains unchanged.
+
+Follow-up email remains unchanged.
+
+Practice tab remains unchanged.
+
+Resume layout remains unchanged.
+
+PDF and DOCX export still work.
+
+Nothing else is touched.
+
+Final Instruction
+
+Fix only the Professional Summary generation.
+
+Do not touch the title because it is already fixed.
+
+Do not touch the rest of the resume.
+
+Do not touch cover letter, follow-up email, or practice.
+
+Do not break or affect anything else.
