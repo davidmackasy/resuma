@@ -1,0 +1,359 @@
+The resume is matching some of the experience, but the resume title and summary are not aligned with the job.
+
+For this job, the resume should not say:
+
+Customer Service Representative / Retail Associate
+
+That makes the applicant look like they are applying with the wrong resume.
+
+It should say something closer to:
+
+Window & Door Installer
+
+or
+
+Window & Door Installation Assistant
+
+or
+
+Construction & Window/Door Installation Worker
+
+The summary should also lead with installation, construction, tools, safety, measuring, caulking, teamwork, and job-site work.
+
+DEV NOTE: Fix Resume Title and Summary Alignment With Job Description
+
+Goal
+
+Improve only the resume title and resume summary generation so they match the job description more accurately.
+
+Do not change the resume generation flow.
+
+Do not change cover letter generation.
+
+Do not change follow-up email generation.
+
+Do not change practice questions.
+
+Do not change the resume template system.
+
+Only fix the resume header title and summary targeting logic.
+
+Current Problem
+
+The AI generated this resume title:
+
+Customer Service Representative / Retail Associate
+
+But the pasted job description is for:
+
+Window/Door Installer
+
+This makes the resume look mismatched.
+
+An HR person will likely reject the resume because the title does not match the job being applied for.
+
+The resume summary also starts with:
+
+Customer-service professional with hands-on supervision...
+
+That is too generic and too focused on customer service.
+
+The job description is focused on:
+
+Window installation
+Door installation
+Construction
+Carpentry
+Caulking
+Hand tools
+Power tools
+Measuring openings
+Safety standards
+Building codes
+Physical stamina
+Job-site workflow
+Quality workmanship
+
+Required Fix
+
+Update the resume generation prompt or post-processing logic so the resume title and summary are strongly based on the target job title and job description.
+
+The resume must prioritize the job being applied for, not only the user’s previous job title.
+
+Important Rule
+
+The resume title should answer:
+
+“What role is this resume targeting?”
+
+Not:
+
+“What was the user’s last job title?”
+
+Example:
+
+If the job description says Window/Door Installer, the resume title should be:
+
+Window & Door Installer
+
+or
+
+Window & Door Installation Assistant
+
+or
+
+Construction & Installation Worker
+
+It should not use unrelated past roles unless they directly match the job.
+
+Resume Title Logic
+
+Add a resume title targeting step before generating the resume.
+
+The AI should extract:
+
+Target job title from job description
+Main job category
+Relevant transferable experience from the user profile
+Best professional resume title for this application
+
+Then generate the title using this priority:
+
+Priority 1:
+Use the exact job title if the applicant has direct or transferable experience.
+
+Example:
+Window & Door Installer
+
+Priority 2:
+Use a slightly broader title if the applicant does not have direct experience but has related skills.
+
+Example:
+Construction & Window/Door Installation Assistant
+
+Priority 3:
+Use a transferable title only if the job description is not clear.
+
+Example:
+Customer Service & Operations Support
+
+For this current example, the correct title should be construction/install-focused, not customer-service-focused.
+
+Bad Output
+
+Customer Service Representative / Retail Associate
+
+Better Outputs
+
+Window & Door Installer
+
+Window & Door Installation Assistant
+
+Construction & Window/Door Installer
+
+Installation & Site Support Worker
+
+Construction Laborer / Window & Door Installation
+
+Summary Logic
+
+The summary should follow this structure:
+
+Sentence 1:
+Target the job title and main job type.
+
+Sentence 2:
+Mention matching skills from the job description.
+
+Sentence 3:
+Connect transferable experience from the applicant.
+
+Sentence 4:
+End with reliability, safety, teamwork, or quality workmanship.
+
+For this job, a better summary would be:
+
+Window and door installation candidate with hands-on site support experience, strong attention to detail, and practical knowledge of equipment handling, inspections, and daily operations. Skilled in following safety procedures, maintaining organized work areas, supporting team workflows, and completing tasks with accuracy. Seeking to apply reliable work habits, customer-facing experience, and quality-focused support to Dan's Custom Windows and Doors.
+
+Or stronger:
+
+Construction and installation-focused worker with experience supporting daily operations, equipment inventory, safety inspections, and customer-facing service. Brings strong attention to detail, reliable work habits, and the ability to work with teams in fast-paced environments. Seeking to contribute to Dan's Custom Windows and Doors through safe, clean, and quality-focused window and door installation support.
+
+Prompt Update
+
+Update the resume generation prompt with this instruction:
+
+When generating the resume title and summary, prioritize the target job title and job description over the applicant’s previous job titles. The resume title must sound like the applicant is applying for the pasted job. Do not use unrelated previous roles as the main resume title unless they directly match the target job. If the applicant’s background is transferable but not exact, create a bridge title that combines the target job with related experience.
+
+Add this rule:
+
+The resume title must include at least one major keyword from the job title or job description when possible.
+
+For this example, acceptable keywords include:
+
+Window
+Door
+Installer
+Installation
+Construction
+Carpentry
+Site Support
+
+Add this rule:
+
+The summary must mention at least 2 to 4 job description skills when they are relevant.
+
+For this example:
+
+installation support
+safety standards
+tools
+caulking
+measuring
+clean work environment
+team workflow
+quality workmanship
+
+Do Not Overclaim Experience
+
+Important:
+
+Do not say the applicant has proven window installation experience if the user profile does not show that.
+
+Use careful wording.
+
+Good:
+
+Installation-focused candidate
+Construction and site support worker
+Seeking to apply skills to window and door installation
+Hands-on support experience
+
+Avoid:
+
+Expert window installer
+Certified carpenter
+Experienced door installer
+
+Unless the user profile clearly supports it.
+
+Add a Safety Check
+
+Before finalizing the resume title, run a simple check:
+
+Does the resume title match the target job?
+
+If no, regenerate only the title and summary.
+
+Example check:
+
+Job title: Window/Door Installer
+Generated resume title: Customer Service Representative / Retail Associate
+Result: Fail
+
+Regenerate title:
+
+Construction & Window/Door Installation Assistant
+
+Result: Pass
+
+Expected Result For This Screenshot
+
+The resume should change from:
+
+David Mackasy
+
+Customer Service Representative / Retail Associate
+
+To something like:
+
+David Mackasy
+
+Window & Door Installation Assistant
+
+or:
+
+David Mackasy
+
+Construction & Window/Door Installation Worker
+
+And the summary should change from customer-service-focused to installation-focused.
+
+Example final output:
+
+SUMMARY
+
+Window and door installation-focused worker with hands-on experience supporting daily operations, equipment inventory, safety checks, and customer-facing service. Skilled in following workplace procedures, maintaining organized work areas, supporting team workflows, and completing tasks with attention to detail. Seeking to contribute reliable work habits, quality-focused support, and strong communication skills to Dan's Custom Windows and Doors.
+
+Files To Check
+
+Find the resume generation logic. Likely files may include:
+
+resume generation API route
+resume prompt builder
+AI resume service
+resume editor component
+resume preview renderer
+
+Look for code related to:
+
+resumeTitle
+headline
+professionalTitle
+summary
+targetRole
+jobTitle
+jobDescription
+generateResume
+resumePrompt
+
+Implementation Steps
+
+Locate where the resume prompt is built.
+Add a dedicated target title instruction.
+Make sure the resume title is generated from the job description first.
+Make sure the summary uses the job title and job responsibilities.
+Add fallback logic if the AI outputs a mismatched title.
+Do not touch cover letter prompts.
+Do not touch follow-up email prompts.
+Do not touch practice mode.
+Test with the Window/Door Installer job description.
+Confirm the title no longer says Customer Service Representative / Retail Associate.
+
+Acceptance Criteria
+
+The resume title matches the pasted job.
+
+The summary is focused on the pasted job.
+
+The resume does not overclaim experience.
+
+The resume still uses transferable skills from the applicant profile.
+
+Cover letter output stays unchanged.
+
+Follow-up email output stays unchanged.
+
+Practice tab stays unchanged.
+
+Resume generation flow still works.
+
+Resume preview still works.
+
+Download/export still works.
+
+No unrelated files are changed.
+
+Final Instruction
+
+Fix only the resume title and summary targeting.
+
+Do not rebuild the full resume system.
+
+Do not change the cover letter.
+
+Do not change the email follow-up.
+
+Do not change the UI unless needed to display the updated title and summary correctly.
+
+Do not break or affect anything else.

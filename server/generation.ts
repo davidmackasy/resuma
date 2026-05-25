@@ -215,6 +215,25 @@ CRITICAL RULES:
 - Remove filler phrases like "results-driven", "dynamic", "passionate"
 - NEVER modify the candidate's master profile - all tailoring applies to output only
 
+RESUME TITLE RULES (HIGHEST PRIORITY):
+- The resume title (header.title) MUST reflect the TARGET JOB, NOT the candidate's previous job title
+- Ask yourself: "What role is this resume targeting?" and use that as the title
+- If the candidate has direct experience matching the job → use the exact or very close job title
+- If the candidate has transferable experience → create a bridge title combining the target role with their background (e.g. "Window & Door Installation Assistant", "Construction & Site Support Worker")
+- NEVER use a previous job title that does not match or relate to the target role
+- The title MUST include at least one major keyword from the job title or job description
+- Wrong: "Customer Service Representative" for a window installer job
+- Right: "Window & Door Installation Assistant" or "Construction & Installation Support Worker"
+
+RESUME SUMMARY RULES (HIGHEST PRIORITY):
+- Sentence 1: Name the target role/job type and lead with the most relevant skills from the JOB DESCRIPTION
+- Sentence 2: Connect matching or transferable skills from the candidate's actual experience to the job requirements
+- Sentence 3: Mention reliability, safety, teamwork, or quality — whatever the job description emphasizes
+- Sentence 4 (optional): End with seeking to contribute to [company] in [target role area]
+- Do NOT open the summary with the candidate's old job title (e.g. do not start "Customer service professional..." for a construction job)
+- Use careful bridging language if experience is transferable but not direct (e.g. "installation-focused candidate", "construction-adjacent experience")
+- The summary MUST mention at least 2-4 specific skills or responsibilities from the job description
+
 INTELLIGENT RELEVANCE FILTERING:
 - Include ONLY the top 2-4 most relevant roles in the resume
 - For each included role, select only the 3-5 most relevant bullets
@@ -227,7 +246,7 @@ INTELLIGENT RELEVANCE FILTERING:
 TONE: ${input.tone}
 ${input.templateId ? `RESUME TEMPLATE STYLE: ${input.templateId.replace(/_/g, " ")}. Tailor the resume content structure and section ordering to match this template style while keeping it ATS-friendly.` : ""}
 ${input.companyName ? `COMPANY: ${input.companyName}` : ""}
-${input.roleTitle ? `TARGET ROLE: ${input.roleTitle}` : ""}
+${input.roleTitle ? `TARGET ROLE: ${input.roleTitle} — the resume title and summary MUST be aligned to this role` : ""}
 ${input.hiringManager ? `HIRING MANAGER: ${input.hiringManager}` : ""}`;
 
   const userPrompt = `CANDIDATE PROFILE:
@@ -319,6 +338,24 @@ CRITICAL RULES:
 - Keep tense consistent (past for previous roles, present for current)
 - NEVER modify the candidate's master profile - all tailoring applies to output only
 
+RESUME TITLE RULES (HIGHEST PRIORITY):
+- The resume title (header.title) MUST reflect the TARGET JOB, NOT the candidate's previous job title
+- Ask yourself: "What role is this resume targeting?" and use that as the title
+- If the candidate has direct experience matching the job → use the exact or very close job title
+- If the candidate has transferable experience → create a bridge title combining the target role with their background
+- NEVER use a previous job title that does not match or relate to the target role
+- The title MUST include at least one major keyword from the job title or job description
+- Example wrong: "Customer Service Representative" for a window installer job
+- Example right: "Window & Door Installation Assistant" or "Construction & Site Support Worker"
+
+RESUME SUMMARY RULES (HIGHEST PRIORITY):
+- Sentence 1: Name the target role/job type and lead with the most relevant skills from the JOB DESCRIPTION
+- Sentence 2: Connect matching or transferable skills from the candidate's actual experience to the job requirements
+- Sentence 3: Mention reliability, safety, teamwork, or quality — whatever the job description emphasizes
+- Do NOT open the summary with the candidate's old job title if it doesn't match the target role
+- Use careful bridging language if experience is transferable but not direct
+- The summary MUST mention at least 2-4 specific skills or responsibilities from the job description
+
 INTELLIGENT RELEVANCE FILTERING:
 - Analyze the job description to identify: required skills, industry, responsibilities, keywords, seniority level
 - Score each experience role for relevance to this specific job
@@ -332,7 +369,7 @@ INTELLIGENT RELEVANCE FILTERING:
 
 TONE: ${input.tone}
 ${input.companyName ? `COMPANY: ${input.companyName}` : ""}
-${input.roleTitle ? `TARGET ROLE: ${input.roleTitle}` : ""}
+${input.roleTitle ? `TARGET ROLE: ${input.roleTitle} — the resume title and summary MUST be aligned to this role` : ""}
 ${input.hiringManager ? `HIRING MANAGER: ${input.hiringManager}` : ""}`;
 
   const userPrompt = `CANDIDATE PROFILE:
@@ -416,6 +453,8 @@ export async function generateSingleDocument(
 - "md": Full resume in markdown format
 - "json": Structured resume with { header: { name, title, email, phone, location, linkedin?, portfolio?, github? }, summary: string, experience: [{ title, company, location, startDate, endDate, bullets: string[], relevanceScore: number }], skills: [{ name, items: string[] }], education: [{ school, degree, field, year }], certifications: [{ name, issuer, year }] }
 
+RESUME TITLE: The header.title MUST match the target job, not the candidate's previous title. If experience is transferable, create a bridge title using keywords from the job description.
+RESUME SUMMARY: Must open by naming the target role type, then connect transferable skills to the job's requirements. Do NOT reuse the candidate's old job title in the summary opening.
 RELEVANCE FILTERING: Analyze job description, include only top 2-4 most relevant roles with 3-5 best bullets each. Exclude irrelevant experience. Reorder skills by relevance.`,
     cover_letter: `Generate a cover letter (250-350 words) as JSON with keys:
 - "md": Full cover letter in markdown
