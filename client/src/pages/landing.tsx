@@ -1,229 +1,443 @@
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  FileText, Sparkles, Download, ArrowRight, Zap, Shield, Target,
-  CheckCircle2, Star, Users, TrendingUp, Mail, MessageSquare,
-  BookOpen, Brain, BarChart3
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  FileText,
+  Sparkles,
+  ArrowRight,
+  Shield,
+  Target,
+  CheckCircle2,
+  Star,
+  Users,
+  Brain,
+  Kanban,
+  LayoutTemplate,
+  Database,
+  MessageSquare,
+  Clock,
+  BarChart3,
+  Zap,
+  Menu,
 } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
-const SHOWCASE_CARDS = [
-  {
-    icon: FileText,
-    color: "bg-primary/15",
-    iconColor: "text-primary",
-    title: "Tailored Resume",
-    badge: "ATS optimized",
-    desc: "Resume rewritten for the role you want, emphasizing exactly the right skills.",
-    lines: [3, 4, 2],
-  },
-  {
-    icon: MessageSquare,
-    color: "bg-blue-500/10",
-    iconColor: "text-blue-600",
-    title: "Cover Letter",
-    badge: "Job-specific",
-    desc: "Personalized to match the job requirements and company voice.",
-    lines: [3, 3, 2],
-  },
-  {
-    icon: Mail,
-    color: "bg-orange-500/10",
-    iconColor: "text-orange-600",
-    title: "Follow-up Email",
-    badge: "Ready to send",
-    desc: "A professional follow-up ready to send the day after your application.",
-    lines: [2, 3, 1],
-  },
-  {
-    icon: BookOpen,
-    color: "bg-violet-500/10",
-    iconColor: "text-violet-600",
-    title: "Interview Prep",
-    badge: "7 questions",
-    desc: "Likely interview questions with model answers specific to the role.",
-    lines: [2, 4, 2],
-  },
-  {
-    icon: Target,
-    color: "bg-rose-500/10",
-    iconColor: "text-rose-600",
-    title: "ATS Fit Report",
-    badge: "Gap analysis",
-    desc: "See your match score, missing skills, and risk flags before you apply.",
-    lines: [3, 3, 2],
-  },
-  {
-    icon: TrendingUp,
-    color: "bg-emerald-500/10",
-    iconColor: "text-emerald-600",
-    title: "Smart Gap Fixer",
-    badge: "Career boost",
-    desc: "AI bridges skill gaps ethically so your application always reads stronger.",
-    lines: [2, 3, 2],
-  },
-];
+function Reveal({
+  children,
+  className,
+  delay = 0,
+}: {
+  children: ReactNode;
+  className?: string;
+  delay?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
 
-function MacFrame({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add("is-visible");
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className={`rounded-xl border border-border/70 shadow-xl overflow-hidden bg-white dark:bg-card ${className}`}>
-      {/* Title bar */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-muted/60 border-b border-border/60">
+    <div
+      ref={ref}
+      className={cn("landing-reveal", className)}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function MacFrame({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-border/80 shadow-elevation overflow-hidden bg-card",
+        className,
+      )}
+    >
+      <div className="flex items-center gap-3 px-4 py-3 bg-muted/40 border-b border-border/60">
         <div className="flex gap-1.5 shrink-0">
           <div className="w-3 h-3 rounded-full bg-[#FF5F56]" />
           <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
           <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
         </div>
-        <div className="flex-1 h-5 bg-muted dark:bg-muted/50 rounded-md max-w-[220px] mx-auto" />
+        <div className="flex-1 h-5 bg-muted/60 rounded-md max-w-[200px] mx-auto" />
       </div>
       {children}
     </div>
   );
 }
 
-function ProductMockup() {
+function BuilderMockup() {
   return (
-    <MacFrame className="w-full max-w-[440px] mx-auto lg:mx-0 lg:ml-auto">
-      {/* Document header */}
-      <div className="bg-muted/30 px-5 py-4 border-b border-border/40">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-              <FileText className="h-4 w-4 text-primary" />
+    <MacFrame className="w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-[2fr_3fr] min-h-[200px] sm:min-h-[280px] text-[10px] sm:text-[10px]">
+        <div className="border-b sm:border-b-0 sm:border-r border-border/60 bg-muted/20 p-3 flex flex-col gap-2">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Brain className="h-3 w-3 text-primary" />
+            <span className="font-bold tracking-wide text-foreground">AI Assistant</span>
+            <span className="ml-auto text-[8px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-semibold">
+              GPT-5.5
+            </span>
+          </div>
+          <div className="rounded-lg bg-card border border-border/50 p-2 text-muted-foreground leading-relaxed">
+            Make my summary more impactful for this product role…
+          </div>
+          <div className="rounded-lg bg-primary/10 border border-primary/20 p-2 text-foreground/90 leading-relaxed">
+            <span className="text-primary font-bold">✦</span> Updated your summary and
+            highlighted product metrics in your top two bullets.
+          </div>
+          <div className="mt-auto flex gap-1">
+            <div className="h-6 flex-1 rounded-md bg-muted/50 border border-border/40" />
+            <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center">
+              <Sparkles className="h-3 w-3 text-primary-foreground" />
             </div>
+          </div>
+        </div>
+        <div className="p-3 space-y-3 bg-background/50">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-foreground leading-none mb-1">Alex Johnson</p>
-              <p className="text-[10px] text-muted-foreground">Senior Product Designer</p>
+              <div className="h-2 w-24 bg-foreground/70 rounded mb-1" />
+              <div className="h-1.5 w-32 bg-muted-foreground/30 rounded" />
+            </div>
+            <span className="text-[8px] font-bold bg-primary/15 text-primary px-2 py-0.5 rounded-full">
+              92% ATS
+            </span>
+          </div>
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-2 section-edit-flash">
+            <div className="h-1.5 w-14 bg-foreground/50 rounded mb-1.5" />
+            <div className="space-y-1">
+              <div className="h-1 bg-muted-foreground/25 rounded w-full" />
+              <div className="h-1 bg-muted-foreground/25 rounded w-11/12" />
             </div>
           </div>
-          <span className="text-[10px] font-bold bg-primary/15 text-primary px-2 py-1 rounded-full whitespace-nowrap">92% ATS fit</span>
-        </div>
-      </div>
-
-      {/* Simulated resume content */}
-      <div className="px-5 py-4 space-y-4">
-        <div>
-          <div className="h-[7px] bg-foreground/75 rounded w-14 mb-2.5" />
-          <div className="space-y-1.5">
-            <div className="h-1.5 bg-muted-foreground/25 rounded w-full" />
-            <div className="h-1.5 bg-muted-foreground/25 rounded w-11/12" />
-            <div className="h-1.5 bg-muted-foreground/25 rounded w-3/4" />
-          </div>
-        </div>
-
-        <div>
-          <div className="h-[7px] bg-foreground/75 rounded w-20 mb-2.5" />
-          <div className="space-y-2.5">
-            {[
-              { t: "Lead Product Designer", c: "Acme Corp" },
-              { t: "UX Designer", c: "Startup Inc." },
-            ].map((job) => (
-              <div key={job.t} className="pl-2.5 border-l-2 border-primary/40 space-y-1">
-                <div className="flex justify-between">
-                  <div className="h-[7px] bg-foreground/40 rounded w-28" />
-                  <div className="h-[6px] bg-muted-foreground/20 rounded w-16" />
-                </div>
-                <div className="h-[6px] bg-muted-foreground/20 rounded w-20" />
-                <div className="h-[5px] bg-muted-foreground/15 rounded w-full" />
-                <div className="h-[5px] bg-muted-foreground/15 rounded w-5/6" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="h-[7px] bg-foreground/75 rounded w-12 mb-2.5" />
-          <div className="flex flex-wrap gap-1.5">
-            {["Figma", "Research", "Prototyping", "Design Systems", "Stakeholder Mgmt"].map((s) => (
-              <span key={s} className="text-[9px] bg-primary/12 text-primary px-2 py-0.5 rounded font-semibold">{s}</span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* AI panel */}
-      <div className="border-t border-border/40 bg-muted/20 px-5 py-3">
-        <div className="flex items-center gap-2 mb-2.5">
-          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-            <Brain className="h-3 w-3 text-primary-foreground" />
-          </div>
-          <span className="text-[9px] font-bold tracking-wide text-foreground">AI ASSISTANT</span>
-        </div>
-        <div className="space-y-1.5">
-          {[
-            { sym: "✦", label: "Generate skills from job" },
-            { sym: "↗", label: "Tailor for this role" },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span className="text-primary font-bold text-[11px]">{item.sym}</span>
-              <span>{item.label}</span>
+          <div>
+            <div className="h-1.5 w-16 bg-foreground/50 rounded mb-1.5" />
+            <div className="pl-2 border-l-2 border-primary/40 space-y-1">
+              <div className="h-1 bg-muted-foreground/20 rounded w-3/4" />
+              <div className="h-1 bg-muted-foreground/20 rounded w-full" />
+              <div className="h-1 bg-muted-foreground/20 rounded w-5/6" />
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </MacFrame>
   );
 }
 
-function ShowcaseCard({ card }: { card: typeof SHOWCASE_CARDS[0] }) {
-  const Icon = card.icon;
+function TrackerMockup() {
+  const rows = [
+    { company: "Stripe", role: "Product Designer", score: 94, status: "Interview" },
+    { company: "Notion", role: "Senior UX", score: 88, status: "Applied" },
+    { company: "Linear", role: "Design Lead", score: 91, status: "Draft" },
+  ];
   return (
-    <div className="w-56 shrink-0 bg-white dark:bg-card border border-border/70 rounded-xl p-4 flex flex-col gap-3 hover:border-primary/30 hover:shadow-md transition-all">
-      <div className="flex items-start justify-between gap-2">
-        <div className={`w-9 h-9 rounded-lg ${card.color} flex items-center justify-center shrink-0`}>
-          <Icon className={`h-4.5 w-4.5 ${card.iconColor} h-[18px] w-[18px]`} />
+    <MacFrame className="w-full">
+      <div className="p-4 space-y-3 bg-background/50">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-foreground">Application Tracker</span>
+          <span className="text-[9px] text-muted-foreground">3 active</span>
         </div>
-        <span className="text-[9px] font-bold bg-muted text-muted-foreground px-2 py-0.5 rounded-full shrink-0 mt-0.5">
-          {card.badge}
-        </span>
-      </div>
-      <div>
-        <p className="text-xs font-semibold text-foreground mb-1">{card.title}</p>
-        <p className="text-[10px] text-muted-foreground leading-relaxed">{card.desc}</p>
-      </div>
-      <div className="space-y-1.5 mt-auto pt-1">
-        {card.lines.map((w, i) => (
+        {rows.map((row) => (
           <div
-            key={i}
-            className="h-1 bg-muted-foreground/15 rounded"
-            style={{ width: `${w * 25}%` }}
-          />
+            key={row.company}
+            className="flex items-center gap-3 rounded-lg border border-border/60 bg-card/80 px-3 py-2.5"
+          >
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+              {row.company[0]}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-semibold text-foreground truncate">{row.role}</p>
+              <p className="text-[9px] text-muted-foreground">{row.company}</p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-[10px] font-bold text-primary">{row.score}%</p>
+              <p className="text-[8px] text-muted-foreground">{row.status}</p>
+            </div>
+          </div>
         ))}
       </div>
-    </div>
+    </MacFrame>
   );
 }
 
-export default function Landing() {
+function CareerMockup() {
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
-      {/* ── Navbar ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/92 backdrop-blur-lg border-b border-border/60">
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 h-15 flex items-center justify-between gap-4" style={{ height: 60 }}>
-          <div className="flex items-center gap-2">
+    <MacFrame className="w-full">
+      <div className="p-4 grid grid-cols-2 gap-3 bg-background/50">
+        <div className="rounded-lg border border-border/60 bg-card/80 p-3 space-y-2">
+          <LayoutTemplate className="h-4 w-4 text-primary" />
+          <p className="text-[10px] font-bold text-foreground">Modern Pro</p>
+          <div className="space-y-1">
+            <div className="h-1 bg-muted-foreground/20 rounded w-full" />
+            <div className="h-1 bg-muted-foreground/20 rounded w-4/5" />
+          </div>
+        </div>
+        <div className="rounded-lg border border-border/60 bg-card/80 p-3 space-y-2">
+          <Database className="h-4 w-4 text-primary" />
+          <p className="text-[10px] font-bold text-foreground">Career DB</p>
+          <div className="space-y-1">
+            <div className="h-1 bg-muted-foreground/20 rounded w-full" />
+            <div className="h-1 bg-muted-foreground/20 rounded w-3/5" />
+          </div>
+        </div>
+        <div className="col-span-2 rounded-lg border border-primary/25 bg-primary/5 p-3 flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-primary shrink-0" />
+          <div>
+            <p className="text-[10px] font-bold text-foreground">Cover Letter</p>
+            <p className="text-[9px] text-muted-foreground">Tailored to Stripe — Product Designer</p>
+          </div>
+        </div>
+      </div>
+    </MacFrame>
+  );
+}
+
+const TRUST_CHIPS = [
+  "No credit card",
+  "ATS-optimized",
+  "AI-powered",
+  "Cancel anytime",
+];
+
+const HOW_IT_WORKS = [
+  {
+    step: "01",
+    title: "Build your career database once",
+    desc: "Upload your resume or enter experience once. Resuma remembers everything for every application.",
+    icon: Database,
+  },
+  {
+    step: "02",
+    title: "Paste a job description",
+    desc: "Drop in the role you're targeting. We extract requirements and score your fit instantly.",
+    icon: Target,
+  },
+  {
+    step: "03",
+    title: "Generate & refine live",
+    desc: "Watch your tailored resume write itself, then chat with AI to polish every section in real time.",
+    icon: Sparkles,
+  },
+];
+
+const FEATURE_SECTIONS = [
+  {
+    id: "features",
+    badge: "Hero feature",
+    title: "Real-time AI generation & chat-edit",
+    desc: "Paste a job description and watch your resume update live. Chat to rewrite bullets, add keywords, or tailor your summary — the preview changes as the AI streams.",
+    bullets: [
+      "Split-pane builder: AI chat + live preview",
+      "Section highlights show exactly what changed",
+      "GPT-5.5 powered with model selector",
+    ],
+    Mockup: BuilderMockup,
+    reverse: false,
+  },
+  {
+    id: "features-tracker",
+    badge: "Track & analyze",
+    title: "Application Tracker + Analytics",
+    desc: "Every application in one place with ATS fit scores, matched skills, and gap analysis before you hit send.",
+    bullets: [
+      "Kanban-style application pipeline",
+      "Pre-apply fit report with risk flags",
+      "Matched skills & missing keywords",
+    ],
+    Mockup: TrackerMockup,
+    reverse: true,
+  },
+  {
+    id: "templates",
+    badge: "Full package",
+    title: "Templates, Career Database & Cover Letters",
+    desc: "One career profile powers every application. Generate cover letters, follow-ups, and interview prep from the same job description.",
+    bullets: [
+      "Premium resume templates",
+      "Reusable career database",
+      "Cover letter & follow-up generation",
+    ],
+    Mockup: CareerMockup,
+    reverse: false,
+  },
+];
+
+const VALUE_PROPS = [
+  {
+    icon: Clock,
+    title: "Save hours per application",
+    desc: "Stop rewriting from scratch. One job description → tailored resume, cover letter, and follow-up.",
+  },
+  {
+    icon: BarChart3,
+    title: "Higher ATS pass rate",
+    desc: "Fit scores and keyword alignment help you apply with confidence — not guesswork.",
+  },
+  {
+    icon: Shield,
+    title: "Premium, ATS-safe output",
+    desc: "Clean formatting recruiters and parsers love. No gimmicks, no fabricated experience.",
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    name: "Priya K.",
+    role: "Software Engineer",
+    quote:
+      "I went from zero callbacks to three interviews in two weeks. The live AI editing is a game changer.",
+    stars: 5,
+  },
+  {
+    name: "Marcus D.",
+    role: "Product Manager",
+    quote:
+      "The ATS fit report alone is worth it. I finally understood why my applications weren't landing.",
+    stars: 5,
+  },
+  {
+    name: "Aisha T.",
+    role: "Marketing Lead",
+    quote:
+      "Getting a tailored cover letter and follow-up in the same pass saves me hours per application.",
+    stars: 5,
+  },
+];
+
+const FAQ_ITEMS = [
+  {
+    q: "How is Resuma different from a generic resume builder?",
+    a: "Resuma tailors every application to a specific job description — resume, cover letter, follow-up, and interview prep — with live AI editing so you refine in real time instead of starting over.",
+  },
+  {
+    q: "Will my resume pass ATS systems?",
+    a: "Yes. Output uses clean, ATS-friendly formatting. The fit report shows your match score, matched skills, and gaps before you apply.",
+  },
+  {
+    q: "Does the AI fabricate experience?",
+    a: "No. Resuma rewrites and emphasizes your existing experience. It won't invent companies, dates, or credentials unless you explicitly ask to add something grounded in your profile.",
+  },
+  {
+    q: "What's included in the subscription?",
+    a: "Unlimited applications, AI resume builder with chat-edit, fit reports, cover letters, follow-up emails, interview prep, and your reusable career database — all for $9.99/month.",
+  },
+  {
+    q: "Can I cancel anytime?",
+    a: "Yes. Cancel from Settings anytime. No long-term contracts.",
+  },
+];
+
+export default function Landing() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const navLinks = [
+    { href: "#features", label: "Features" },
+    { href: "#templates", label: "Templates" },
+    { href: "#pricing", label: "Pricing" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      {/* Sticky nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-xl">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 h-[60px] flex items-center justify-between gap-4">
+          <a href="/" className="flex items-center gap-2 shrink-0">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <FileText className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-serif font-bold text-base tracking-tight" data-testid="text-brand-name">Resuma</span>
+            <span className="font-serif font-bold text-base tracking-tight" data-testid="text-brand-name">
+              Resuma
+            </span>
+          </a>
+
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="hover:text-foreground transition-colors duration-150"
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-7 text-sm font-medium text-muted-foreground">
-            <a href="#showcase" className="hover:text-foreground transition-colors duration-150">How it works</a>
-            <a href="#features" className="hover:text-foreground transition-colors duration-150">Features</a>
-            <a href="#reviews" className="hover:text-foreground transition-colors duration-150">Reviews</a>
-          </div>
-
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 shrink-0" aria-label="Open menu">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[min(100vw-2rem,320px)]">
+                <SheetHeader>
+                  <SheetTitle className="font-serif text-left">Menu</SheetTitle>
+                </SheetHeader>
+                <nav className="flex flex-col gap-1 mt-6">
+                  {navLinks.map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileNavOpen(false)}
+                      className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                  <a
+                    href="#faq"
+                    onClick={() => setMobileNavOpen(false)}
+                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    FAQ
+                  </a>
+                </nav>
+              </SheetContent>
+            </Sheet>
             <a href="/login?mode=login">
               <Button
                 variant="ghost"
                 size="sm"
                 data-testid="button-login"
-                className="font-medium text-muted-foreground hover:text-foreground"
+                className="font-medium text-muted-foreground hover:text-foreground hidden sm:inline-flex"
               >
-                Sign in
+                Log in
               </Button>
             </a>
             <a href="/login?mode=signup">
-              <Button size="sm" data-testid="button-get-started" className="font-semibold px-4">
+              <Button
+                size="sm"
+                data-testid="button-get-started"
+                className="font-semibold px-3 sm:px-4 btn-glow text-xs sm:text-sm"
+              >
                 Get Started
               </Button>
             </a>
@@ -231,263 +445,339 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* ── Hero ── */}
-      <section className="relative pt-24 pb-16 sm:pt-32 sm:pb-20 px-5 sm:px-6 overflow-hidden">
-        {/* Gradient backdrop */}
-        <div className="absolute inset-0 -z-10 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[700px] h-[600px] bg-gradient-to-bl from-primary/10 via-primary/4 to-transparent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-1/4 w-[500px] h-[400px] bg-gradient-to-tr from-violet-500/6 to-transparent rounded-full blur-3xl" />
+      {/* Hero — centered */}
+      <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 px-5 sm:px-6">
+        <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
+          <div className="landing-glow-orb absolute top-1/4 left-1/2 -translate-x-1/2 w-[min(900px,100vw)] h-[500px] bg-primary/12 rounded-full blur-[100px]" />
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/80 to-transparent" />
         </div>
 
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-[1fr_auto] gap-12 lg:gap-16 items-center">
-
-            {/* Left */}
-            <div className="space-y-7 max-w-[540px]">
-              <div className="space-y-4">
-                <h1
-                  className="text-[2.1rem] sm:text-[2.6rem] lg:text-[3rem] font-bold tracking-tight leading-[1.14] text-foreground"
-                  data-testid="text-hero-title"
-                >
-                  <span className="block">Land more interviews</span>
-                  <span className="block">with a <span className="text-primary">smarter resume builder</span></span>
-                </h1>
-                <p className="text-muted-foreground text-base sm:text-[17px] leading-relaxed max-w-[460px]">
-                  Create tailored resumes, cover letters, follow-up emails, and interview prep from one job description.
-                </p>
-              </div>
-
-              {/* CTAs */}
-              <div className="flex flex-col sm:flex-row items-start gap-3">
-                <a href="/login?mode=signup">
-                  <Button
-                    size="lg"
-                    className="font-semibold px-6 h-11 text-sm w-full sm:w-auto"
-                    data-testid="button-hero-cta"
-                  >
-                    Build Your Resume
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </a>
-                <a href="#showcase">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="h-11 text-sm font-medium w-full sm:w-auto border-border/80 hover:bg-muted/50"
-                    data-testid="button-hero-learn"
-                  >
-                    See How It Works
-                  </Button>
-                </a>
-              </div>
-
-              {/* Trust row */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 pt-1">
-                <div className="flex items-center gap-2">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    4.9 · <strong className="text-foreground font-semibold">500+ reviews</strong>
-                  </span>
-                </div>
-                <div className="hidden sm:block w-px h-4 bg-border" />
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Users className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span><strong className="text-foreground font-semibold">2,400+</strong> applications tailored this month</span>
-                </div>
-              </div>
-
-              {/* Benefit bullets */}
-              <div className="flex flex-col gap-2">
-                {[
-                  "Tailored resume, cover letter & follow-up in one click",
-                  "ATS fit score so you know your chances before applying",
-                  "Interview questions & model answers specific to each role",
-                ].map((item) => (
-                  <div key={item} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <Reveal>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/25 bg-primary/8 text-primary text-[11px] font-semibold tracking-wide">
+              <Sparkles className="h-3.5 w-3.5" />
+              Powered by GPT-5.5
             </div>
+          </Reveal>
 
-            {/* Right: Product mockup in Mac frame */}
-            <div className="hidden lg:flex justify-end items-center relative">
-              {/* Soft glow */}
-              <div className="absolute -inset-8 bg-gradient-to-br from-primary/12 via-primary/4 to-violet-500/8 rounded-3xl blur-2xl pointer-events-none" />
-              <div className="relative">
-                <ProductMockup />
-                {/* Floating badge: Cover Letter */}
-                <div className="absolute -left-8 top-1/3 bg-white dark:bg-card border border-border/80 rounded-xl px-3 py-2 shadow-lg flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-md bg-primary/15 flex items-center justify-center">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-bold text-foreground leading-none">Cover Letter</p>
-                    <p className="text-[9px] text-muted-foreground">Generated ✓</p>
-                  </div>
-                </div>
-                {/* Floating badge: Interview Prep */}
-                <div className="absolute -right-6 bottom-1/4 bg-white dark:bg-card border border-border/80 rounded-xl px-3 py-2 shadow-lg flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-md bg-violet-500/15 flex items-center justify-center">
-                    <BookOpen className="h-3.5 w-3.5 text-violet-600" />
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-bold text-foreground leading-none">Interview Prep</p>
-                    <p className="text-[9px] text-muted-foreground">7 questions ready</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+          <Reveal delay={80}>
+            <h1
+              className="font-serif text-[2rem] sm:text-[2.75rem] lg:text-[3.25rem] font-bold tracking-tight leading-[1.1] max-w-3xl mx-auto"
+              data-testid="text-hero-title"
+            >
+              Paste a job description.{" "}
+              <span className="text-primary">Watch your tailored resume write itself.</span>
+            </h1>
+          </Reveal>
 
-      {/* ── Showcase (animated marquee in Mac frame) ── */}
-      <section id="showcase" className="py-20 sm:py-24 px-5 sm:px-6 border-t border-border/60 bg-muted/20">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary mb-3">
-              Everything included
-            </span>
-            <h2 className="text-3xl sm:text-[2.2rem] font-bold mb-3 tracking-tight">
-              Your full application package, built for you
-            </h2>
-            <p className="text-muted-foreground max-w-md mx-auto text-[15px]">
-              Generate polished application materials from a single job description.
+          <Reveal delay={160}>
+            <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
+              Real-time AI generation and chat-edit — resume, cover letter, and fit analysis from one job post.
             </p>
-          </div>
+          </Reveal>
 
-          {/* Mac browser frame wrapping the sliding track */}
-          <MacFrame>
-            <div className="relative overflow-hidden py-6 bg-muted/10">
-              {/* Fade edges */}
-              <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-muted/10 to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-muted/10 to-transparent z-10 pointer-events-none" />
+          <Reveal delay={240} className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a href="/login?mode=signup">
+              <Button size="lg" className="font-semibold px-8 h-12 text-sm btn-glow" data-testid="button-hero-cta">
+                Build Your Resume
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </a>
+            <a href="#how-it-works">
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-12 text-sm font-medium border-border/80 hover:bg-muted/30"
+                data-testid="button-hero-learn"
+              >
+                See how it works
+              </Button>
+            </a>
+          </Reveal>
 
-              {/* Sliding track — duplicated for seamless loop */}
-              <div className="flex gap-4 w-max marquee-track px-4">
-                {[...SHOWCASE_CARDS, ...SHOWCASE_CARDS].map((card, i) => (
-                  <ShowcaseCard key={i} card={card} />
-                ))}
-              </div>
+          <Reveal delay={320} className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            {TRUST_CHIPS.map((chip) => (
+              <span
+                key={chip}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 border border-border/50 rounded-full px-3 py-1.5"
+              >
+                <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
+                {chip}
+              </span>
+            ))}
+          </Reveal>
+
+          <Reveal delay={400} className="pt-8 max-w-3xl mx-auto">
+            <div className="relative">
+              <div className="absolute -inset-6 bg-primary/8 rounded-2xl blur-2xl pointer-events-none" />
+              <BuilderMockup />
             </div>
-          </MacFrame>
+          </Reveal>
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
-      <section id="reviews" className="py-20 sm:py-24 px-5 sm:px-6">
+      {/* How it works */}
+      <section id="how-it-works" className="py-20 sm:py-28 px-5 sm:px-6 border-t border-border/60 bg-muted/15">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
+          <Reveal className="text-center mb-14">
             <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary mb-3">
-              Real results
+              How it works
             </span>
-            <h2 className="text-3xl sm:text-[2.2rem] font-bold mb-3 tracking-tight">
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight">
+              Three steps to a stronger application
+            </h2>
+          </Reveal>
+
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+            {HOW_IT_WORKS.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <Reveal key={item.step} delay={i * 100}>
+                  <div className="relative h-full rounded-2xl border border-border/70 bg-card/50 p-6 hover:border-primary/25 transition-colors duration-200">
+                    <span className="text-[11px] font-bold text-primary/80 tracking-widest">{item.step}</span>
+                    <div className="w-10 h-10 rounded-xl bg-primary/12 flex items-center justify-center mt-4 mb-4">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <h3 className="font-serif text-lg font-bold mb-2 tracking-tight">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Feature sections */}
+      {FEATURE_SECTIONS.map((section, i) => {
+        const Mockup = section.Mockup;
+        return (
+          <section
+            key={section.id}
+            id={section.id}
+            className={cn(
+              "py-20 sm:py-28 px-5 sm:px-6 border-t border-border/60",
+              i % 2 === 1 && "bg-muted/10",
+            )}
+          >
+            <div className="max-w-6xl mx-auto">
+              <div
+                className={cn(
+                  "grid lg:grid-cols-2 gap-12 lg:gap-16 items-center",
+                  section.reverse && "lg:[&>*:first-child]:order-2",
+                )}
+              >
+                <Reveal className={section.reverse ? "lg:order-2" : ""}>
+                  <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary mb-3">
+                    {section.badge}
+                  </span>
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight mb-4 leading-tight">
+                    {section.title}
+                  </h2>
+                  <p className="text-muted-foreground text-[15px] leading-relaxed mb-6">{section.desc}</p>
+                  <ul className="space-y-3">
+                    {section.bullets.map((b) => (
+                      <li key={b} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Reveal>
+                <Reveal delay={120}>
+                  <div className="relative">
+                    <div className="absolute -inset-4 bg-primary/6 rounded-2xl blur-xl pointer-events-none" />
+                    <Mockup />
+                  </div>
+                </Reveal>
+              </div>
+            </div>
+          </section>
+        );
+      })}
+
+      {/* Value props */}
+      <section className="py-20 sm:py-28 px-5 sm:px-6 border-t border-border/60 bg-muted/15">
+        <div className="max-w-6xl mx-auto">
+          <Reveal className="text-center mb-12">
+            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary mb-3">
+              Why Resuma
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight">
+              Built for serious job seekers
+            </h2>
+          </Reveal>
+          <div className="grid sm:grid-cols-3 gap-5">
+            {VALUE_PROPS.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <Reveal key={item.title} delay={i * 80}>
+                  <div className="h-full rounded-2xl border border-border/70 bg-card/50 p-6 hover:border-primary/20 transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-primary/12 flex items-center justify-center mb-4">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <h3 className="font-serif font-bold text-lg mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section id="reviews" className="py-20 sm:py-28 px-5 sm:px-6 border-t border-border/60">
+        <div className="max-w-6xl mx-auto">
+          <Reveal className="text-center mb-12">
+            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary mb-3">
+              Testimonials
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight">
               Job seekers who got interviews
             </h2>
-          </div>
+            <p className="text-sm text-muted-foreground mt-2">Placeholder quotes — swap with real testimonials</p>
+          </Reveal>
 
-          <div className="grid sm:grid-cols-3 gap-4">
-            {[
-              {
-                name: "Priya K.",
-                role: "Software Engineer",
-                quote: "I went from getting zero callbacks to three interviews in two weeks. The tailored resumes are night and day.",
-                stars: 5,
-              },
-              {
-                name: "Marcus D.",
-                role: "Product Manager",
-                quote: "The ATS fit report alone is worth it. I finally understood why my applications weren't landing.",
-                stars: 5,
-              },
-              {
-                name: "Aisha T.",
-                role: "Marketing Lead",
-                quote: "Getting a tailored cover letter and follow-up email in the same pass saves me hours per application.",
-                stars: 5,
-              },
-            ].map((t) => (
-              <div
-                key={t.name}
-                className="bg-background border border-border/70 rounded-xl p-5 space-y-4 hover:border-primary/25 hover:shadow-sm transition-all"
-              >
-                <div className="flex">
-                  {[...Array(t.stars)].map((_, i) => (
-                    <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">"{t.quote}"</p>
-                <div className="flex items-center gap-2.5 pt-1 border-t border-border/50">
-                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                    {t.name[0]}
+          <div className="grid sm:grid-cols-3 gap-5">
+            {TESTIMONIALS.map((t, i) => (
+              <Reveal key={t.name} delay={i * 80}>
+                <div className="h-full rounded-2xl border border-border/70 bg-card/40 p-6 space-y-4 hover:border-primary/20 transition-colors">
+                  <div className="flex">
+                    {[...Array(t.stars)].map((_, j) => (
+                      <Star key={j} className="h-3.5 w-3.5 fill-primary/80 text-primary/80" />
+                    ))}
                   </div>
-                  <div>
-                    <p className="text-xs font-semibold">{t.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{t.role}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
+                  <div className="flex items-center gap-2.5 pt-2 border-t border-border/50">
+                    <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-xs font-bold text-primary">
+                      {t.name[0]}
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold">{t.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{t.role}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Final CTA ── */}
-      <section className="py-20 sm:py-24 px-5 sm:px-6 border-t border-border/60 bg-muted/20 relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-primary/5 rounded-full blur-3xl" />
+      {/* FAQ */}
+      <section id="faq" className="py-20 sm:py-28 px-5 sm:px-6 border-t border-border/60 bg-muted/10">
+        <div className="max-w-2xl mx-auto">
+          <Reveal className="text-center mb-10">
+            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary mb-3">
+              FAQ
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight">Common questions</h2>
+          </Reveal>
+          <Reveal delay={80}>
+            <Accordion type="single" collapsible className="rounded-2xl border border-border/70 bg-card/40 px-5">
+              {FAQ_ITEMS.map((item) => (
+                <AccordionItem key={item.q} value={item.q} className="border-border/50">
+                  <AccordionTrigger className="text-left text-sm font-semibold hover:no-underline hover:text-primary transition-colors py-5">
+                    {item.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground leading-relaxed pb-5">
+                    {item.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </Reveal>
         </div>
-        <div className="max-w-xl mx-auto text-center space-y-6">
+      </section>
+
+      {/* Final CTA / Pricing */}
+      <section id="pricing" className="py-20 sm:py-28 px-5 sm:px-6 border-t border-border/60 relative overflow-hidden">
+        <div className="absolute inset-0 -z-10 pointer-events-none">
+          <div className="landing-glow-orb absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-primary/8 rounded-full blur-3xl" />
+        </div>
+        <Reveal className="max-w-xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/12 text-primary text-[10px] font-bold uppercase tracking-widest">
-            <Sparkles className="h-3.5 w-3.5" />
-            Start today
+            <Zap className="h-3.5 w-3.5" />
+            Simple pricing
           </div>
-          <h2 className="text-3xl sm:text-[2.2rem] font-bold tracking-tight leading-tight">
+          <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
             Ready to land more interviews?
           </h2>
-          <p className="text-muted-foreground text-[15px] max-w-sm mx-auto">
-            Stop sending generic applications. Start sending ones built for each job.
+          <p className="text-muted-foreground text-[15px]">
+            <strong className="text-foreground font-semibold">$9.99/month</strong> — unlimited applications, AI
+            builder, fit reports, and full application package.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
             <a href="/login?mode=signup">
-              <Button size="lg" className="font-semibold px-8 h-11 text-sm" data-testid="button-final-cta">
+              <Button size="lg" className="font-semibold px-8 h-12 text-sm btn-glow" data-testid="button-final-cta">
                 Get started — $9.99/mo
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </a>
             <a href="/login?mode=login">
-              <Button variant="outline" size="lg" className="h-11 text-sm font-medium border-border/80">
-                Sign in
+              <Button variant="outline" size="lg" className="h-12 text-sm font-medium border-border/80">
+                Log in
               </Button>
             </a>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Cancel anytime · Secure payments via Stripe · ATS-safe output guaranteed
+            Cancel anytime · Secure payments via Stripe · ATS-safe output
           </p>
-        </div>
+        </Reveal>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-border/60 py-7 px-5 sm:px-6">
-        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-              <FileText className="h-3.5 w-3.5 text-primary-foreground" />
+      {/* Footer */}
+      <footer className="border-t border-border/60 py-12 px-5 sm:px-6 bg-muted/20">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
+            <div className="lg:col-span-1">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
+                  <FileText className="h-3.5 w-3.5 text-primary-foreground" />
+                </div>
+                <span className="text-sm font-bold font-serif">Resuma</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed max-w-[220px]">
+                Tailored applications powered by real-time AI. Built for job seekers who want results.
+              </p>
             </div>
-            <span className="text-sm font-bold">Resuma</span>
+
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground mb-4">Product</p>
+              <ul className="space-y-2.5 text-xs text-muted-foreground">
+                <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
+                <li><a href="#templates" className="hover:text-foreground transition-colors">Templates</a></li>
+                <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
+                <li><a href="#faq" className="hover:text-foreground transition-colors">FAQ</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground mb-4">Company</p>
+              <ul className="space-y-2.5 text-xs text-muted-foreground">
+                <li><a href="#reviews" className="hover:text-foreground transition-colors">Testimonials</a></li>
+                <li><a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a></li>
+                <li><a href="/login?mode=signup" className="hover:text-foreground transition-colors">Get started</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground mb-4">Legal</p>
+              <ul className="space-y-2.5 text-xs text-muted-foreground">
+                <li><span className="text-muted-foreground/70">Privacy Policy</span></li>
+                <li><span className="text-muted-foreground/70">Terms of Service</span></li>
+                <li><a href="/login?mode=login" className="hover:text-foreground transition-colors">Sign in</a></li>
+              </ul>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
-            <a href="#showcase" className="hover:text-foreground transition-colors">Features</a>
-            <a href="#reviews" className="hover:text-foreground transition-colors">Reviews</a>
-            <a href="/login?mode=signup" className="hover:text-foreground transition-colors">Get started</a>
-            <a href="/login?mode=login" className="hover:text-foreground transition-colors">Sign in</a>
-            <span>© {new Date().getFullYear()} Resuma</span>
+
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-border/50 text-xs text-muted-foreground">
+            <span>© {new Date().getFullYear()} Resuma. All rights reserved.</span>
+            <div className="flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5 text-primary" />
+              <span>Trusted by thousands of applicants</span>
+            </div>
           </div>
         </div>
       </footer>

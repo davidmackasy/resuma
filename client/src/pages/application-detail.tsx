@@ -5,7 +5,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,11 +28,20 @@ import {
 import {
   Copy, Check, FileText, Mail, MessageSquare,
   Briefcase, MapPin, RefreshCw, Loader2, ArrowLeft,
-  Download, Pencil, X, Save, GraduationCap, ChevronDown
+  Download, Pencil, X, Save, GraduationCap, ChevronDown, Circle
 } from "lucide-react";
 import { Link } from "wouter";
 import type { Application, AppDocument } from "@shared/schema";
 import { format } from "date-fns";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
+import { EmptyState } from "@/components/empty-state";
+import { ApplicationStatusBadge } from "@/components/application-status-badge";
+import { ResumeBuilderView } from "@/components/resume-builder/resume-builder-view";
 
 export default function ApplicationDetail() {
   const [, params] = useRoute("/app/applications/:id");
@@ -130,20 +138,24 @@ export default function ApplicationDetail() {
   if (!application) {
     return (
       <div className="p-4 sm:p-6 max-w-5xl mx-auto">
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Application not found</p>
-          <Link href="/app/applications">
-            <Button variant="outline" className="mt-4">Back to History</Button>
-          </Link>
-        </Card>
+        <EmptyState
+          icon={FileText}
+          title="Application not found"
+          description="This application may have been deleted or the link is incorrect."
+          action={
+            <Link href="/app/applications">
+              <Button variant="outline">Back to Application Tracker</Button>
+            </Link>
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6 overflow-hidden">
+      <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 min-w-0">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <Link href="/app/applications">
             <Button size="icon" variant="ghost" data-testid="button-back">
               <ArrowLeft className="h-4 w-4" />
@@ -169,15 +181,14 @@ export default function ApplicationDetail() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={application.status === "generated" ? "default" : "secondary"}>
-            {application.status}
-          </Badge>
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <ApplicationStatusBadge status={application.status} />
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
                 variant="outline"
                 disabled={regenerateAllMutation.isPending}
+                className="w-full sm:w-auto"
                 data-testid="button-regenerate-all"
               >
                 {regenerateAllMutation.isPending ? (
@@ -185,7 +196,8 @@ export default function ApplicationDetail() {
                 ) : (
                   <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
                 )}
-                Regenerate All
+                <span className="sm:hidden">Regenerate</span>
+                <span className="hidden sm:inline">Regenerate All</span>
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -204,40 +216,53 @@ export default function ApplicationDetail() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6 min-w-0">
-        <div className="lg:col-span-2 min-w-0 overflow-hidden">
-          <Tabs defaultValue="resume">
-            <TabsList className="w-full justify-start overflow-x-auto">
-              <TabsTrigger value="resume" data-testid="tab-resume">
-                <FileText className="mr-1.5 h-3.5 w-3.5" />
-                Resume
-              </TabsTrigger>
-              <TabsTrigger value="cover_letter" data-testid="tab-cover-letter">
+      <Tabs defaultValue="resume" className="min-w-0">
+        <TabsList className="w-full justify-start overflow-x-auto scrollbar-thin">
+          <TabsTrigger value="resume" data-testid="tab-resume" className="text-xs sm:text-sm shrink-0">
+            <FileText className="mr-1.5 h-3.5 w-3.5" />
+            <span className="sm:hidden">Resume</span>
+            <span className="hidden sm:inline">Resume Builder</span>
+          </TabsTrigger>
+              <TabsTrigger value="cover_letter" data-testid="tab-cover-letter" className="text-xs sm:text-sm shrink-0">
                 <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
-                Cover Letter
+                <span className="sm:hidden">Cover</span>
+                <span className="hidden sm:inline">Cover Letter</span>
               </TabsTrigger>
-              <TabsTrigger value="email" data-testid="tab-email">
+              <TabsTrigger value="email" data-testid="tab-email" className="text-xs sm:text-sm shrink-0">
                 <Mail className="mr-1.5 h-3.5 w-3.5" />
-                Follow-up Email
+                <span className="sm:hidden">Email</span>
+                <span className="hidden sm:inline">Follow-up Email</span>
               </TabsTrigger>
-              <TabsTrigger value="practice" data-testid="tab-practice">
+              <TabsTrigger value="practice" data-testid="tab-practice" className="text-xs sm:text-sm shrink-0">
                 <GraduationCap className="mr-1.5 h-3.5 w-3.5" />
                 Practice
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="resume">
-              <DocumentPanel
-                doc={resume}
-                docType="resume"
-                applicationId={id!}
-                onCopy={(text) => copyToClipboard(text, "resume")}
-                isCopied={copiedDoc === "resume"}
-                onRegenerate={() => regenerateDocMutation.mutate("resume")}
-                isRegenerating={regenerateDocMutation.isPending}
-                onDownload={(fmt) => resume && downloadDoc(resume.id, fmt, "resume")}
-                canExport
-              />
+              {resume && resume.contentJson && typeof resume.contentJson === "object" && Object.keys(resume.contentJson as object).length > 0 ? (
+                <ResumeBuilderView
+                  doc={resume}
+                  applicationId={id!}
+                  onCopy={(text) => copyToClipboard(text, "resume")}
+                  isCopied={copiedDoc === "resume"}
+                  onRegenerate={() => regenerateDocMutation.mutate("resume")}
+                  isRegenerating={regenerateDocMutation.isPending}
+                  onDownload={(fmt) => downloadDoc(resume.id, fmt, "resume")}
+                />
+              ) : (
+                <DocumentPanel
+                  doc={resume}
+                  docType="resume"
+                  applicationId={id!}
+                  onCopy={(text) => copyToClipboard(text, "resume")}
+                  isCopied={copiedDoc === "resume"}
+                  onRegenerate={() => regenerateDocMutation.mutate("resume")}
+                  isRegenerating={regenerateDocMutation.isPending}
+                  onDownload={(fmt) => resume && downloadDoc(resume.id, fmt, "resume")}
+                  canExport
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="cover_letter">
@@ -274,39 +299,37 @@ export default function ApplicationDetail() {
               />
             </TabsContent>
           </Tabs>
-        </div>
 
-        <div className="space-y-4">
-          <Card className="p-4">
-            <h3 className="font-medium text-sm mb-3">Application Details</h3>
-            <div className="space-y-2.5 text-sm">
-              <DetailRow label="Company" value={application.companyName} />
-              <DetailRow label="Role" value={application.roleTitle} />
-              <DetailRow label="Location" value={application.jobLocation} />
-              <DetailRow label="Tone" value={application.tone} />
-              <DetailRow label="Template" value={application.templateId?.replace(/_/g, " ")} />
-              <DetailRow
-                label="Created"
-                value={application.createdAt ? format(new Date(application.createdAt), "MMM d, yyyy") : ""}
-              />
-            </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card className="p-4 border-border/80 sm:col-span-2 lg:col-span-1">
+          <h3 className="font-medium text-sm mb-3">Application Details</h3>
+          <div className="space-y-2.5 text-sm">
+            <DetailRow label="Company" value={application.companyName} />
+            <DetailRow label="Role" value={application.roleTitle} />
+            <DetailRow label="Location" value={application.jobLocation} />
+            <DetailRow label="Tone" value={application.tone} />
+            <DetailRow label="Template" value={application.templateId?.replace(/_/g, " ")} />
+            <DetailRow
+              label="Created"
+              value={application.createdAt ? format(new Date(application.createdAt), "MMM d, yyyy") : ""}
+            />
+          </div>
+        </Card>
+
+        {application.jobUrl ? (
+          <Card className="p-4 border-border/80 sm:col-span-2 lg:col-span-2">
+            <h3 className="font-medium text-sm mb-2">Job Posting</h3>
+            <a
+              href={application.jobUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-primary hover:underline break-all"
+              data-testid="link-job-url"
+            >
+              {application.jobUrl}
+            </a>
           </Card>
-
-          {application.jobUrl && (
-            <Card className="p-4">
-              <h3 className="font-medium text-sm mb-2">Job Posting</h3>
-              <a
-                href={application.jobUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-primary hover:underline break-all"
-                data-testid="link-job-url"
-              >
-                {application.jobUrl}
-              </a>
-            </Card>
-          )}
-        </div>
+        ) : null}
       </div>
     </div>
   );
@@ -366,104 +389,150 @@ function DocumentPanel({
 
   if (!doc || (!doc.contentMd && !doc.contentJson)) {
     return (
-      <Card className="p-8 text-center mt-4">
-        <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-        <p className="text-sm text-muted-foreground">No content available</p>
-      </Card>
+      <EmptyState
+        icon={FileText}
+        title="No content available"
+        description="Generate or regenerate this document to see a preview here."
+        className="mt-4"
+      />
     );
   }
 
   const hasStructuredContent = doc.contentJson && typeof doc.contentJson === "object" && Object.keys(doc.contentJson as any).length > 0;
 
   return (
-    <Card className="mt-4 overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-2 p-3 border-b">
-        <div className="flex items-center gap-1.5">
+    <Card className="mt-4 overflow-hidden border-border/80">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 border-b bg-muted/20">
+        <div className="flex items-center gap-2 flex-wrap">
           {canExport && hasStructuredContent && onDownload ? (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onDownload("pdf")}
-                data-testid={`button-download-pdf-${docType}`}
-              >
-                <Download className="mr-1 h-3.5 w-3.5" />
-                PDF
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onDownload("docx")}
-                data-testid={`button-download-docx-${docType}`}
-              >
-                <Download className="mr-1 h-3.5 w-3.5" />
-                DOCX
-              </Button>
-            </>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-1.5">
-          {editing ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={cancelEdit}
-                data-testid={`button-cancel-edit-${docType}`}
-              >
-                <X className="mr-1 h-3.5 w-3.5" />
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => saveMutation.mutate(editContent)}
-                disabled={saveMutation.isPending}
-                data-testid={`button-save-${docType}`}
-              >
-                {saveMutation.isPending ? (
-                  <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Save className="mr-1 h-3.5 w-3.5" />
-                )}
-                Save
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={startEdit}
-                data-testid={`button-edit-${docType}`}
-              >
-                <Pencil className="mr-1 h-3.5 w-3.5" />
-                Edit
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onCopy(doc.contentMd || "")}
-                data-testid={`button-copy-${docType}`}
-              >
-                {isCopied ? <Check className="mr-1 h-3.5 w-3.5" /> : <Copy className="mr-1 h-3.5 w-3.5" />}
-                {isCopied ? "Copied" : "Copy"}
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
+            <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-background/50 p-0.5">
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
-                    disabled={isRegenerating}
-                    data-testid={`button-regenerate-${docType}`}
+                    className="h-8 px-2.5"
+                    onClick={() => onDownload("pdf")}
+                    data-testid={`button-download-pdf-${docType}`}
                   >
-                    {isRegenerating ? (
-                      <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <RefreshCw className="mr-1 h-3.5 w-3.5" />
-                    )}
-                    Redo
+                    <Download className="mr-1 h-3.5 w-3.5" />
+                    PDF
                   </Button>
-                </AlertDialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent>Download as PDF</TooltipContent>
+              </Tooltip>
+              <Separator orientation="vertical" className="h-5" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2.5"
+                    onClick={() => onDownload("docx")}
+                    data-testid={`button-download-docx-${docType}`}
+                  >
+                    <Download className="mr-1 h-3.5 w-3.5" />
+                    DOCX
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Download as Word document</TooltipContent>
+              </Tooltip>
+            </div>
+          ) : null}
+          {!editing && !saveMutation.isPending ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
+              <Circle className="h-1.5 w-1.5 fill-primary text-primary" />
+              Ready
+            </span>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-background/50 p-0.5">
+          {editing ? (
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2.5"
+                    onClick={cancelEdit}
+                    data-testid={`button-cancel-edit-${docType}`}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Cancel editing</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="h-8 px-2.5"
+                    onClick={() => saveMutation.mutate(editContent)}
+                    disabled={saveMutation.isPending}
+                    data-testid={`button-save-${docType}`}
+                  >
+                    {saveMutation.isPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Save className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Save changes</TooltipContent>
+              </Tooltip>
+            </>
+          ) : (
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2.5"
+                    onClick={startEdit}
+                    data-testid={`button-edit-${docType}`}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Edit document</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2.5"
+                    onClick={() => onCopy(doc.contentMd || "")}
+                    data-testid={`button-copy-${docType}`}
+                  >
+                    {isCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{isCopied ? "Copied!" : "Copy to clipboard"}</TooltipContent>
+              </Tooltip>
+              <AlertDialog>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2.5"
+                        disabled={isRegenerating}
+                        data-testid={`button-regenerate-${docType}`}
+                      >
+                        {isRegenerating ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>Regenerate with AI</TooltipContent>
+                </Tooltip>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Regenerate this document?</AlertDialogTitle>
@@ -517,20 +586,28 @@ function DocumentPanel({
 function PracticePanel({ practiceContent, isGenerating }: { practiceContent?: { questions: { question: string; bestAnswer: string }[] } | null; isGenerating?: boolean }) {
   if (isGenerating) {
     return (
-      <Card className="p-8 text-center mt-4">
-        <Loader2 className="h-8 w-8 text-muted-foreground mx-auto mb-2 animate-spin" />
-        <p className="text-sm text-muted-foreground">Generating practice questions...</p>
+      <Card className="mt-4 overflow-hidden border-border/80">
+        <div className="p-4 border-b">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-3 w-56 mt-2" />
+        </div>
+        <div className="p-4 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-20 w-full rounded-lg" />
+          ))}
+        </div>
       </Card>
     );
   }
 
   if (!practiceContent?.questions?.length) {
     return (
-      <Card className="p-8 text-center mt-4">
-        <GraduationCap className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-        <p className="text-sm text-muted-foreground">No practice questions available yet</p>
-        <p className="text-xs text-muted-foreground mt-1">Practice questions will be generated along with your documents</p>
-      </Card>
+      <EmptyState
+        icon={GraduationCap}
+        title="No practice questions yet"
+        description="Practice questions are generated along with your application documents."
+        className="mt-4"
+      />
     );
   }
 

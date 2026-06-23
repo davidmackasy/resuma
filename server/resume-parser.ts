@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import OpenAI from "openai";
+import { getEffectiveDefaultModel } from "@shared/ai-config";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -145,7 +146,7 @@ Return a JSON object with these exact keys:
 }`;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-5-mini",
+    model: getEffectiveDefaultModel(),
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },

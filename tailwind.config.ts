@@ -5,17 +5,27 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      spacing: {
+        "4.5": "1.125rem",
+        "18": "4.5rem",
+      },
       borderRadius: {
-        lg: ".5625rem", /* 9px */
-        md: ".375rem", /* 6px */
-        sm: ".1875rem", /* 3px */
+        lg: "var(--radius-lg)",
+        md: "var(--radius-md)",
+        sm: "var(--radius-sm)",
+        xl: "var(--radius-xl)",
+        "2xl": "var(--radius-2xl)",
       },
       colors: {
-        // Flat / base colors (regular buttons)
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
         border: "hsl(var(--border) / <alpha-value>)",
         input: "hsl(var(--input) / <alpha-value>)",
+        surface: {
+          base: "hsl(var(--surface-base) / <alpha-value>)",
+          raised: "hsl(var(--surface-raised) / <alpha-value>)",
+          elevated: "hsl(var(--surface-elevated) / <alpha-value>)",
+        },
         card: {
           DEFAULT: "hsl(var(--card) / <alpha-value>)",
           foreground: "hsl(var(--card-foreground) / <alpha-value>)",
@@ -29,6 +39,8 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary) / <alpha-value>)",
           foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
+          hover: "hsl(var(--primary-hover) / <alpha-value>)",
+          active: "hsl(var(--primary-active) / <alpha-value>)",
           border: "var(--primary-border)",
         },
         secondary: {
@@ -51,7 +63,16 @@ export default {
           foreground: "hsl(var(--destructive-foreground) / <alpha-value>)",
           border: "var(--destructive-border)",
         },
+        success: {
+          DEFAULT: "hsl(var(--success) / <alpha-value>)",
+          foreground: "hsl(var(--success-foreground) / <alpha-value>)",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning) / <alpha-value>)",
+          foreground: "hsl(var(--warning-foreground) / <alpha-value>)",
+        },
         ring: "hsl(var(--ring) / <alpha-value>)",
+        divider: "hsl(var(--divider) / <alpha-value>)",
         chart: {
           "1": "hsl(var(--chart-1) / <alpha-value>)",
           "2": "hsl(var(--chart-2) / <alpha-value>)",
@@ -73,7 +94,7 @@ export default {
         "sidebar-accent": {
           DEFAULT: "hsl(var(--sidebar-accent) / <alpha-value>)",
           foreground: "hsl(var(--sidebar-accent-foreground) / <alpha-value>)",
-          border: "var(--sidebar-accent-border)"
+          border: "var(--sidebar-accent-border)",
         },
         status: {
           online: "rgb(34 197 94)",
@@ -87,6 +108,24 @@ export default {
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
       },
+      fontSize: {
+        display: ["var(--text-display-size)", { lineHeight: "var(--text-display-leading)", letterSpacing: "var(--text-display-tracking)", fontWeight: "700" }],
+        h1: ["var(--text-h1-size)", { lineHeight: "var(--text-h1-leading)", letterSpacing: "var(--text-h1-tracking)", fontWeight: "600" }],
+        h2: ["var(--text-h2-size)", { lineHeight: "var(--text-h2-leading)", letterSpacing: "var(--text-h2-tracking)", fontWeight: "600" }],
+        body: ["var(--text-body-size)", { lineHeight: "var(--text-body-leading)" }],
+        caption: ["var(--text-caption-size)", { lineHeight: "var(--text-caption-leading)", letterSpacing: "0.01em" }],
+      },
+      boxShadow: {
+        elevation: "var(--shadow-elevation)",
+        popover: "var(--shadow-popover)",
+      },
+      transitionDuration: {
+        fast: "150ms",
+        base: "200ms",
+      },
+      transitionTimingFunction: {
+        premium: "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -96,10 +135,20 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "section-flash": {
+          "0%, 100%": { backgroundColor: "transparent" },
+          "35%": { backgroundColor: "hsl(var(--primary) / 0.14)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        shimmer: "shimmer 1.8s ease-in-out infinite",
+        "section-flash": "section-flash 1s ease-out",
       },
     },
   },

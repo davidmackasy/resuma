@@ -31,6 +31,7 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import AdminUsers from "@/pages/admin-users";
 import AdminUserDetail from "@/pages/admin-user-detail";
 import AdminAdmins from "@/pages/admin-admins";
+import ComingSoonPage from "@/pages/coming-soon";
 
 function AppRoutes() {
   return (
@@ -43,6 +44,7 @@ function AppRoutes() {
       <Route path="/app/profile/setup" component={ProfileSetup} />
       <Route path="/app/profile" component={ProfilePage} />
       <Route path="/app/settings" component={SettingsPage} />
+      <Route path="/app/coming-soon/:feature" component={ComingSoonPage} />
       <Route path="/app/admin" component={AdminDashboard} />
       <Route path="/app/admin/users/:userId" component={AdminUserDetail} />
       <Route path="/app/admin/users" component={AdminUsers} />
@@ -87,7 +89,7 @@ function DesktopShell() {
           <header className="flex items-center justify-between gap-4 px-4 py-2.5 border-b sticky top-0 z-50 bg-background/90 backdrop-blur-md">
             <SidebarTrigger data-testid="button-sidebar-toggle" className="text-muted-foreground hover:text-foreground" />
           </header>
-          <main className="flex-1 overflow-auto bg-muted/10">
+          <main className="flex-1 overflow-auto bg-muted/5">
             <AppRoutes />
           </main>
         </div>

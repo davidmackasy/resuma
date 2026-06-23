@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import type { Application, JobAnalysis } from "@shared/schema";
+import { EmptyState } from "@/components/empty-state";
 
 function getScoreColor(score: number): string {
   if (score >= 80) return "text-green-600 dark:text-green-400";
@@ -125,12 +126,18 @@ export default function FitReport() {
   if (!application || !analysis) {
     return (
       <div className="p-4 sm:p-6 max-w-4xl mx-auto">
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Analysis not found</p>
-          <Link href="/app/applications">
-            <Button variant="outline" className="mt-4" data-testid="button-back-history">Back to History</Button>
-          </Link>
-        </Card>
+        <EmptyState
+          icon={Target}
+          title="Analysis not found"
+          description="This fit report may not exist yet or the application was removed."
+          action={
+            <Link href="/app/applications">
+              <Button variant="outline" data-testid="button-back-history">
+                Back to Application Tracker
+              </Button>
+            </Link>
+          }
+        />
       </div>
     );
   }
@@ -363,13 +370,14 @@ export default function FitReport() {
         </Card>
       )}
 
-      <div className="flex items-center justify-between gap-4 pb-6">
-        <p className="text-xs text-muted-foreground">
+      <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pb-6">
+        <p className="text-xs text-muted-foreground text-center sm:text-left">
           Uses 1 application from your monthly quota
         </p>
         <Button
           onClick={() => generateMutation.mutate()}
           disabled={generateMutation.isPending}
+          className="w-full sm:w-auto shrink-0"
           data-testid="button-generate"
         >
           {generateMutation.isPending ? (

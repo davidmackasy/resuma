@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown, Loader2, AlertCircle, Sparkles } from "lucide-react";
 import { ResumeTemplateGallery } from "@/components/resume-template-gallery";
+import { PageHeader } from "@/components/page-header";
 import type { Profile } from "@shared/schema";
 
 const toneOptions = [
@@ -71,19 +72,14 @@ export default function NewApplication() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6 pb-10">
-      {/* Header */}
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-serif font-bold" data-testid="text-new-app-title">
-          New Application
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Paste a job description to analyze fit and generate your tailored application package
-        </p>
-      </div>
+      <PageHeader
+        title="New Application"
+        description="Paste a job description to analyze fit and generate your tailored application package"
+        titleTestId="text-new-app-title"
+      />
 
-      {/* Profile warning */}
       {profileLoading ? (
-        <Skeleton className="h-[88px] w-full" />
+        <Skeleton className="h-[88px] w-full rounded-xl" />
       ) : !hasProfile ? (
         <Card className="p-4 border-amber-500/30 bg-amber-500/5">
           <div className="flex items-start gap-3">
@@ -108,7 +104,7 @@ export default function NewApplication() {
       ) : null}
 
       {/* Job Description */}
-      <Card className="p-5 space-y-4">
+      <Card className="p-5 space-y-4 border-border/80">
         <div className="flex items-center gap-2 mb-1">
           <h2 className="font-semibold text-sm">Job Description</h2>
           <span className="text-xs text-destructive font-medium">Required</span>
@@ -202,7 +198,7 @@ export default function NewApplication() {
               key={t.value}
               type="button"
               onClick={() => setTone(t.value)}
-              className={`relative p-3 rounded-md border text-left transition-all toggle-elevate ${
+              className={`relative p-3 rounded-lg border text-left transition-all duration-base ease-premium toggle-elevate ${
                 tone === t.value
                   ? "toggle-elevated border-primary bg-primary/5"
                   : "hover:border-foreground/20"

@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import OpenAI from "openai";
+import { getEffectiveDefaultModel } from "@shared/ai-config";
 import { chatStorage } from "./storage";
 
 const openai = new OpenAI({
@@ -82,7 +83,7 @@ export function registerChatRoutes(app: Express): void {
 
       // Stream response from OpenAI
       const stream = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: getEffectiveDefaultModel(),
         messages: chatMessages,
         stream: true,
         max_completion_tokens: 2048,

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { User, CreditCard, Trash2, Shield, Loader2, LogOut, ExternalLink } from "lucide-react";
 import type { Usage } from "@shared/schema";
+import { PageHeader } from "@/components/page-header";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -76,13 +77,14 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-serif font-bold" data-testid="text-settings-title">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage your account and preferences</p>
-      </div>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto space-y-6">
+      <PageHeader
+        title="Settings"
+        description="Manage your account and preferences"
+        titleTestId="text-settings-title"
+      />
 
-      <Card className="p-5">
+      <Card className="p-5 border-border/80">
         <div className="flex items-center gap-2 mb-4">
           <User className="h-4 w-4 text-muted-foreground" />
           <h2 className="font-medium">Account</h2>
@@ -92,17 +94,17 @@ export default function SettingsPage() {
             <span className="text-muted-foreground">Name</span>
             <span className="font-medium" data-testid="text-settings-name">{user?.firstName} {user?.lastName}</span>
           </div>
-          <div className="flex justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
             <span className="text-muted-foreground">Email</span>
-            <span className="font-medium" data-testid="text-settings-email">{user?.email}</span>
+            <span className="font-medium break-all sm:text-right sm:max-w-[65%]" data-testid="text-settings-email">{user?.email}</span>
           </div>
         </div>
       </Card>
 
-      <Card className="p-5">
+      <Card className="p-5 border-border/80">
         <div className="flex items-center gap-2 mb-4">
           <CreditCard className="h-4 w-4 text-muted-foreground" />
-          <h2 className="font-medium">Plan & Usage</h2>
+          <h2 className="font-medium text-h2 font-serif">Plan & Usage</h2>
         </div>
         {subLoading ? (
           <Skeleton className="h-16 w-full" />
@@ -145,7 +147,7 @@ export default function SettingsPage() {
         {usageLoading ? (
           <Skeleton className="h-16 w-full" />
         ) : (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Applications used</p>
               <p className="text-xl font-bold" data-testid="text-settings-apps-used">

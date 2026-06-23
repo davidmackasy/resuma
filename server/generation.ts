@@ -1,12 +1,12 @@
 import OpenAI from "openai";
 import type { Profile } from "@shared/schema";
+import type { ResumeJson } from "@shared/resume-utils";
+import { getEffectiveDefaultModel } from "@shared/ai-config";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
-
-const MODEL = "gpt-5-mini";
 
 export interface JobExtraction {
   jobCategory: string;
@@ -42,31 +42,7 @@ export interface AnalysisResult {
   tokensUsed: number;
 }
 
-export interface ResumeJson {
-  header: {
-    name: string;
-    title: string;
-    email: string;
-    phone: string;
-    location: string;
-    linkedin?: string;
-    portfolio?: string;
-    github?: string;
-  };
-  summary: string;
-  experience: {
-    title: string;
-    company: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    bullets: string[];
-    relevanceScore?: number;
-  }[];
-  skills: { name: string; items: string[] }[];
-  education: { school: string; degree: string; field: string; year: string }[];
-  certifications?: { name: string; issuer: string; year: string }[];
-}
+export type { ResumeJson };
 
 export interface CoverLetterJson {
   recipientName: string;
@@ -116,7 +92,7 @@ export async function analyzeJob(profile: Profile, jobDescription: string): Prom
   let totalTokens = 0;
 
   const extractionResponse = await openai.chat.completions.create({
-    model: MODEL,
+    model: getEffectiveDefaultModel(),
     messages: [
       {
         role: "system",
@@ -146,7 +122,7 @@ export async function analyzeJob(profile: Profile, jobDescription: string): Prom
   const profileSummary = buildProfileSummary(profile);
 
   const fitResponse = await openai.chat.completions.create({
-    model: MODEL,
+    model: getEffectiveDefaultModel(),
     messages: [
       {
         role: "system",
@@ -306,7 +282,7 @@ COVER LETTER RULES:
 Return ONLY valid JSON with keys: resume, coverLetter, followupEmail.`;
 
   const response = await openai.chat.completions.create({
-    model: MODEL,
+    model: getEffectiveDefaultModel(),
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -342,7 +318,7 @@ Return ONLY valid JSON with keys: resume, coverLetter, followupEmail.`;
       md: emailData.md || "Generation failed - no email content",
       json: emailData.json || { subject: "", greeting: "", body: "", signoff: "", senderName: input.profile.fullName },
     },
-    model: MODEL,
+    model: getEffectiveDefaultModel(),
     tokensUsed,
   };
 }
@@ -450,7 +426,7 @@ Generate THREE documents as a JSON object with these exact keys:
 Return ONLY valid JSON with keys: resume, coverLetter, followupEmail.`;
 
   const response = await openai.chat.completions.create({
-    model: MODEL,
+    model: getEffectiveDefaultModel(),
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -486,7 +462,7 @@ Return ONLY valid JSON with keys: resume, coverLetter, followupEmail.`;
       md: emailData.md || "Generation failed - no email content",
       json: emailData.json || { subject: "", greeting: "", body: "", signoff: "", senderName: input.profile.fullName },
     },
-    model: MODEL,
+    model: getEffectiveDefaultModel(),
     tokensUsed,
   };
 }
@@ -521,7 +497,7 @@ ${input.roleTitle ? `TARGET ROLE: ${input.roleTitle}` : ""}
 ${input.hiringManager ? `HIRING MANAGER: ${input.hiringManager}` : ""}`;
 
   const response = await openai.chat.completions.create({
-    model: MODEL,
+    model: getEffectiveDefaultModel(),
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: `CANDIDATE PROFILE:\n${profileSummary}\n\nJOB DESCRIPTION:\n${input.jobDescription.substring(0, 6000)}\n\n${docPrompts[docType]}\n\nReturn ONLY valid JSON.` },
@@ -543,7 +519,7 @@ ${input.hiringManager ? `HIRING MANAGER: ${input.hiringManager}` : ""}`;
   return {
     md: parsed.md || "",
     json: parsed.json || parsed,
-    model: MODEL,
+    model: getEffectiveDefaultModel(),
     tokensUsed,
   };
 }
@@ -594,7 +570,7 @@ ${companyName ? `\nCOMPANY: ${companyName}` : ""}
 Generate the 7 hardest interview questions and best answers.`;
 
   const response = await openai.chat.completions.create({
-    model: MODEL,
+    model: getEffectiveDefaultModel(),
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },

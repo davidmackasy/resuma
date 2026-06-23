@@ -5,6 +5,8 @@ import { storage } from "./storage";
 import { analyzeJob, generateFromAnalysis, generateDocuments, generateSingleDocument, generatePracticeQuestions } from "./generation";
 import { generateResumePdf, generateCoverLetterPdf } from "./export-pdf";
 import { generateResumeDocx, generateCoverLetterDocx } from "./export-docx";
+import { streamResumeChat } from "./resume-chat";
+import type { ResumeJson } from "@shared/resume-utils";
 import { extractTextFromFile, parseResumeText } from "./resume-parser";
 import { getStripeClient, getStripePublishableKey, getStripePriceId } from "./stripeClient";
 import { authStorage } from "./replit_integrations/auth/storage";
@@ -727,6 +729,63 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating document:", error);
       res.status(500).json({ message: "Failed to update document" });
+    }
+  });
+
+  app.post("/api/applykit/applications/:id/resume-chat", isAuthenticated, checkBan, requireSubscription, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const id = parseInt(req.params.id);
+      const { message, history, contentJson, customInstructions, model } = req.body;
+
+      if (!message?.trim()) {
+        return res.status(400).json({ message: "Message is required" });
+      }
+
+      const application = await storage.getApplication(id, userId);
+      if (!application || application.userId !== userId) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      const resumeDoc = (await storage.getDocuments(id)).find((d) => d.docType === "resume");
+      if (!resumeDoc) {
+        return res.status(400).json({ message: "No resume document found for this application" });
+      }
+
+      const resumeJson = (contentJson || resumeDoc.contentJson) as ResumeJson;
+      if (!resumeJson?.header) {
+        return res.status(400).json({ message: "Resume has no structured content" });
+      }
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders?.();
+
+      await streamResumeChat({
+        message: message.trim(),
+        history: Array.isArray(history) ? history : [],
+        resumeJson,
+        jobDescription: application.jobDescription,
+        roleTitle: application.roleTitle || undefined,
+        companyName: application.companyName || undefined,
+        customInstructions: customInstructions || undefined,
+        model: typeof model === "string" ? model : undefined,
+        send: (event) => {
+          res.write(`data: ${JSON.stringify(event)}\n\n`);
+        },
+      });
+
+      res.end();
+    } catch (error: any) {
+      console.error("Resume chat error:", error);
+      if (res.headersSent) {
+        res.write(`data: ${JSON.stringify({ type: "error", message: error.message || "Chat failed" })}\n\n`);
+        res.end();
+      } else {
+        res.status(500).json({ message: error.message || "Chat failed" });
+      }
     }
   });
 

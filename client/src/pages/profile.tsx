@@ -19,6 +19,8 @@ import {
   CheckCircle, AlertTriangle, FileText, LogOut, Settings
 } from "lucide-react";
 import type { Profile } from "@shared/schema";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
 
 export default function ProfilePage() {
   const [, navigate] = useLocation();
@@ -43,16 +45,16 @@ export default function ProfilePage() {
   if (!profile?.structuredComplete) {
     return (
       <div className="p-4 sm:p-6 max-w-3xl mx-auto">
-        <Card className="p-8 text-center">
-          <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h2 className="font-serif font-bold text-xl mb-2">Set up your career profile</h2>
-          <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-            Upload your resume or create one from scratch to get started with tailored applications.
-          </p>
-          <Button onClick={() => navigate("/app/profile/setup")} data-testid="button-go-setup">
-            Get Started
-          </Button>
-        </Card>
+        <EmptyState
+          icon={FileText}
+          title="Set up your career database"
+          description="Upload your resume or create one from scratch to power tailored applications."
+          action={
+            <Button onClick={() => navigate("/app/profile/setup")} data-testid="button-go-setup">
+              Get Started
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -109,19 +111,20 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-serif font-bold" data-testid="text-profile-title">Career Profile</h1>
-          <p className="text-sm text-muted-foreground mt-1">Your master resume data used for all applications</p>
-        </div>
-        <Button onClick={() => setIsEditing(true)} data-testid="button-edit-profile">
-          <PenLine className="mr-2 h-4 w-4" />
-          Edit Profile
-        </Button>
-      </div>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto space-y-6">
+      <PageHeader
+        title="Career Database"
+        description="Your master resume data used for all applications"
+        titleTestId="text-profile-title"
+        action={
+          <Button onClick={() => setIsEditing(true)} data-testid="button-edit-profile">
+            <PenLine className="mr-2 h-4 w-4" />
+            Edit Profile
+          </Button>
+        }
+      />
 
-      <Card className="p-5">
+      <Card className="p-5 border-border/80">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="font-bold text-lg" data-testid="text-profile-name">{profile.fullName}</h2>
@@ -366,14 +369,14 @@ function ProfileEditor({ profile, onDone }: { profile: Profile; onDone: () => vo
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
           <h1 className="text-2xl font-serif font-bold" data-testid="text-profile-title">Edit Profile</h1>
           <p className="text-sm text-muted-foreground mt-1">Update your career profile information</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={onDone} data-testid="button-cancel-edit">Cancel</Button>
-          <Button onClick={validateAndSave} disabled={saveMutation.isPending} data-testid="button-save-profile">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={onDone} className="flex-1 sm:flex-none" data-testid="button-cancel-edit">Cancel</Button>
+          <Button onClick={validateAndSave} disabled={saveMutation.isPending} className="flex-1 sm:flex-none" data-testid="button-save-profile">
             <Save className="mr-2 h-4 w-4" />
             {saveMutation.isPending ? "Saving..." : "Save"}
           </Button>
@@ -506,7 +509,7 @@ function ProfileEditor({ profile, onDone }: { profile: Profile; onDone: () => vo
         <div className="space-y-3">
           {educationItems.fields.map((field, index) => (
             <div key={field.id} className="flex items-start gap-2">
-              <div className="grid sm:grid-cols-4 gap-2 flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 flex-1">
                 <Input {...form.register(`education.items.${index}.school`)} placeholder="School" />
                 <Input {...form.register(`education.items.${index}.degree`)} placeholder="Degree" />
                 <Input {...form.register(`education.items.${index}.field`)} placeholder="Field" />
@@ -533,7 +536,7 @@ function ProfileEditor({ profile, onDone }: { profile: Profile; onDone: () => vo
         <div className="space-y-3">
           {certItems.fields.map((field, index) => (
             <div key={field.id} className="flex items-start gap-2">
-              <div className="grid sm:grid-cols-3 gap-2 flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 flex-1">
                 <Input {...form.register(`certifications.items.${index}.name`)} placeholder="Certification Name" />
                 <Input {...form.register(`certifications.items.${index}.issuer`)} placeholder="Issuer" />
                 <Input {...form.register(`certifications.items.${index}.year`)} placeholder="Year" />
